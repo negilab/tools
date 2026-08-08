@@ -5,35 +5,21 @@ PDFをブラウザで開いて、書き込み・ページ整理・文字の差�
 
 ---
 
-## 置き方（GitHub Pages）
+## 公開URL
 
-`akiranakachi-eng/swing-clipper` のリポジトリ直下に、この2つをそのまま置くだけです。
+- ツール本体: https://akiranakachi-eng.github.io/tools/pdf.html
+- リポジトリ: https://github.com/akiranakachi-eng/tools
 
-```
-swing-clipper/
-├── jww.html            ← 既存
-├── pdf.html            ← 追加
-└── pdf-assets/         ← 追加（フォルダごと）
-```
-
-コミット＆プッシュすると、1〜2分で以下のURLで開けます。
+構成は次のとおりです。`pdf-assets/` の中身（約5.6MB）はすべて必要です。
+ライブラリと日本語フォントを同梱しているので、外部CDNには一切つながりません。
 
 ```
-https://akiranakachi-eng.github.io/swing-clipper/pdf.html
+tools/
+├── index.html          ← ツール一覧のトップページ
+├── pdf.html            ← PDF編集
+├── pdf-assets/         ← ライブラリ・日本語フォント・CMap
+└── .nojekyll           ← Jekyll処理を飛ばす（消さないこと）
 ```
-
-コマンドでやる場合:
-
-```bash
-cd swing-clipper
-cp -r /path/to/pdf.html /path/to/pdf-assets .
-git add pdf.html pdf-assets
-git commit -m "PDF編集ツールを追加"
-git push
-```
-
-> `pdf-assets/` の中身（約5.6MB）はすべて必要です。
-> ライブラリと日本語フォントを同梱しているので、外部CDNには一切つながりません。
 
 ---
 
