@@ -62,15 +62,34 @@ function doPost(e) {
     checkToken_(e);
     const body = JSON.parse((e && e.postData && e.postData.contents) || '{}');
     if (!body.id) throw new Error('IDがありません');
-    if (body.kind !== 'done' && body.kind !== 'answer') throw new Error('種別が不正です');
 
-    const saved = dropToInbox_({
-      受信日時: Utilities.formatDate(new Date(), CONFIG.TIMEZONE, 'yyyy-MM-dd HH:mm:ss'),
-      ID: String(body.id),
-      種別: body.kind === 'done' ? '済' : '回答',
-      回答: String(body.answer || ''),
-      補足: String(body.note || ''),
-    });
+    const now = Utilities.formatDate(new Date(), CONFIG.TIMEZONE, 'yyyy-MM-dd HH:mm:ss');
+    let record;
+
+    if (body.kind === 'done' || body.kind === 'answer') {
+      record = {
+        受信日時: now,
+        ID: String(body.id),
+        種別: body.kind === 'done' ? '済' : '回答',
+        回答: String(body.answer || ''),
+        補足: String(body.note || ''),
+      };
+    } else if (body.kind === 'check') {
+      // 検収チェックポイントの1つを入り／切りする。番号は画面と同じく1から数える。
+      const num = parseInt(body.number, 10);
+      if (!(num >= 1)) throw new Error('チェック番号が不正です');
+      record = {
+        受信日時: now,
+        ID: String(body.id),
+        種別: 'チェック',
+        チェック番号: num,
+        状態: String(body.state) === '未' ? '未' : '済',
+      };
+    } else {
+      throw new Error('種別が不正です');
+    }
+
+    const saved = dropToInbox_(record);
 
     // 次の読み取りで最新が返るように、とっておいた結果を捨てる
     CacheService.getScriptCache().remove('board');

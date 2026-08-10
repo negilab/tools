@@ -117,8 +117,8 @@
   .card h2{font-size:15.5px;margin:0 0 6px;font-weight:700;line-height:1.45;}
   .card .body{font-size:13px;color:var(--fg-sub);line-height:1.7;margin:0 0 8px;
     white-space:pre-wrap;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
-  .card .body.expanded{-webkit-line-clamp:unset;display:block;}
-  .more-btn{background:none;border:none;color:var(--label);font-size:12px;font-weight:600;padding:0 0 8px;}
+  .more-btn{background:none;border:none;color:var(--label);font-size:12px;font-weight:600;
+    padding:0 0 8px;display:flex;align-items:center;gap:4px;}
   .due{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;color:var(--fg-sub);
     background:var(--input-bg);border:1px solid var(--line);border-radius:var(--radius-pill);
     padding:3px 10px;margin-bottom:10px;}
@@ -167,6 +167,53 @@
   .done-meta .chip{font-size:11px;color:var(--ok-text);background:rgba(214,176,140,.10);
     border:1px solid rgba(214,176,140,.25);border-radius:var(--radius-pill);padding:3px 9px;}
   .done-check{color:var(--ok-text);font-size:16px;margin-right:6px;}
+
+  /* ---------------------------------------------------- 検収チェックポイント */
+  .cp-chip{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;color:var(--ok-text);
+    background:rgba(214,176,140,.10);border:1px solid rgba(214,176,140,.25);
+    border-radius:var(--radius-pill);padding:3px 10px;margin-bottom:10px;}
+  .cp-chip::before{content:"☑";font-size:11px;}
+  .cp-block{margin-top:14px;border-top:1px dashed var(--line);padding-top:12px;}
+  .cp-head{display:flex;align-items:baseline;gap:8px;margin-bottom:8px;}
+  .cp-head .label{font-size:11px;font-weight:700;color:var(--label);letter-spacing:.03em;}
+  .cp-head .prog{font-size:11px;color:var(--fg-sub);font-variant-numeric:tabular-nums;}
+  .cp-list{display:flex;flex-direction:column;gap:2px;}
+  .cp-row{all:unset;display:flex;align-items:flex-start;gap:10px;cursor:pointer;
+    padding:9px 4px;border-radius:var(--radius-md);width:100%;box-sizing:border-box;}
+  .cp-row:active{background:var(--input-bg);}
+  .cp-row .box{width:22px;height:22px;border-radius:7px;border:1.5px solid var(--outline);
+    display:flex;align-items:center;justify-content:center;flex:none;margin-top:1px;
+    font-size:14px;color:transparent;background:var(--input-bg);}
+  .cp-row.on .box{background:var(--accent);border-color:var(--accent);color:var(--fg-on-accent);}
+  .cp-row .txt{font-size:13px;line-height:1.6;color:var(--fg-sub);
+    white-space:pre-wrap;overflow-wrap:anywhere;}
+  .cp-row.on .txt{color:var(--fg);}
+  .cp-row .wait{display:block;font-size:11px;color:var(--ok-text);margin-top:3px;}
+  .cp-note{font-size:11.5px;color:var(--fg-disabled);line-height:1.6;margin-top:10px;}
+
+  /* ---------------------------------------------------- 詳細画面 */
+  .detail{position:fixed;inset:0;z-index:25;background:var(--bg);
+    display:flex;flex-direction:column;transform:translateX(100%);
+    transition:transform .22s cubic-bezier(.32,.72,0,1);visibility:hidden;}
+  .detail.open{transform:translateX(0);visibility:visible;}
+  .detail-head{position:sticky;top:0;background:var(--band);border-bottom:1px solid var(--band-line);
+    padding:max(10px, env(safe-area-inset-top)) 14px 10px;
+    display:flex;align-items:center;gap:10px;flex:none;}
+  .back-btn{all:unset;display:flex;align-items:center;gap:6px;cursor:pointer;
+    color:var(--label);font-size:14px;font-weight:700;padding:6px 8px 6px 2px;}
+  .back-btn .arrow{font-size:18px;line-height:1;}
+  .detail-head .head-id{margin-left:auto;font-size:11px;color:var(--fg-disabled);
+    font-variant-numeric:tabular-nums;}
+  .detail-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;
+    padding:16px 16px calc(28px + env(safe-area-inset-bottom));}
+  .detail-body h2{font-size:18px;margin:8px 0 10px;font-weight:700;line-height:1.5;
+    overflow-wrap:anywhere;}
+  .detail-body .full{font-size:14px;color:var(--fg-sub);line-height:1.85;margin:0 0 4px;
+    white-space:pre-wrap;overflow-wrap:anywhere;}
+  .detail-body .card-top{margin-bottom:4px;}
+  .detail-body .answer-block{border-top:1px dashed var(--line);margin-top:16px;}
+  .detail-body .meta{margin-top:16px;padding-top:12px;border-top:1px dashed var(--line);
+    font-size:11.5px;color:var(--fg-disabled);line-height:1.9;}
 
   /* ---------------------------------------------------- フッター */
   footer.bottombar{position:fixed;left:0;right:0;bottom:0;z-index:15;background:var(--band);
@@ -259,6 +306,15 @@
     <a class="drive-link" id="driveLink" href="#" target="_blank" rel="noopener">Driveで開く ↗</a>
   </footer>
 
+  <!-- 詳細画面(カードをタップすると出る。全文と検収チェックポイント) -->
+  <section class="detail" id="detailView" aria-hidden="true">
+    <div class="detail-head">
+      <button class="back-btn" id="detailBack"><span class="arrow">‹</span>ボードへ戻る</button>
+      <span class="head-id" id="detailId"></span>
+    </div>
+    <div class="detail-body" id="detailBody"></div>
+  </section>
+
   <div class="sheet-backdrop" id="backdrop"></div>
 
   <!-- 使い方 -->
@@ -270,7 +326,9 @@
     </div>
     <div class="sheet-body">
       <h4>■ 見る</h4>
-      <p>「ボード」に、いま残っている項目が並びます。上に来ているのが返事待ちの確認依頼です。「もっと見る」で全文が開きます。</p>
+      <p>「ボード」に、いま残っている項目が並びます。上に来ているのが返事待ちの確認依頼です。カードをタップすると詳細画面が開き、端折らずに全文が読めます。左上の「ボードへ戻る」で一覧に戻ります。</p>
+      <h4>■ 検収チェックポイント</h4>
+      <p>観点のある項目は、詳細画面に一覧が出ます。行をタップすればその場でチェックを入れたり外したりできます。PCの画面のチェックと同じ扱いです。</p>
       <h4>■ 終わったタスクにチェックを入れる</h4>
       <p>カード下の「済にする」を押してください。PCが受け取ると、その項目に書いてある次の作業をClaudeが自動で始めます。</p>
       <h4>■ 確認依頼に答える</h4>
@@ -320,6 +378,7 @@
 const KEY_CONFIG  = "taskboard_config_v1";   // {url, token}
 const KEY_CACHE   = "taskboard_cache_v1";    // 最後に取れたデータ（圏外用）
 const KEY_PENDING = "taskboard_pending_v1";  // 送信したがPC未反映のもの
+const KEY_CPWAIT  = "taskboard_cpwait_v1";   // 検収チェックの送信済み・PC未反映 {ID:{番号:"済"|"未"}}
 
 // 台帳ファイル（Googleドライブ）。閲覧には本人のGoogleアカウントが必要。
 const DRIVE_FILE_URL = "https://drive.google.com/file/d/1aVFxeyLOb0edBFYjmZSatJKDs9WJpWzO/view";
@@ -339,7 +398,7 @@ const DEMO = {
     {
       "済":"", "回答":"", "補足":"", "ID":"T0011", "種別":"タスク", "状態":"進行中", "担当":"Claude",
       "内容":"資料ドラフトを確認してください", "期限":"",
-      "本文・説明":"サンプル案件Aの提案資料ドラフトができました。内容に問題がなければ「済にする」を押してください。修正したい点があれば補足欄にご記入ください。"
+      "本文・説明":"サンプル案件Aの提案資料ドラフトができました。内容に問題がなければ「済にする」を押してください。修正したい点があれば補足欄にご記入ください。\n\n【検収 1/3】\n☑ 面積の根拠が追えるか\n☐ 単価の出所が書いてあるか\n☐ 合計が内訳と一致するか"
     }
   ],
   done: [
@@ -351,6 +410,8 @@ const DEMO = {
 // ================================================================ 状態
 let data = null;        // 表示中のデータ
 let pending = readJson(KEY_PENDING, {});
+let cpWait = readJson(KEY_CPWAIT, {});
+let openId = null;      // 詳細画面で開いている行のID（null なら一覧）
 let loading = false;
 
 function readJson(key, fallback){
@@ -454,6 +515,90 @@ function reconcilePending(fresh){
     if(!openIds[id]){ delete pending[id]; changed = true; }
   });
   if(changed) writeJson(KEY_PENDING, pending);
+  reconcileCpWait(fresh);
+}
+
+/** 台帳の☑が送った内容どおりになった検収チェックを「反映待ち」から外す */
+function reconcileCpWait(fresh){
+  const byId = {};
+  (fresh.board || []).forEach(function(r){ if(r["ID"]) byId[r["ID"]] = r; });
+  let changed = false;
+  Object.keys(cpWait).forEach(function(id){
+    const row = byId[id];
+    if(!row){ delete cpWait[id]; changed = true; return; }
+    const items = splitBody(row["本文・説明"]).items;
+    Object.keys(cpWait[id]).forEach(function(n){
+      const item = items[parseInt(n, 10) - 1];
+      // 観点が消えた・並びが変わった場合も、待ち続けても意味がないので捨てる
+      if(!item || item.done === (cpWait[id][n] === "済")){ delete cpWait[id][n]; changed = true; }
+    });
+    if(Object.keys(cpWait[id]).length === 0){ delete cpWait[id]; changed = true; }
+  });
+  if(changed) writeJson(KEY_CPWAIT, cpWait);
+}
+
+// ================================================================ 検収チェックポイント
+// PC側は「本文・説明」の末尾に
+//     【検収 1/3】
+//     ☑ 面積の根拠
+//     ☐ 単価の出所
+// という形で観点を書き出している。そこを読み取って、本文と観点に切り分ける。
+// 台帳に列を足さずに済むので、PC側もExcelの見た目も今までのまま。
+const CP_HEAD = /^【検収\s*(\d+)\s*\/\s*(\d+)】$/;
+const CP_ON = "☑";
+const CP_OFF = "☐";
+
+function splitBody(body){
+  const raw = String(body == null ? "" : body);
+  const lines = raw.split(/\r?\n/);
+  let head = -1;
+  for(let i = lines.length - 1; i >= 0; i--){
+    if(CP_HEAD.test(lines[i].trim())){ head = i; break; }
+  }
+  if(head < 0) return { text: raw, items: [] };
+
+  const total = parseInt(lines[head].trim().match(CP_HEAD)[2], 10);
+  const items = [];
+  let i = head + 1;
+  for(; i < lines.length; i++){
+    const s = lines[i].trim();
+    const mark = s.charAt(0);
+    if(mark !== CP_ON && mark !== CP_OFF) break;
+    items.push({ number: items.length + 1, done: mark === CP_ON, text: s.slice(1).trim() });
+  }
+  const restIsBlank = lines.slice(i).every(function(s){ return s.trim() === ""; });
+  // 数が合わない・後ろに別の文章が続くなら、たまたま似た行が並んだだけとみなして触らない。
+  // 番号を取り違えたまま台帳に書かせるより、出さないほうが安全。
+  if(items.length !== total || !restIsBlank) return { text: raw, items: [] };
+
+  return { text: lines.slice(0, head).join("\n").replace(/\s+$/, ""), items: items };
+}
+
+/** 送信済みでPC未反映のチェックを重ねた、いま画面に出すべき状態 */
+function cpView(id, items){
+  const waits = cpWait[id] || {};
+  return items.map(function(c){
+    const w = waits[String(c.number)];
+    return {
+      number: c.number,
+      text: c.text,
+      done: w ? (w === "済") : c.done,
+      waiting: !!w
+    };
+  });
+}
+
+/** 見本モード用。台帳の代わりに本文の☑を書き換える。 */
+function applyCheckToBody(body, number, done){
+  const parts = splitBody(body);
+  if(!parts.items.length) return body;
+  const items = parts.items.map(function(c){
+    return c.number === number ? { number: c.number, text: c.text, done: done } : c;
+  });
+  const doneCount = items.filter(function(c){ return c.done; }).length;
+  const block = "【検収 " + doneCount + "/" + items.length + "】\n"
+    + items.map(function(c){ return (c.done ? CP_ON : CP_OFF) + " " + c.text; }).join("\n");
+  return parts.text ? (parts.text + "\n\n" + block) : block;
 }
 
 // ================================================================ 表示
@@ -500,61 +645,158 @@ function render(){
     : done.map(doneHtml).join("");
 
   document.getElementById("modeChip").textContent = (data && data.demo) ? "見本" : "出先用";
-  bindCards();
+  bindCards(boardEl);
+  renderDetail();
+}
+
+function isAskType(type){ return /確認|質問|問/.test(type); }
+
+function topHtml(r, isAsk){
+  return '<div class="card-top">'
+    + '<span class="badge type' + (isAsk ? " ask" : "") + '">' + escapeHtml(r["種別"] || "タスク") + '</span>'
+    + (r["状態"] ? '<span class="badge">' + escapeHtml(r["状態"]) + '</span>' : "")
+    + (r["担当"] ? '<span class="who">' + escapeHtml(r["担当"]) + '</span>' : "")
+    + '</div>';
+}
+
+/** 回答欄・済にするボタン。カードと詳細画面で同じものを使う。 */
+function actionHtml(r, isAsk, text){
+  if(pending[r["ID"]]){
+    return '<div class="pending-note"><span class="spinner"></span>'
+         + '送信済み — PCが受け取るのを待っています</div>';
+  }
+  if(!isAsk){
+    return '<button class="done-toggle-btn" data-done>'
+         + '<span class="check">✓</span><span class="txt">終わったら押してください(済にする)</span></button>';
+  }
+  const opts = extractOptions(text);
+  const optHtml = opts.map(function(o){
+    return '<button class="opt-btn" data-opt="' + escapeHtml(o.text) + '">'
+         + escapeHtml(o.mark) + '. ' + escapeHtml(o.text) + '</button>';
+  }).join("");
+  return '<div class="answer-block">'
+    + '<div class="answer-label">回答してください</div>'
+    + (opts.length ? '<div class="options">' + optHtml
+        + '<button class="opt-btn free" data-opt="__free__">自由に書く</button></div>' : "")
+    + '<div class="field"' + (opts.length ? ' style="display:none"' : "") + ' data-free>'
+    +   '<label>回答</label><input type="text" data-answer placeholder="答えを入力" /></div>'
+    + '<div class="field"><label>補足(任意)</label>'
+    +   '<textarea data-note placeholder="一言添えたいことがあれば"></textarea></div>'
+    + '<button class="primary-btn" data-send disabled>この内容で送信</button>'
+    + '</div>';
 }
 
 function cardHtml(r){
   const id    = r["ID"];
-  const type  = r["種別"] || "タスク";
-  const isAsk = /確認|質問|問/.test(type);
-  const body  = r["本文・説明"] || "";
-  const wait  = pending[id];
+  const isAsk = isAskType(r["種別"] || "タスク");
+  const parts = splitBody(r["本文・説明"]);
+  const cps   = cpView(id, parts.items);
+  const doneCount = cps.filter(function(c){ return c.done; }).length;
 
-  const due = r["期限"] ? '<div class="due">' + escapeHtml(r["期限"]) + ' 期限</div>' : "";
-  const state = r["状態"] ? '<span class="badge">' + escapeHtml(r["状態"]) + '</span>' : "";
-  const who = r["担当"] ? '<span class="who">' + escapeHtml(r["担当"]) + '</span>' : "";
+  return ''
+    + '<div class="card' + (pending[id] ? " pending" : "") + '" data-id="' + escapeHtml(id) + '">'
+    +   topHtml(r, isAsk)
+    +   '<h2>' + escapeHtml(r["内容"]) + '</h2>'
+    +   (parts.text ? '<p class="body">' + escapeHtml(parts.text) + '</p>' : "")
+    +   '<button class="more-btn" data-open>詳しく見る（全文）<span>›</span></button>'
+    +   (cps.length ? '<div class="cp-chip">検収 ' + doneCount + '/' + cps.length + '</div>' : "")
+    +   (r["期限"] ? '<div class="due">' + escapeHtml(r["期限"]) + ' 期限</div>' : "")
+    +   '<div class="task-id">Excel ID: ' + escapeHtml(id) + '</div>'
+    +   actionHtml(r, isAsk, parts.text)
+    + '</div>';
+}
 
-  let action = "";
-  if(wait){
-    action = '<div class="pending-note"><span class="spinner"></span>'
-           + '送信済み — PCが受け取るのを待っています</div>';
-  }else if(isAsk){
-    const opts = extractOptions(body);
-    const optHtml = opts.map(function(o){
-      return '<button class="opt-btn" data-opt="' + escapeHtml(o.text) + '">'
-           + escapeHtml(o.mark) + '. ' + escapeHtml(o.text) + '</button>';
-    }).join("");
-    action =
-      '<div class="answer-block">'
-      + '<div class="answer-label">回答してください</div>'
-      + (opts.length ? '<div class="options">' + optHtml
-          + '<button class="opt-btn free" data-opt="__free__">自由に書く</button></div>' : "")
-      + '<div class="field"' + (opts.length ? ' style="display:none"' : "") + ' data-free>'
-      +   '<label>回答</label><input type="text" data-answer placeholder="答えを入力" /></div>'
-      + '<div class="field"><label>補足(任意)</label>'
-      +   '<textarea data-note placeholder="一言添えたいことがあれば"></textarea></div>'
-      + '<button class="primary-btn" data-send disabled>この内容で送信</button>'
+// ================================================================ 詳細画面
+function detailHtml(r){
+  const id    = r["ID"];
+  const isAsk = isAskType(r["種別"] || "タスク");
+  const parts = splitBody(r["本文・説明"]);
+  const cps   = cpView(id, parts.items);
+  const doneCount = cps.filter(function(c){ return c.done; }).length;
+
+  let cpBlock = "";
+  if(cps.length){
+    cpBlock = '<div class="cp-block">'
+      + '<div class="cp-head"><span class="label">検収チェックポイント</span>'
+      +   '<span class="prog">' + doneCount + '/' + cps.length + '</span></div>'
+      + '<div class="cp-list">'
+      + cps.map(function(c){
+          return '<button class="cp-row' + (c.done ? " on" : "") + '" data-cp="' + c.number + '">'
+               + '<span class="box">✓</span>'
+               + '<span class="txt">' + escapeHtml(c.text)
+               + (c.waiting ? '<span class="wait">送信済み — PCが受け取るのを待っています</span>' : "")
+               + '</span></button>';
+        }).join("")
+      + '</div>'
+      + '<div class="cp-note">タップでチェックが入り、もう一度タップで外れます。'
+      + 'PCの画面のチェックと同じ扱いです。</div>'
       + '</div>';
-  }else{
-    action =
-      '<button class="done-toggle-btn" data-done>'
-      + '<span class="check">✓</span><span class="txt">終わったら押してください(済にする)</span></button>';
   }
 
   return ''
-    + '<div class="card' + (wait ? " pending" : "") + '" data-id="' + escapeHtml(id) + '">'
-    +   '<div class="card-top">'
-    +     '<span class="badge type' + (isAsk ? " ask" : "") + '">' + escapeHtml(type) + '</span>'
-    +     state + who
-    +   '</div>'
+    + '<div class="card-wrap" data-id="' + escapeHtml(id) + '">'
+    +   topHtml(r, isAsk)
     +   '<h2>' + escapeHtml(r["内容"]) + '</h2>'
-    +   (body ? '<p class="body">' + escapeHtml(body) + '</p>'
-              + '<button class="more-btn" data-more>もっと見る</button>' : "")
-    +   due
-    +   '<div class="task-id">Excel ID: ' + escapeHtml(id) + '</div>'
-    +   action
+    +   (r["期限"] ? '<div class="due">' + escapeHtml(r["期限"]) + ' 期限</div>' : "")
+    +   (parts.text ? '<p class="full">' + escapeHtml(parts.text) + '</p>' : "")
+    +   cpBlock
+    +   actionHtml(r, isAsk, parts.text)
+    +   '<div class="meta">Excel ID: ' + escapeHtml(id)
+    +     (r["担当"] ? '　担当: ' + escapeHtml(r["担当"]) : "")
+    +     (r["状態"] ? '　状態: ' + escapeHtml(r["状態"]) : "") + '</div>'
     + '</div>';
 }
+
+function renderDetail(){
+  const view = document.getElementById("detailView");
+  if(!openId){
+    view.classList.remove("open");
+    view.setAttribute("aria-hidden", "true");
+    return;
+  }
+  const r = boardRows().filter(function(x){ return x["ID"] === openId; })[0];
+  if(!r){
+    // PCが受け取って台帳が片付いた。開きっぱなしにせず一覧へ戻す。
+    hideDetail();
+    toast("この項目は片付きました");
+    return;
+  }
+  document.getElementById("detailId").textContent = "Excel ID: " + r["ID"];
+  const body = document.getElementById("detailBody");
+  // チェックを1つ押すたびに描き直すので、同じ項目のあいだは読んでいた位置を保つ
+  const keep = (body.dataset.shown === r["ID"]) ? body.scrollTop : 0;
+  body.innerHTML = detailHtml(r);
+  body.dataset.shown = r["ID"];
+  body.scrollTop = keep;
+  view.classList.add("open");
+  view.setAttribute("aria-hidden", "false");
+  bindActions(body, r["ID"]);
+  bindCheckpoints(body, r);
+}
+
+function openDetail(id){
+  openId = id;
+  try{ history.pushState({ detail: id }, ""); }catch(e){}
+  renderDetail();
+}
+
+/** 画面を閉じるだけ（履歴は触らない） */
+function hideDetail(){
+  openId = null;
+  const view = document.getElementById("detailView");
+  view.classList.remove("open");
+  view.setAttribute("aria-hidden", "true");
+}
+
+function closeDetail(){
+  const hadState = !!(history.state && history.state.detail);
+  hideDetail();
+  if(hadState){ try{ history.back(); }catch(e){} }
+}
+
+window.addEventListener("popstate", function(){
+  if(openId) hideDetail();
+});
 
 function doneHtml(d){
   const chips = [d["決着"], d["閉じた人"] ? "閉じた人: " + d["閉じた人"] : "", d["完了日時"]]
@@ -569,71 +811,91 @@ function doneHtml(d){
 }
 
 // ================================================================ カードの操作
-function bindCards(){
-  document.querySelectorAll(".card[data-id]").forEach(function(card){
+function bindCards(root){
+  root.querySelectorAll(".card[data-id]").forEach(function(card){
     const id = card.dataset.id;
 
-    const more = card.querySelector("[data-more]");
-    if(more){
-      more.addEventListener("click", function(){
-        const p = card.querySelector(".body");
-        const open = p.classList.toggle("expanded");
-        more.textContent = open ? "閉じる" : "もっと見る";
-      });
+    // カードのどこを押しても詳細画面が開く。ただし回答欄など操作する部品の上は除く。
+    card.addEventListener("click", function(ev){
+      if(ev.target.closest("button, input, textarea, a, label")) return;
+      openDetail(id);
+    });
+    const openBtn = card.querySelector("[data-open]");
+    if(openBtn){
+      openBtn.addEventListener("click", function(){ openDetail(id); });
     }
-
-    const doneBtn = card.querySelector("[data-done]");
-    if(doneBtn){
-      doneBtn.addEventListener("click", function(){
-        send(id, { id:id, kind:"done" }, "済にしました");
-      });
-    }
-
-    const sendBtn = card.querySelector("[data-send]");
-    if(sendBtn){
-      const freeWrap = card.querySelector("[data-free]");
-      const answerEl = card.querySelector("[data-answer]");
-      let chosen = null;
-
-      card.querySelectorAll(".opt-btn").forEach(function(btn){
-        btn.addEventListener("click", function(){
-          card.querySelectorAll(".opt-btn").forEach(function(b){ b.classList.remove("selected"); });
-          btn.classList.add("selected");
-          if(btn.dataset.opt === "__free__"){
-            chosen = null;
-            if(freeWrap) freeWrap.style.display = "";
-            if(answerEl) answerEl.focus();
-          }else{
-            chosen = btn.dataset.opt;
-            if(freeWrap) freeWrap.style.display = "none";
-          }
-          sendBtn.disabled = !currentAnswer();
-        });
-      });
-
-      function currentAnswer(){
-        if(chosen) return chosen;
-        return answerEl ? answerEl.value.trim() : "";
-      }
-      if(answerEl){
-        answerEl.addEventListener("input", function(){ sendBtn.disabled = !currentAnswer(); });
-      }
-      // 選択肢が無い場合は最初から自由記入が出ているので、入力次第で有効になる
-      sendBtn.disabled = !currentAnswer();
-
-      sendBtn.addEventListener("click", function(){
-        const note = card.querySelector("[data-note]");
-        send(id, {
-          id: id, kind: "answer",
-          answer: currentAnswer(),
-          note: note ? note.value.trim() : ""
-        }, "回答を送りました");
-      });
-    }
+    bindActions(card, id);
   });
 }
 
-async function send(id, payload, okMessage){
+/** 「済にする」と回答欄。カードでも詳細画面でも同じように動く。 */
+function bindActions(scope, id){
+  const doneBtn = scope.querySelector("[data-done]");
+  if(doneBtn){
+    doneBtn.addEventListener("click", function(){
+      send(id, { id:id, kind:"done" }, "済にしました", doneBtn);
+    });
+  }
+
+  const sendBtn = scope.querySelector("[data-send]");
+  if(!sendBtn) return;
+
+  const freeWrap = scope.querySelector("[data-free]");
+  const answerEl = scope.querySelector("[data-answer]");
+  let chosen = null;
+
+  function currentAnswer(){
+    if(chosen) return chosen;
+    return answerEl ? answerEl.value.trim() : "";
+  }
+
+  scope.querySelectorAll(".opt-btn").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      scope.querySelectorAll(".opt-btn").forEach(function(b){ b.classList.remove("selected"); });
+      btn.classList.add("selected");
+      if(btn.dataset.opt === "__free__"){
+        chosen = null;
+        if(freeWrap) freeWrap.style.display = "";
+        if(answerEl) answerEl.focus();
+      }else{
+        chosen = btn.dataset.opt;
+        if(freeWrap) freeWrap.style.display = "none";
+      }
+      sendBtn.disabled = !currentAnswer();
+    });
+  });
+
+  if(answerEl){
+    answerEl.addEventListener("input", function(){ sendBtn.disabled = !currentAnswer(); });
+  }
+  // 選択肢が無い場合は最初から自由記入が出ているので、入力次第で有効になる
+  sendBtn.disabled = !currentAnswer();
+
+  sendBtn.addEventListener("click", function(){
+    const note = scope.querySelector("[data-note]");
+    send(id, {
+      id: id, kind: "answer",
+      answer: currentAnswer(),
+      note: note ? note.value.trim() : ""
+    }, "回答を送りました", sendBtn);
+  });
+}
+
+/** 詳細画面の検収チェックポイント。1つ押すごとに受信箱へ1件送る。 */
+function bindCheckpoints(scope, r){
+  const id = r["ID"];
+  const items = splitBody(r["本文・説明"]).items;
+  scope.querySelectorAll("[data-cp]").forEach(function(row){
+    row.addEventListener("click", function(){
+      const n = parseInt(row.dataset.cp, 10);
+      const shown = cpView(id, items)[n - 1];
+      if(!shown) return;
+      sendCheck(id, n, !shown.done, row);
+    });
+  });
+}
+
+async function send(id, payload, okMessage, btn){
   if(!getConfig()){
     // 見本モード：手元だけで消す
     data.board = data.board.filter(function(r){ return r["ID"] !== id; });
@@ -643,15 +905,13 @@ async function send(id, payload, okMessage){
       "決着": payload.kind === "answer" ? ("回答: " + payload.answer) : "本人がチェック",
       "閉じた人":"あなた", "完了日時":"(見本)"
     });
+    closeDetail();
     render();
     toast(okMessage + "(見本)");
     return;
   }
 
-  const card = document.querySelector('.card[data-id="' + CSS.escape(id) + '"]');
-  const btn = card && (card.querySelector("[data-send]") || card.querySelector("[data-done]"));
   if(btn) btn.disabled = true;
-
   try{
     await apiPost(payload);
     pending[id] = { at: Date.now(), kind: payload.kind };
@@ -660,6 +920,33 @@ async function send(id, payload, okMessage){
     toast(okMessage);
   }catch(err){
     if(btn) btn.disabled = false;
+    toast(String(err.message || err), true);
+  }
+}
+
+async function sendCheck(id, number, done, row){
+  const state = done ? "済" : "未";
+
+  if(!getConfig()){
+    // 見本モード：本文の☑を手元で書き換えるだけ
+    (data.board || []).forEach(function(r){
+      if(r["ID"] === id) r["本文・説明"] = applyCheckToBody(r["本文・説明"], number, done);
+    });
+    render();
+    toast((done ? "チェックしました" : "チェックを外しました") + "(見本)");
+    return;
+  }
+
+  if(row) row.disabled = true;
+  try{
+    await apiPost({ id:id, kind:"check", number:number, state:state });
+    if(!cpWait[id]) cpWait[id] = {};
+    cpWait[id][String(number)] = state;
+    writeJson(KEY_CPWAIT, cpWait);
+    render();
+    toast(done ? "チェックを送りました" : "チェックを外しました");
+  }catch(err){
+    if(row) row.disabled = false;
     toast(String(err.message || err), true);
   }
 }
@@ -704,6 +991,8 @@ function closeSheets(){
 
 // ================================================================ 起動
 document.getElementById("driveLink").href = DRIVE_FILE_URL;
+
+document.getElementById("detailBack").addEventListener("click", closeDetail);
 
 document.getElementById("tabBoard").addEventListener("click", function(){ switchTab(true); });
 document.getElementById("tabDone").addEventListener("click", function(){ switchTab(false); });
