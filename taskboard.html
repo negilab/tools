@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
+<title>タスクボード</title>
+<meta name="description" content="出先からタスクボードのExcel台帳を確認・回答するアプリ風UI" />
+<link rel="manifest" href="taskboard-assets/manifest.json" />
+<link rel="apple-touch-icon" href="taskboard-assets/icons/apple-touch-icon.png" />
+<link rel="icon" href="taskboard-assets/icons/icon-192.png" />
+<meta name="theme-color" content="#211E1C" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="タスクボード" />
+<style>
+  :root{
+    /* sumitsubo dark テーマから移植した配色 */
+    --bg:#211E1C;
+    --surface:#2E2A27;
+    --input-bg:#262220;
+    --band:#26221F;
+    --band-line:#4A423C;
+    --nav-btn:#3A3532;
+    --nav-btn-hover:#46403B;
+    --nav-btn-pressed:#322D2A;
+    --subtle:#2E2A27;
+    --subtle-hover:#383330;
+    --subtle-pressed:#262220;
+    --subtle-fg:#C9C2BA;
+    --outline:#5A524B;
+    --line:#453E39;
+    --trough:#3A3532;
+    --accent:#B05B3B;
+    --accent-hover:#C46B49;
+    --accent-pressed:#964A31;
+    --fg-on-accent:#FFFFFF;
+    --label:#E09A6A;
+    --fg:#F0EDE8;
+    --fg-sub:#A79E96;
+    --fg-disabled:#6E655E;
+    --ok-text:#D6B08C;
+    --viewer-bg:#1A1715;
+    --radius-lg:18px;
+    --radius-md:12px;
+    --radius-pill:999px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--fg);}
+  body{
+    font-family:"Noto Sans JP","Hiragino Kaku Gothic ProN","Yu Gothic UI",Meiryo,sans-serif;
+    min-height:100dvh;
+    display:flex;flex-direction:column;
+    overscroll-behavior-y:none;
+    -webkit-font-smoothing:antialiased;
+  }
+  button, input, textarea{font-family:inherit;}
+
+  /* ---------------------------------------------------- ヘッダー帯 */
+  header.topbar{
+    position:sticky;top:0;z-index:20;
+    background:var(--band);
+    border-bottom:1px solid var(--band-line);
+    padding:max(12px, env(safe-area-inset-top)) 16px 12px;
+  }
+  .topbar-row{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+  .brand{display:flex;align-items:baseline;gap:8px;min-width:0;}
+  .brand .mark{
+    width:9px;height:9px;border-radius:50%;background:var(--accent);
+    box-shadow:0 0 0 3px rgba(176,91,59,.22);flex:none;
+  }
+  .brand h1{font-size:19px;margin:0;font-weight:700;letter-spacing:.02em;color:var(--fg);white-space:nowrap;}
+  .brand .sub{font-size:11px;color:var(--fg-sub);background:var(--nav-btn);border:1px solid var(--band-line);
+    padding:2px 8px;border-radius:var(--radius-pill);white-space:nowrap;}
+  .topbar-actions{display:flex;gap:8px;flex:none;}
+  .icon-btn{
+    width:34px;height:34px;border-radius:50%;border:1px solid var(--band-line);
+    background:var(--nav-btn);color:var(--fg-on-band,var(--fg));
+    display:flex;align-items:center;justify-content:center;font-size:15px;
+    transition:background .12s ease;
+  }
+  .icon-btn:active{background:var(--nav-btn-pressed);}
+
+  /* ---------------------------------------------------- セグメント */
+  .segment-wrap{padding:12px 16px 0;background:var(--band);border-bottom:1px solid var(--band-line);}
+  .segment{
+    display:flex;gap:6px;background:var(--nav-btn-pressed);border-radius:var(--radius-pill);
+    padding:4px;margin-bottom:12px;
+  }
+  .segment button{
+    flex:1;border:none;background:transparent;color:var(--fg-sub);
+    font-size:13px;font-weight:600;padding:9px 10px;border-radius:var(--radius-pill);
+    display:flex;align-items:center;justify-content:center;gap:6px;
+  }
+  .segment button.active{background:var(--accent);color:var(--fg-on-accent);}
+  .segment button .count{
+    font-size:11px;opacity:.85;background:rgba(0,0,0,.18);
+    border-radius:var(--radius-pill);padding:1px 7px;
+  }
+  .segment button.active .count{background:rgba(255,255,255,.22);}
+
+  /* ---------------------------------------------------- 本体 */
+  main{flex:1;overflow-y:auto;padding:14px 14px calc(90px + env(safe-area-inset-bottom));}
+
+  .notice{
+    display:flex;gap:10px;align-items:flex-start;
+    background:var(--input-bg);border:1px solid var(--line);border-radius:var(--radius-md);
+    padding:10px 12px;margin-bottom:14px;font-size:12.5px;color:var(--fg-sub);line-height:1.55;
+  }
+  .notice .dot{width:6px;height:6px;border-radius:50%;background:var(--label);margin-top:6px;flex:none;}
+  .notice b{color:var(--label);font-weight:700;}
+
+  .list{display:flex;flex-direction:column;gap:12px;}
+
+  .empty-state{
+    text-align:center;color:var(--fg-sub);padding:48px 20px;font-size:13.5px;line-height:1.7;
+  }
+  .empty-state .glyph{font-size:30px;margin-bottom:10px;opacity:.6;}
+
+  /* ---------------------------------------------------- カード */
+  .card{
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-lg);
+    padding:14px 14px 14px;transition:opacity .2s ease, transform .2s ease;
+  }
+  .card.leaving{opacity:0;transform:translateY(-6px) scale(.98);}
+
+  .card-top{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:9px;}
+  .badge{
+    font-size:11px;font-weight:700;padding:3px 9px;border-radius:var(--radius-pill);
+    border:1px solid var(--outline);color:var(--subtle-fg);letter-spacing:.02em;
+  }
+  .badge.state-進行中{color:var(--label);border-color:rgba(224,154,106,.45);background:rgba(224,154,106,.08);}
+  .badge.state-未着手{color:var(--fg-sub);border-color:var(--outline);}
+  .badge.type{color:var(--fg-sub);background:var(--input-bg);border-color:var(--line);}
+  .who{margin-left:auto;font-size:11px;color:var(--fg-disabled);display:flex;align-items:center;gap:4px;}
+  .who::before{content:"";width:14px;height:14px;border-radius:50%;background:var(--nav-btn);border:1px solid var(--band-line);}
+  .task-id{font-size:10.5px;color:var(--fg-disabled);font-variant-numeric:tabular-nums;letter-spacing:.03em;}
+
+  .card h2{font-size:15.5px;margin:0 0 6px;font-weight:700;color:var(--fg);line-height:1.45;}
+  .card .body{
+    font-size:13px;color:var(--fg-sub);line-height:1.7;margin:0 0 8px;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+  }
+  .card .body.expanded{-webkit-line-clamp:unset;display:block;}
+  .more-btn{background:none;border:none;color:var(--label);font-size:12px;font-weight:600;padding:0 0 8px;}
+
+  .due{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;color:var(--fg-sub);
+    background:var(--input-bg);border:1px solid var(--line);border-radius:var(--radius-pill);
+    padding:3px 10px;margin-bottom:10px;}
+  .due::before{content:"⏰";font-size:10px;}
+
+  /* 選択肢(回答)エリア */
+  .answer-block{margin-top:6px;border-top:1px dashed var(--line);padding-top:12px;}
+  .answer-label{font-size:11px;font-weight:700;color:var(--label);letter-spacing:.03em;margin-bottom:8px;}
+  .options{display:flex;flex-direction:column;gap:8px;}
+  .opt-btn{
+    text-align:left;border:1px solid var(--outline);background:var(--subtle);color:var(--fg);
+    font-size:13px;font-weight:600;padding:11px 14px;border-radius:var(--radius-pill);
+    line-height:1.4;
+  }
+  .opt-btn:active{background:var(--subtle-pressed);}
+  .opt-btn.selected{background:var(--accent);border-color:var(--accent);color:var(--fg-on-accent);}
+  .opt-btn.dontknow{color:var(--fg-sub);background:transparent;}
+
+  .supplement{margin-top:10px;}
+  .supplement label{display:block;font-size:11px;color:var(--fg-sub);margin-bottom:6px;}
+  .supplement textarea{
+    width:100%;min-height:56px;resize:vertical;background:var(--input-bg);
+    border:1px solid var(--line);border-radius:var(--radius-md);color:var(--fg);
+    font-size:13px;padding:9px 11px;line-height:1.5;
+  }
+  .supplement textarea::placeholder{color:var(--fg-disabled);}
+
+  .primary-btn{
+    width:100%;border:none;background:var(--accent);color:var(--fg-on-accent);
+    font-size:14px;font-weight:700;padding:12px;border-radius:var(--radius-pill);margin-top:12px;
+  }
+  .primary-btn:active{background:var(--accent-pressed);}
+  .primary-btn[disabled]{background:var(--nav-btn);color:var(--fg-disabled);}
+
+  .done-toggle{margin-top:12px;display:flex;align-items:center;gap:10px;}
+  .done-toggle .check{
+    width:22px;height:22px;border-radius:7px;border:1.5px solid var(--outline);
+    display:flex;align-items:center;justify-content:center;flex:none;color:transparent;
+    font-size:14px;background:var(--input-bg);
+  }
+  .done-toggle span.txt{font-size:12.5px;color:var(--fg-sub);}
+  .done-toggle-btn{all:unset;display:flex;align-items:center;gap:10px;cursor:pointer;padding:6px 2px;}
+  .done-toggle-btn:active .check{background:var(--subtle-pressed);}
+
+  /* ---------------------------------------------------- 完了カード */
+  .card.done{opacity:.9;}
+  .card.done h2{color:var(--fg-sub);}
+  .done-meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;}
+  .done-meta .chip{font-size:11px;color:var(--ok-text);background:rgba(214,176,140,.10);
+    border:1px solid rgba(214,176,140,.25);border-radius:var(--radius-pill);padding:3px 9px;}
+  .done-check{color:var(--ok-text);font-size:16px;margin-right:6px;}
+
+  /* ---------------------------------------------------- フッター */
+  footer.bottombar{
+    position:fixed;left:0;right:0;bottom:0;z-index:15;
+    background:var(--band);border-top:1px solid var(--band-line);
+    padding:10px 16px calc(10px + env(safe-area-inset-bottom));
+    display:flex;align-items:center;gap:10px;
+  }
+  .sync-status{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--fg-sub);flex:1;min-width:0;}
+  .sync-status .dot{width:6px;height:6px;border-radius:50%;background:var(--fg-disabled);flex:none;}
+  .sync-status.demo .dot{background:var(--label);}
+  .sync-status span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .drive-link{
+    flex:none;font-size:12px;font-weight:700;color:var(--label);
+    border:1px solid var(--band-line);background:var(--nav-btn);
+    padding:8px 12px;border-radius:var(--radius-pill);text-decoration:none;white-space:nowrap;
+    display:flex;align-items:center;gap:5px;
+  }
+  .drive-link:active{background:var(--nav-btn-pressed);}
+
+  /* ---------------------------------------------------- ボトムシート */
+  .sheet-backdrop{
+    position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:30;opacity:0;pointer-events:none;
+    transition:opacity .2s ease;
+  }
+  .sheet-backdrop.open{opacity:1;pointer-events:auto;}
+  .sheet{
+    position:fixed;left:0;right:0;bottom:0;z-index:31;background:var(--surface);
+    border-radius:20px 20px 0 0;border:1px solid var(--line);border-bottom:none;
+    max-height:82dvh;display:flex;flex-direction:column;
+    transform:translateY(100%);transition:transform .25s cubic-bezier(.32,.72,0,1);
+    padding-bottom:env(safe-area-inset-bottom);
+  }
+  .sheet.open{transform:translateY(0);}
+  .sheet-handle{width:36px;height:4px;background:var(--outline);border-radius:99px;margin:10px auto 4px;}
+  .sheet-head{display:flex;align-items:center;justify-content:space-between;padding:6px 18px 12px;
+    border-bottom:1px solid var(--line);}
+  .sheet-head h3{margin:0;font-size:15px;color:var(--fg);}
+  .sheet-close{all:unset;color:var(--fg-sub);font-size:20px;padding:4px 8px;cursor:pointer;}
+  .sheet-body{overflow-y:auto;padding:16px 18px 24px;font-size:13px;color:var(--fg-sub);line-height:1.85;}
+  .sheet-body h4{color:var(--label);font-size:12.5px;margin:18px 0 6px;letter-spacing:.02em;}
+  .sheet-body h4:first-child{margin-top:0;}
+  .sheet-body p{margin:0 0 4px;}
+  .sheet-body .warn{color:var(--fg-disabled);font-size:12px;margin-top:16px;border-top:1px dashed var(--line);padding-top:12px;}
+  .reset-btn{margin-top:16px;width:100%;border:1px solid var(--outline);background:var(--subtle);
+    color:var(--subtle-fg);font-size:12.5px;font-weight:600;padding:10px;border-radius:var(--radius-pill);}
+
+  /* ---------------------------------------------------- トースト */
+  .toast{
+    position:fixed;left:50%;bottom:96px;transform:translateX(-50%) translateY(10px);
+    background:var(--nav-btn);border:1px solid var(--band-line);color:var(--fg);
+    font-size:12.5px;padding:10px 16px;border-radius:var(--radius-pill);z-index:40;
+    opacity:0;pointer-events:none;transition:opacity .18s ease, transform .18s ease;
+    box-shadow:0 8px 24px rgba(0,0,0,.35);white-space:nowrap;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  .toast .dot{color:var(--ok-text);margin-right:6px;}
+</style>
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="topbar-row">
+      <div class="brand">
+        <span class="mark"></span>
+        <h1>タスクボード</h1>
+        <span class="sub">出先用</span>
+      </div>
+      <div class="topbar-actions">
+        <button class="icon-btn" id="helpBtn" aria-label="使い方">?</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="segment-wrap">
+    <div class="segment">
+      <button class="active" id="tabBoard" onclick="showTab('board')">ボード <span class="count" id="countBoard">0</span></button>
+      <button id="tabDone" onclick="showTab('done')">完了ずみ <span class="count" id="countDone">0</span></button>
+    </div>
+  </div>
+
+  <main>
+    <div class="notice">
+      <span class="dot"></span>
+      <div><b>プロトタイプUI</b> — 実際のExcel台帳とはまだ自動連携していません。ここでの「済にする」「回答する」は端末内だけの見本動作です。本物の台帳は下の「Googleドライブで開く」から編集してください。</div>
+    </div>
+    <div class="list" id="boardList"></div>
+    <div class="list" id="doneList" style="display:none;"></div>
+  </main>
+
+  <footer class="bottombar">
+    <div class="sync-status demo">
+      <span class="dot"></span>
+      <span id="syncText">見本データを表示中</span>
+    </div>
+    <a class="drive-link" id="driveLink" href="#" target="_blank" rel="noopener">Driveで開く ↗</a>
+  </footer>
+
+  <div class="sheet-backdrop" id="sheetBackdrop" onclick="closeHelp()"></div>
+  <div class="sheet" id="helpSheet" role="dialog" aria-modal="true">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head">
+      <h3>タスクボード(出先用)の使い方</h3>
+      <button class="sheet-close" onclick="closeHelp()">✕</button>
+    </div>
+    <div class="sheet-body">
+      <h4>■ 見る</h4>
+      <p>「ボード」に、いま残っている項目が並びます。上に来ているのが返事待ちの確認依頼です。カードをタップすると本文の全文が開きます。</p>
+      <h4>■ 終わったタスクにチェックを入れる</h4>
+      <p>カード下の「済にする」を押してください。PCが受け取ると、その項目に書いてある次の作業をClaudeが自動で始めます。</p>
+      <h4>■ 確認依頼に答える</h4>
+      <p>選択肢から選び、補足欄に一言添えて送信してください。「済」は入れなくてかまいません。回答した時点で片付いた扱いになります。</p>
+      <h4>■ 注意</h4>
+      <p>・IDは台帳側でPCが行を見分ける目印です。書き換えないでください。<br>
+      ・反映まで数十秒から数分かかります(ドライブの同期とPCの確認の間隔ぶん)。<br>
+      ・PCの電源が入っていないあいだは処理されません。次にPCが動いたときにまとめて実行されます。</p>
+      <p class="warn">このアプリ自体は現在プロトタイプです。実データとの読み書きはまだ行われません。</p>
+      <button class="reset-btn" onclick="resetDemo()">見本データをリセットする</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"><span class="dot">●</span><span id="toastMsg"></span></div>
+
+<script>
+  // ================= 見本データ =================
+  // 実データは「タスクボード.xlsx」の『ボード』『完了ずみ』シートと同じ列構成
+  // (済 / 回答 / 補足 / ID / 種別 / 状態 / 担当 / 内容 / 期限 / 本文・説明)。
+  // 個別の案件名など機微な内容は含めず、見本用に一般化しています。
+  const SEED_BOARD = [
+    {
+      id: "T-102", type: "確認", state: "進行中", owner: "Claude",
+      title: "見積りの数量、単位はどちらでまとめますか",
+      body: "サンプル案件Bの見積書について、数量の単位を「式」でまとめるか「㎡」のまま出すかで表記が分かれています。どちらかに揃えたいので選んでください。迷う場合は分からないでも構いません。",
+      due: "8/12",
+      question: true,
+      options: ["式でまとめる", "㎡のまま出す"]
+    },
+    {
+      id: "T-101", type: "タスク", state: "進行中", owner: "Claude",
+      title: "資料ドラフトを確認してください",
+      body: "サンプル案件Aの提案資料ドラフトができました。内容に問題がなければ「済にする」を押してください。修正したい点があれば補足欄にご記入ください。",
+      due: "",
+      question: false
+    },
+    {
+      id: "T-103", type: "タスク", state: "未着手", owner: "Claude",
+      title: "週次レポートの雛形作成",
+      body: "来週から使う週次進捗レポートのExcel雛形を作成します。特に指定がなければこのまま進めます。フォーマットの希望があれば補足に書いてください。",
+      due: "",
+      question: false
+    }
+  ];
+
+  const SEED_DONE = [
+    { id: "T-098", title: "打ち合わせメモの共有", resolution: "会話で決着", closedBy: "Claude", closedAt: "2026-08-09 18:20" },
+    { id: "T-097", title: "資料アップロード", resolution: "Claudeがクローズ", closedBy: "Claude", closedAt: "2026-08-09 15:03" }
+  ];
+
+  // 実際の台帳ファイル(Google Drive)。閲覧にはご自身のGoogleアカウントでの権限が必要です。
+  const DRIVE_FILE_URL = "https://drive.google.com/file/d/1aVFxeyLOb0edBFYjmZSatJKDs9WJpWzO/view";
+
+  const STORAGE_KEY = "taskboard_demo_state_v1";
+
+  function loadState(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(raw) return JSON.parse(raw);
+    }catch(e){}
+    return { board: SEED_BOARD, done: SEED_DONE };
+  }
+  function saveState(){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
+  function resetDemo(){
+    state = { board: JSON.parse(JSON.stringify(SEED_BOARD)), done: JSON.parse(JSON.stringify(SEED_DONE)) };
+    saveState();
+    render();
+    closeHelp();
+    showToast("見本データをリセットしました");
+  }
+
+  let state = loadState();
+
+  document.getElementById("driveLink").href = DRIVE_FILE_URL;
+
+  function showTab(name){
+    const isBoard = name === "board";
+    document.getElementById("tabBoard").classList.toggle("active", isBoard);
+    document.getElementById("tabDone").classList.toggle("active", !isBoard);
+    document.getElementById("boardList").style.display = isBoard ? "flex" : "none";
+    document.getElementById("doneList").style.display = isBoard ? "none" : "flex";
+  }
+
+  function escapeHtml(s){
+    return (s || "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+  }
+
+  function renderBoard(){
+    const list = document.getElementById("boardList");
+    document.getElementById("countBoard").textContent = state.board.length;
+    if(state.board.length === 0){
+      list.innerHTML = `<div class="empty-state"><div class="glyph">✓</div>いま残っているタスクはありません。</div>`;
+      return;
+    }
+    list.innerHTML = state.board.map(t => cardHtml(t)).join("");
+  }
+
+  function cardHtml(t){
+    const dueHtml = t.due ? `<div class="due">${escapeHtml(t.due)} 期限</div>` : "";
+    let answerHtml = "";
+    if(t.question){
+      const opts = t.options.map((o,i) => `
+        <button class="opt-btn" data-id="${t.id}" data-opt="${escapeHtml(o)}" onclick="selectOption(this)">${i+1}. ${escapeHtml(o)}</button>
+      `).join("");
+      answerHtml = `
+        <div class="answer-block">
+          <div class="answer-label">回答してください</div>
+          <div class="options">
+            ${opts}
+            <button class="opt-btn dontknow" data-id="${t.id}" data-opt="先方確認" onclick="selectOption(this)">0. 分からない(先方確認へ)</button>
+          </div>
+          <div class="supplement">
+            <label for="sup-${t.id}">補足(任意)</label>
+            <textarea id="sup-${t.id}" placeholder="一言添えたいことがあれば"></textarea>
+          </div>
+          <button class="primary-btn" id="send-${t.id}" disabled onclick="submitAnswer('${t.id}')">この内容で送信</button>
+        </div>
+      `;
+    } else {
+      answerHtml = `
+        <button class="done-toggle-btn" onclick="completeTask('${t.id}')">
+          <span class="check">✓</span>
+          <span class="txt">終わったら押してください</span>
+        </button>
+      `;
+    }
+    return `
+      <div class="card" id="card-${t.id}">
+        <div class="card-top">
+          <span class="badge type">${escapeHtml(t.type)}</span>
+          <span class="badge state-${escapeHtml(t.state)}">${escapeHtml(t.state)}</span>
+          <span class="who">${escapeHtml(t.owner)}</span>
+        </div>
+        <h2>${escapeHtml(t.title)}</h2>
+        <p class="body" id="body-${t.id}">${escapeHtml(t.body)}</p>
+        <button class="more-btn" onclick="toggleBody('${t.id}', this)">もっと見る</button>
+        ${dueHtml}
+        <div class="task-id">Excel ID: ${escapeHtml(t.id)}</div>
+        ${answerHtml}
+      </div>
+    `;
+  }
+
+  function toggleBody(id, btn){
+    const el = document.getElementById("body-" + id);
+    const expanded = el.classList.toggle("expanded");
+    btn.textContent = expanded ? "閉じる" : "もっと見る";
+  }
+
+  function selectOption(btn){
+    const id = btn.dataset.id;
+    document.querySelectorAll(`.opt-btn[data-id="${id}"]`).forEach(b => b.classList.remove("selected"));
+    btn.classList.add("selected");
+    btn.dataset.selected = "1";
+    document.getElementById("send-" + id).disabled = false;
+    document.getElementById("send-" + id).dataset.opt = btn.dataset.opt;
+  }
+
+  function submitAnswer(id){
+    const btn = document.getElementById("send-" + id);
+    const opt = btn.dataset.opt;
+    const sup = document.getElementById("sup-" + id).value;
+    const task = state.board.find(t => t.id === id);
+    if(!task) return;
+    moveToDone(task, opt, sup);
+    showToast("回答を保存しました(見本)");
+  }
+
+  function completeTask(id){
+    const task = state.board.find(t => t.id === id);
+    if(!task) return;
+    moveToDone(task, null, null);
+    showToast("済にしました(見本)");
+  }
+
+  function moveToDone(task, resolutionText, supplement){
+    const cardEl = document.getElementById("card-" + task.id);
+    if(cardEl) cardEl.classList.add("leaving");
+    const resolution = resolutionText ? `回答: ${resolutionText}` : "会話で決着";
+    const now = new Date();
+    const pad = n => String(n).padStart(2,"0");
+    const closedAt = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    setTimeout(() => {
+      state.board = state.board.filter(t => t.id !== task.id);
+      state.done.unshift({
+        id: task.id, title: task.title, resolution,
+        closedBy: "あなた", closedAt,
+        supplement: supplement || ""
+      });
+      saveState();
+      render();
+    }, 200);
+  }
+
+  function renderDone(){
+    const list = document.getElementById("doneList");
+    document.getElementById("countDone").textContent = state.done.length;
+    if(state.done.length === 0){
+      list.innerHTML = `<div class="empty-state"><div class="glyph">—</div>まだ完了した項目はありません。</div>`;
+      return;
+    }
+    list.innerHTML = state.done.map(d => `
+      <div class="card done">
+        <h2><span class="done-check">✓</span>${escapeHtml(d.title)}</h2>
+        <div class="task-id">Excel ID: ${escapeHtml(d.id)}</div>
+        <div class="done-meta">
+          <span class="chip">${escapeHtml(d.resolution)}</span>
+          <span class="chip">閉じた人: ${escapeHtml(d.closedBy)}</span>
+          <span class="chip">${escapeHtml(d.closedAt)}</span>
+        </div>
+      </div>
+    `).join("");
+  }
+
+  function render(){
+    renderBoard();
+    renderDone();
+  }
+
+  let toastTimer = null;
+  function showToast(msg){
+    const t = document.getElementById("toast");
+    document.getElementById("toastMsg").textContent = msg;
+    t.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove("show"), 2200);
+  }
+
+  function openHelp(){
+    document.getElementById("sheetBackdrop").classList.add("open");
+    document.getElementById("helpSheet").classList.add("open");
+  }
+  function closeHelp(){
+    document.getElementById("sheetBackdrop").classList.remove("open");
+    document.getElementById("helpSheet").classList.remove("open");
+  }
+  document.getElementById("helpBtn").addEventListener("click", openHelp);
+
+  render();
+</script>
+
+<!--
+  実データ連携について(実装メモ):
+  この画面は見た目・操作感のプロトタイプで、localStorage による見本動作のみです。
+  「タスクボード.xlsx」(Google Drive)と本当に読み書きするには、次のような構成が
+  現実的です。
+
+  1. スプレッドシートに束縛した Google Apps Script を「ウェブアプリ」として公開し、
+     doGet で『ボード』『完了ずみ』シートをJSONで返し、doPost で 済/回答/補足 列を
+     更新するAPIを作る(xlsxのままだと直接は束縛できないため、Googleスプレッドシート
+     形式に変換してから束縛するか、変換済みのシートをこのアプリの参照先にする)。
+  2. このページの fetch 呼び出し先(API_BASE)をそのウェブアプリのURLに差し替える。
+  3. iPhoneのホーム画面に追加すれば、standalone表示のアプリ風に使える
+     (manifest.json / apple-touch-icon は設定済み)。
+
+  現状は同期先が無いため、上記のような外部通信は行わず、常にこの端末の中だけで
+  完結する見本データで動作します。
+-->
+</body>
+</html>
