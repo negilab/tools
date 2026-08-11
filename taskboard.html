@@ -344,11 +344,13 @@
       <p>観点のある項目は、詳細画面に一覧が出ます。行をタップすればその場でチェックを入れたり外したりできます。PCの画面のチェックと同じ扱いです。まとめて付けるときは右上の「すべてチェック」を押してください。</p>
       <p>タップした瞬間にチェックが付きます。送るのは裏で行うので、続けて押して構いません。送れなかったときだけ、元に戻して知らせます。</p>
       <h4>■ 終わったタスクにチェックを入れる</h4>
-      <p>カード下の「済にする」を押してください。PCが受け取ると、その項目に書いてある次の作業をClaudeが自動で始めます。</p>
+      <p>カード下の「済にする」を押してください。押した時点で一覧から消えます。PCが受け取ると、その項目に書いてある次の作業をClaudeが自動で始めます。<br>
+      PCの電源が入っていないなどで一日たっても受け取られなかったときは、消したままにせず一覧に出し直します。</p>
       <h4>■ 確認依頼に答える</h4>
       <p>選択肢が読み取れたときはボタンで、そうでないときは自由記入で答えてください。「済」は入れなくてかまいません。回答した時点で片付いた扱いになります。</p>
       <h4>■ 更新のしかた</h4>
-      <p>右上の⟳は、台帳を取り直すボタンです(いつでも最新を取りに行きます)。<br>
+      <p>この画面を開いているあいだは、<b>1分ごとに台帳を取り直します</b>。画面下の「最終取得」の時刻が進みます。ほかのことをしているあいだは止まり、戻ってきたときにその場で取り直します。<br>
+      右上の⟳は、待たずにいますぐ取り直すボタンです。<br>
       画面の作りそのものを新しくするときは、⚙の「アプリを再読み込み」を押してください。</p>
       <h4>■ 注意</h4>
       <p>・IDは台帳側でPCが行を見分ける目印です。書き換えないでください。<br>
@@ -406,6 +408,15 @@ const KEY_CONFIG  = "taskboard_config_v1";   // {url, token}
 const KEY_CACHE   = "taskboard_cache_v1";    // 最後に取れたデータ（圏外用）
 const KEY_PENDING = "taskboard_pending_v1";  // 送信したがPC未反映のもの
 const KEY_CPWAIT  = "taskboard_cpwait_v1";   // 検収チェックの送信済み・PC未反映 {ID:{番号:"済"|"未"}}
+const KEY_HIDDEN  = "taskboard_hidden_v1";   // 済にしてこの端末では隠した項目 {ID:隠した時刻}
+
+// 台帳を取り直す間隔。画面を見ているあいだだけ動かす。
+const AUTO_RELOAD_MS = 60 * 1000;
+
+// 隠した項目をいつまで隠しておくか。
+// PCが受け取れないまま(電源が入っていない等)いつまでも消えていると、
+// 済にしたつもりの用事が誰にも見えなくなる。一日たったらまた出す。
+const HIDE_KEEP_MS = 24 * 60 * 60 * 1000;
 
 // 台帳ファイル（Googleドライブ）。閲覧には本人のGoogleアカウントが必要。
 const DRIVE_FILE_URL = "https://drive.google.com/file/d/1aVFxeyLOb0edBFYjmZSatJKDs9WJpWzO/view";
@@ -418,6 +429,8 @@ let data = null;        // 表示中のデータ
 let pending = {};
 let cpWait = {};
 let cpBusy = {};        // 送信中の検収チェック {"ID|番号":true}。連打で二重に送らないための札。
+let hidden = {};        // 済にしてこの端末では隠した項目 {ID:隠した時刻}
+let autoTimer = null;   // 台帳を取り直す時計
 let openId = null;      // 詳細画面で開いている行のID（null なら一覧）
 let loading = false;
 
@@ -486,14 +499,24 @@ function storageWorks(){
 migrateConfig();
 pending = readJson(KEY_PENDING, {});
 cpWait = readJson(KEY_CPWAIT, {});
+hidden = readJson(KEY_HIDDEN, {});
 
 // ================================================================ 通信
-async function apiGet(){
+/**
+ * 台帳を読む。
+ *
+ * fresh=1 を付けると、向こうは毎回xlsxを複製し直して読む(重い)。
+ * 自分で押したとき(⟳・保存直後)だけ付け、1分ごとの取り直しでは付けない。
+ * 向こうの15秒の取り置きに任せる。こちらから送ったときは向こうが取り置きを
+ * 捨てるので、送った直後の1回は取り置き無しでも最新が返る。
+ */
+async function apiGet(wantFresh){
   const cfg = getConfig();
   const url = cfg.url
     + (cfg.url.indexOf("?") >= 0 ? "&" : "?")
     + "token=" + encodeURIComponent(cfg.token)
-    + "&fresh=1&_=" + Date.now();
+    + (wantFresh ? "&fresh=1" : "")
+    + "&_=" + Date.now();
   const res = await fetch(url, { method:"GET", redirect:"follow" });
   if(!res.ok) throw new Error("接続できませんでした (" + res.status + ")");
   const json = await res.json();
@@ -520,7 +543,15 @@ async function apiPost(payload){
 }
 
 // ================================================================ 読み込み
-async function load(showToastOnOk){
+/**
+ * 台帳を取り直して画面を作り直す。
+ *
+ * opts.quiet … 自動の取り直し。読み込み中の表示を出さず、失敗しても
+ *              画面を書き換えない(勝手に「つながりません」に変わらない)。
+ * opts.fresh … 向こうの取り置きを使わずに読む。
+ */
+async function load(showToastOnOk, opts){
+  opts = opts || {};
   if(loading) return;
   const cfg = getConfig();
 
@@ -536,11 +567,13 @@ async function load(showToastOnOk){
   }
 
   loading = true;
-  document.getElementById("refreshBtn").classList.add("spinning");
-  setStatus("live", "読み込み中…");
+  if(!opts.quiet){
+    document.getElementById("refreshBtn").classList.add("spinning");
+    setStatus("live", "読み込み中…");
+  }
 
   try{
-    const fresh = await apiGet();
+    const fresh = await apiGet(opts.fresh !== false);
     data = fresh;
     writeJson(KEY_CACHE, fresh);
     reconcilePending(fresh);
@@ -548,17 +581,23 @@ async function load(showToastOnOk){
     setStatus("live", "最終取得 " + (fresh.fetchedAt || "—"));
     if(showToastOnOk) toast("最新にしました");
   }catch(err){
-    const cached = readJson(KEY_CACHE, null);
-    if(cached){
-      data = cached;
-      render();
-      setStatus("bad", "つながらないため前回の内容を表示中");
+    // 自動の取り直しで一度しくじっただけなら、いま出ているものをそのままにする。
+    // 電波が切れるたびに画面が「つながりません」に化けると、かえって使いにくい。
+    if(opts.quiet){
+      setStatus("bad", "取り直せませんでした(表示は前回のまま)");
     }else{
-      data = { ok:true, board:[], done:[], failed:true };
-      render();
-      setStatus("bad", "つながりません");
+      const cached = readJson(KEY_CACHE, null);
+      if(cached){
+        data = cached;
+        render();
+        setStatus("bad", "つながらないため前回の内容を表示中");
+      }else{
+        data = { ok:true, board:[], done:[], failed:true };
+        render();
+        setStatus("bad", "つながりません");
+      }
+      banner("error", "つながりません", String(err.message || err), true);
     }
-    banner("error", "つながりません", String(err.message || err), true);
   }finally{
     loading = false;
     document.getElementById("refreshBtn").classList.remove("spinning");
@@ -578,7 +617,26 @@ function reconcilePending(fresh){
     if(!openIds[id]){ delete pending[id]; changed = true; }
   });
   if(changed) writeJson(KEY_PENDING, pending);
+  pruneHidden(openIds);
   reconcileCpWait(fresh);
+}
+
+/**
+ * 隠したままにしておく必要がなくなった項目を、隠し札から外す。
+ *
+ * ・台帳が片付いた … もう一覧に出てこないので隠す理由がない
+ * ・一日たっても片付かない … PCが受け取れていない。黙って消えたままにせず出し直す
+ */
+function pruneHidden(openIds){
+  const now = Date.now();
+  let changed = false;
+  Object.keys(hidden).forEach(function(id){
+    if(!openIds[id] || (now - (hidden[id] || 0)) > HIDE_KEEP_MS){
+      delete hidden[id];
+      changed = true;
+    }
+  });
+  if(changed) writeJson(KEY_HIDDEN, hidden);
 }
 
 /** 台帳の☑が送った内容どおりになった検収チェックを「反映待ち」から外す */
@@ -591,6 +649,9 @@ function reconcileCpWait(fresh){
     if(!row){ delete cpWait[id]; changed = true; return; }
     const items = splitBody(row["本文・説明"]).items;
     Object.keys(cpWait[id]).forEach(function(n){
+      // いま送っている最中のものは判定しない。取り直しの返事が、送るより前の
+      // 台帳だったときに、まだ届いていないチェックを「済んだ」と勘違いするため。
+      if(cpBusy[id + "|" + n]) return;
       const item = items[parseInt(n, 10) - 1];
       // 観点が消えた・並びが変わった場合も、待ち続けても意味がないので捨てる
       if(!item || item.done === (cpWait[id][n] === "済")){ delete cpWait[id][n]; changed = true; }
@@ -670,7 +731,7 @@ function extractOptions(body){
 
 function boardRows(){
   return (data && data.board ? data.board : []).filter(function(r){
-    return r["ID"] && !r["済"] && !r["回答"];
+    return r["ID"] && !r["済"] && !r["回答"] && !hidden[r["ID"]];
   });
 }
 
@@ -976,6 +1037,14 @@ async function send(id, payload, okMessage, btn){
     await apiPost(payload);
     pending[id] = { at: Date.now(), kind: payload.kind };
     writeJson(KEY_PENDING, pending);
+    if(payload.kind === "done"){
+      // 済にしたものは、PCが受け取るのを待たずにこの端末の一覧から下ろす。
+      // 押したのに残っていると、押せていないのかと何度も押すことになる。
+      // 台帳が片付けば pruneHidden が札を外し、一日たっても片付かなければ出し直す。
+      hidden[id] = Date.now();
+      writeJson(KEY_HIDDEN, hidden);
+      if(openId === id) closeDetail();
+    }
     render();
     toast(okMessage);
   }catch(err){
@@ -1134,6 +1203,7 @@ document.getElementById("cfgSave").addEventListener("click", function(){
   try{ localStorage.removeItem(KEY_CACHE); }catch(e){}
   pending = {}; writeJson(KEY_PENDING, pending);
   cpWait = {}; writeJson(KEY_CPWAIT, cpWait);
+  hidden = {}; writeJson(KEY_HIDDEN, hidden);
   closeSheets(); clearBanner(); load(true);
 });
 
@@ -1148,15 +1218,51 @@ document.getElementById("cfgClear").addEventListener("click", function(){
   }catch(e){}
   pending = {}; writeJson(KEY_PENDING, pending);
   cpWait = {}; writeJson(KEY_CPWAIT, cpWait);
+  hidden = {}; writeJson(KEY_HIDDEN, hidden);
   closeSheets(); clearBanner(); load(false);
   toast("設定を消しました");
 });
 
-// 画面を再び開いたときは黙って取り直す
+// ================================================================ 自動の取り直し
+//
+// PCが受け取って台帳を片付けても、こちらは手で⟳を押すまで古いままだった。
+// 画面を見ているあいだは1分ごとに取り直す。背面に回っているあいだは止めて、
+// 戻ってきたらその場で1回取り直す。
+
+/** いま書いている最中か。取り直しで画面を作り直すと入力が消えるので、そのときは見送る。 */
+function isTyping(){
+  const el = document.activeElement;
+  if(!el) return false;
+  const tag = (el.tagName || "").toLowerCase();
+  return tag === "input" || tag === "textarea" || el.isContentEditable === true;
+}
+
+function autoReload(){
+  if(document.visibilityState !== "visible") return;
+  if(!getConfig() || loading) return;
+  if(isTyping()) return;                 // 次の番まで待つ(1分後にまた来る)
+  load(false, { quiet: true, fresh: false });
+}
+
+function startAutoReload(){
+  stopAutoReload();
+  autoTimer = setInterval(autoReload, AUTO_RELOAD_MS);
+}
+
+function stopAutoReload(){
+  if(autoTimer){ clearInterval(autoTimer); autoTimer = null; }
+}
+
 document.addEventListener("visibilitychange", function(){
-  if(document.visibilityState === "visible" && getConfig()) load(false);
+  if(document.visibilityState === "visible"){
+    startAutoReload();
+    if(getConfig()) load(false, { quiet: true, fresh: false });
+  }else{
+    stopAutoReload();
+  }
 });
 
+startAutoReload();
 load(false);
 </script>
 </body>
