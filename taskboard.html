@@ -177,6 +177,11 @@
   .cp-head{display:flex;align-items:baseline;gap:8px;margin-bottom:8px;}
   .cp-head .label{font-size:11px;font-weight:700;color:var(--label);letter-spacing:.03em;}
   .cp-head .prog{font-size:11px;color:var(--fg-sub);font-variant-numeric:tabular-nums;}
+  .cp-all{margin-left:auto;flex:none;border:1px solid var(--outline);background:var(--subtle);
+    color:var(--subtle-fg);font-size:11.5px;font-weight:700;padding:6px 12px;
+    border-radius:var(--radius-pill);}
+  .cp-all:active{background:var(--subtle-pressed);}
+  .cp-waiting{color:var(--ok-text);}
   .cp-list{display:flex;flex-direction:column;gap:2px;}
   .cp-row{all:unset;display:flex;align-items:flex-start;gap:10px;cursor:pointer;
     padding:9px 4px;border-radius:var(--radius-md);width:100%;box-sizing:border-box;}
@@ -188,7 +193,8 @@
   .cp-row .txt{font-size:13px;line-height:1.6;color:var(--fg-sub);
     white-space:pre-wrap;overflow-wrap:anywhere;}
   .cp-row.on .txt{color:var(--fg);}
-  .cp-row .wait{display:block;font-size:11px;color:var(--ok-text);margin-top:3px;}
+  /* PC未反映のあいだの目印。押した手ごたえは消さず、点ひとつぶんに留める */
+  .cp-row.waiting .box{box-shadow:0 0 0 2px rgba(214,176,140,.35);}
   .cp-note{font-size:11.5px;color:var(--fg-disabled);line-height:1.6;margin-top:10px;}
 
   /* ---------------------------------------------------- 詳細画面 */
@@ -254,6 +260,11 @@
     border-radius:5px;padding:1px 5px;font-size:11.5px;word-break:break-all;}
   .sheet-body .warn{color:var(--fg-disabled);font-size:12px;margin-top:16px;
     border-top:1px dashed var(--line);padding-top:12px;}
+  .cfg-state{font-size:12px;line-height:1.6;margin:10px 0 0;padding:9px 11px;
+    border-radius:var(--radius-md);background:var(--input-bg);border:1px solid var(--line);
+    color:var(--fg-sub);}
+  .cfg-state.ok{color:var(--ok-text);border-color:rgba(214,176,140,.35);}
+  .cfg-state.bad{color:var(--danger);border-color:rgba(196,99,91,.5);}
   .ghost-btn{margin-top:14px;width:100%;border:1px solid var(--outline);background:var(--subtle);
     color:var(--subtle-fg);font-size:12.5px;font-weight:600;padding:10px;border-radius:var(--radius-pill);}
 
@@ -301,7 +312,7 @@
   <footer class="bottombar">
     <div class="sync-status demo" id="syncStatus">
       <span class="dot"></span>
-      <span id="syncText">見本データを表示中</span>
+      <span id="syncText">接続の設定がまだです</span>
     </div>
     <a class="drive-link" id="driveLink" href="#" target="_blank" rel="noopener">Driveで開く ↗</a>
   </footer>
@@ -328,7 +339,8 @@
       <h4>■ 見る</h4>
       <p>「ボード」に、いま残っている項目が並びます。上に来ているのが返事待ちの確認依頼です。カードをタップすると詳細画面が開き、端折らずに全文が読めます。左上の「ボードへ戻る」で一覧に戻ります。</p>
       <h4>■ 検収チェックポイント</h4>
-      <p>観点のある項目は、詳細画面に一覧が出ます。行をタップすればその場でチェックを入れたり外したりできます。PCの画面のチェックと同じ扱いです。</p>
+      <p>観点のある項目は、詳細画面に一覧が出ます。行をタップすればその場でチェックを入れたり外したりできます。PCの画面のチェックと同じ扱いです。まとめて付けるときは右上の「すべてチェック」を押してください。</p>
+      <p>タップした瞬間にチェックが付きます。送るのは裏で行うので、続けて押して構いません。送れなかったときだけ、元に戻して知らせます。</p>
       <h4>■ 終わったタスクにチェックを入れる</h4>
       <p>カード下の「済にする」を押してください。PCが受け取ると、その項目に書いてある次の作業をClaudeが自動で始めます。</p>
       <h4>■ 確認依頼に答える</h4>
@@ -349,7 +361,8 @@
       <button class="sheet-close" data-close>✕</button>
     </div>
     <div class="sheet-body">
-      <p>Googleドライブの台帳につなぐための設定です。設定するまでは見本データが表示されます。</p>
+      <p>Googleドライブの台帳につなぐための設定です。つなぐまでは項目が出ません。</p>
+      <p class="cfg-state" id="cfgState"></p>
 
       <div class="field">
         <label for="cfgUrl">接続先アドレス(ウェブアプリのURL)</label>
@@ -363,9 +376,11 @@
       </div>
 
       <button class="primary-btn" id="cfgSave">保存してつなぐ</button>
-      <button class="ghost-btn" id="cfgClear">設定を消して見本データに戻す</button>
+      <button class="ghost-btn" id="cfgClear">接続の設定を消す</button>
 
-      <p class="warn">設定はこの端末の中だけに保存されます。設置のしかたは、リポジトリの「タスクボード.md」を参照してください。</p>
+      <p class="warn">設定はこの端末の中だけに保存されます。一度入れれば、次からは入力不要です。<br>
+      ホーム画面に追加したアプリとSafariとで、設定が別々になることがあります。両方から使う場合は、それぞれで一度ずつ設定してください。<br>
+      設置のしかたは、リポジトリの「タスクボード.md」を参照してください。</p>
     </div>
   </div>
 
@@ -383,34 +398,14 @@ const KEY_CPWAIT  = "taskboard_cpwait_v1";   // 検収チェックの送信済�
 // 台帳ファイル（Googleドライブ）。閲覧には本人のGoogleアカウントが必要。
 const DRIVE_FILE_URL = "https://drive.google.com/file/d/1aVFxeyLOb0edBFYjmZSatJKDs9WJpWzO/view";
 
-// ================================================================ 見本データ
-// 接続先が未設定のときだけ使う。実際の列構成に合わせてある。
-const DEMO = {
-  ok: true,
-  fetchedAt: "",
-  demo: true,
-  board: [
-    {
-      "済":"", "回答":"", "補足":"", "ID":"T0012", "種別":"確認", "状態":"進行中", "担当":"Claude",
-      "内容":"見積りの数量、単位はどちらでまとめますか", "期限":"8/12",
-      "本文・説明":"サンプル案件Bの見積書について、数量の単位が行によって分かれています。どちらかに揃えたいので選んでください。\nA: 「式」でまとめる\nB: 「㎡」のまま出す"
-    },
-    {
-      "済":"", "回答":"", "補足":"", "ID":"T0011", "種別":"タスク", "状態":"進行中", "担当":"Claude",
-      "内容":"資料ドラフトを確認してください", "期限":"",
-      "本文・説明":"サンプル案件Aの提案資料ドラフトができました。内容に問題がなければ「済にする」を押してください。修正したい点があれば補足欄にご記入ください。\n\n【検収 1/3】\n☑ 面積の根拠が追えるか\n☐ 単価の出所が書いてあるか\n☐ 合計が内訳と一致するか"
-    }
-  ],
-  done: [
-    {"ID":"T0007","種別":"タスク","内容":"検証R02: 独立3並列型の拾い","決着":"本人がチェック","閉じた人":"Claude","完了日時":"2026-08-10 18:37"},
-    {"ID":"T0006","種別":"タスク","内容":"sumitsubo物差し機能","決着":"Claudeがクローズ","閉じた人":"Claude","完了日時":"2026-08-10 15:31"}
-  ]
-};
+// 昔の版で使っていたかもしれない保存名。見つけたら今の名前へ引き継ぐ。
+const OLD_CONFIG_KEYS = ["taskboard_config", "taskboard_cfg_v1", "taskboard_setting_v1"];
 
 // ================================================================ 状態
 let data = null;        // 表示中のデータ
-let pending = readJson(KEY_PENDING, {});
-let cpWait = readJson(KEY_CPWAIT, {});
+let pending = {};
+let cpWait = {};
+let cpBusy = {};        // 送信中の検収チェック {"ID|番号":true}。連打で二重に送らないための札。
 let openId = null;      // 詳細画面で開いている行のID（null なら一覧）
 let loading = false;
 
@@ -420,13 +415,65 @@ function readJson(key, fallback){
     return raw ? JSON.parse(raw) : fallback;
   }catch(e){ return fallback; }
 }
+
+/** 書けたかどうかを返す。書けないまま黙って進むと、設定が消えたように見えるため。 */
 function writeJson(key, value){
-  try{ localStorage.setItem(key, JSON.stringify(value)); }catch(e){}
+  try{
+    localStorage.setItem(key, JSON.stringify(value));
+    return true;
+  }catch(e){ return false; }
 }
+
 function getConfig(){
   const c = readJson(KEY_CONFIG, null);
   return (c && c.url && c.token) ? c : null;
 }
+
+/**
+ * 設定を保存して、本当に残ったかを読み直して確かめる。
+ * 端末の空きが足りないときは、いちばん大きい「前回の内容」を捨ててもう一度試す。
+ * それでも駄目なら false を返す。呼び出し側で理由を出す。
+ */
+function saveConfig(url, token){
+  for(let attempt = 0; attempt < 2; attempt++){
+    if(attempt === 1){
+      try{ localStorage.removeItem(KEY_CACHE); }catch(e){}
+    }
+    writeJson(KEY_CONFIG, { url:url, token:token });
+    const back = getConfig();
+    if(back && back.url === url && back.token === token) return true;
+  }
+  return false;
+}
+
+/** 昔の名前で保存された設定があれば、今の名前に移す(一度だけ) */
+function migrateConfig(){
+  if(getConfig()) return;
+  for(let i = 0; i < OLD_CONFIG_KEYS.length; i++){
+    const old = readJson(OLD_CONFIG_KEYS[i], null);
+    if(old && old.url && old.token){
+      if(saveConfig(old.url, old.token)){
+        try{ localStorage.removeItem(OLD_CONFIG_KEYS[i]); }catch(e){}
+      }
+      return;
+    }
+  }
+}
+
+/** この端末に保存できるか。プライベートブラウズなどで書けないことがある。 */
+function storageWorks(){
+  try{
+    const probe = "taskboard_probe";
+    localStorage.setItem(probe, "1");
+    const ok = localStorage.getItem(probe) === "1";
+    localStorage.removeItem(probe);
+    return ok;
+  }catch(e){ return false; }
+}
+
+migrateConfig();
+pending = readJson(KEY_PENDING, {});
+cpWait = readJson(KEY_CPWAIT, {});
 
 // ================================================================ 通信
 async function apiGet(){
@@ -466,9 +513,13 @@ async function load(showToastOnOk){
   const cfg = getConfig();
 
   if(!cfg){
-    data = DEMO;
+    // 未設定のまま見本を出すと、押しても送られないのに送れたように見える。
+    // 何も出さずに設定画面を開いて、まずつないでもらう。
+    data = { ok:true, board:[], done:[], unset:true };
+    hideDetail();
     render();
-    setStatus("demo", "見本データを表示中(未設定)");
+    setStatus("demo", "接続の設定がまだです");
+    openSettings();
     return;
   }
 
@@ -588,19 +639,6 @@ function cpView(id, items){
   });
 }
 
-/** 見本モード用。台帳の代わりに本文の☑を書き換える。 */
-function applyCheckToBody(body, number, done){
-  const parts = splitBody(body);
-  if(!parts.items.length) return body;
-  const items = parts.items.map(function(c){
-    return c.number === number ? { number: c.number, text: c.text, done: done } : c;
-  });
-  const doneCount = items.filter(function(c){ return c.done; }).length;
-  const block = "【検収 " + doneCount + "/" + items.length + "】\n"
-    + items.map(function(c){ return (c.done ? CP_ON : CP_OFF) + " " + c.text; }).join("\n");
-  return parts.text ? (parts.text + "\n\n" + block) : block;
-}
-
 // ================================================================ 表示
 function escapeHtml(s){
   return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
@@ -632,9 +670,17 @@ function render(){
 
   const boardEl = document.getElementById("boardList");
   if(rows.length === 0){
-    boardEl.innerHTML = data && data.failed
-      ? '<div class="empty-state"><div class="glyph">…</div>読み込めませんでした。<br>右上の⟳でもう一度お試しください。</div>'
-      : '<div class="empty-state"><div class="glyph">✓</div>いま残っているタスクはありません。</div>';
+    if(data && data.unset){
+      boardEl.innerHTML = '<div class="empty-state"><div class="glyph">⚙</div>'
+        + 'まだ台帳につながっていません。<br>接続の設定をすると、ここに項目が並びます。'
+        + '<br><br><button class="ghost-btn" id="emptyCfg">接続の設定をする</button></div>';
+    }else if(data && data.failed){
+      boardEl.innerHTML = '<div class="empty-state"><div class="glyph">…</div>'
+        + '読み込めませんでした。<br>右上の⟳でもう一度お試しください。</div>';
+    }else{
+      boardEl.innerHTML = '<div class="empty-state"><div class="glyph">✓</div>'
+        + 'いま残っているタスクはありません。</div>';
+    }
   }else{
     boardEl.innerHTML = rows.map(cardHtml).join("");
   }
@@ -644,7 +690,9 @@ function render(){
     ? '<div class="empty-state"><div class="glyph">—</div>まだ完了した項目はありません。</div>'
     : done.map(doneHtml).join("");
 
-  document.getElementById("modeChip").textContent = (data && data.demo) ? "見本" : "出先用";
+  document.getElementById("modeChip").textContent = (data && data.unset) ? "未設定" : "出先用";
+  const emptyCfg = document.getElementById("emptyCfg");
+  if(emptyCfg) emptyCfg.addEventListener("click", openSettings);
   bindCards(boardEl);
   renderDetail();
 }
@@ -716,20 +764,25 @@ function detailHtml(r){
 
   let cpBlock = "";
   if(cps.length){
+    const rest = cps.length - doneCount;
+    const waiting = cps.filter(function(c){ return c.waiting; }).length;
     cpBlock = '<div class="cp-block">'
       + '<div class="cp-head"><span class="label">検収チェックポイント</span>'
-      +   '<span class="prog">' + doneCount + '/' + cps.length + '</span></div>'
+      +   '<span class="prog">' + doneCount + '/' + cps.length + '</span>'
+      +   (rest ? '<button class="cp-all" data-cp-all>すべてチェック</button>' : "")
+      + '</div>'
       + '<div class="cp-list">'
       + cps.map(function(c){
-          return '<button class="cp-row' + (c.done ? " on" : "") + '" data-cp="' + c.number + '">'
+          return '<button class="cp-row' + (c.done ? " on" : "")
+               + (c.waiting ? " waiting" : "") + '" data-cp="' + c.number + '">'
                + '<span class="box">✓</span>'
-               + '<span class="txt">' + escapeHtml(c.text)
-               + (c.waiting ? '<span class="wait">送信済み — PCが受け取るのを待っています</span>' : "")
-               + '</span></button>';
+               + '<span class="txt">' + escapeHtml(c.text) + '</span></button>';
         }).join("")
       + '</div>'
       + '<div class="cp-note">タップでチェックが入り、もう一度タップで外れます。'
-      + 'PCの画面のチェックと同じ扱いです。</div>'
+      + 'PCの画面のチェックと同じ扱いです。'
+      + (waiting ? '<br><span class="cp-waiting">' + waiting + '件はPCの反映待ちです</span>' : "")
+      + '</div>'
       + '</div>';
   }
 
@@ -890,26 +943,21 @@ function bindCheckpoints(scope, r){
       const n = parseInt(row.dataset.cp, 10);
       const shown = cpView(id, items)[n - 1];
       if(!shown) return;
-      sendCheck(id, n, !shown.done, row);
+      sendCheck(id, n, !shown.done);
     });
   });
+  const all = scope.querySelector("[data-cp-all]");
+  if(all){
+    all.addEventListener("click", function(){
+      cpView(id, items).forEach(function(c){
+        if(!c.done) sendCheck(id, c.number, true);
+      });
+    });
+  }
 }
 
 async function send(id, payload, okMessage, btn){
-  if(!getConfig()){
-    // 見本モード：手元だけで消す
-    data.board = data.board.filter(function(r){ return r["ID"] !== id; });
-    data.done.unshift({
-      "ID":id, "種別":"タスク",
-      "内容":(DEMO.board.find(function(r){return r["ID"]===id;}) || {})["内容"] || id,
-      "決着": payload.kind === "answer" ? ("回答: " + payload.answer) : "本人がチェック",
-      "閉じた人":"あなた", "完了日時":"(見本)"
-    });
-    closeDetail();
-    render();
-    toast(okMessage + "(見本)");
-    return;
-  }
+  if(!getConfig()){ openSettings(); return; }
 
   if(btn) btn.disabled = true;
   try{
@@ -924,31 +972,42 @@ async function send(id, payload, okMessage, btn){
   }
 }
 
-async function sendCheck(id, number, done, row){
+/**
+ * 検収チェックを1つ入り切りする。
+ *
+ * 押した瞬間に見た目を変えてしまい、送信は裏で行う。返事を待って描き直すと、
+ * 遅い回線では効いていないように見えて何度も押してしまうため。
+ * 送れなかったときだけ元に戻して知らせる。
+ */
+function sendCheck(id, number, done){
+  if(!getConfig()){ openSettings(); return; }
+
+  const key = id + "|" + number;
+  if(cpBusy[key]) return;          // 送信中の連打は捨てる(同じものを二重に送らない)
+  cpBusy[key] = true;
+
   const state = done ? "済" : "未";
+  const before = (cpWait[id] || {})[String(number)];   // 失敗したときに戻す先
 
-  if(!getConfig()){
-    // 見本モード：本文の☑を手元で書き換えるだけ
-    (data.board || []).forEach(function(r){
-      if(r["ID"] === id) r["本文・説明"] = applyCheckToBody(r["本文・説明"], number, done);
-    });
-    render();
-    toast((done ? "チェックしました" : "チェックを外しました") + "(見本)");
-    return;
-  }
+  if(!cpWait[id]) cpWait[id] = {};
+  cpWait[id][String(number)] = state;
+  writeJson(KEY_CPWAIT, cpWait);
+  render();                        // ここで画面はもう変わっている
 
-  if(row) row.disabled = true;
-  try{
-    await apiPost({ id:id, kind:"check", number:number, state:state });
-    if(!cpWait[id]) cpWait[id] = {};
-    cpWait[id][String(number)] = state;
+  apiPost({ id:id, kind:"check", number:number, state:state }).then(function(){
+    delete cpBusy[key];
+  }).catch(function(err){
+    delete cpBusy[key];
+    // 送れていないのにチェックが付いたままだと、やったつもりで抜ける。必ず戻す。
+    if(cpWait[id]){
+      if(before === undefined) delete cpWait[id][String(number)];
+      else cpWait[id][String(number)] = before;
+      if(Object.keys(cpWait[id]).length === 0) delete cpWait[id];
+    }
     writeJson(KEY_CPWAIT, cpWait);
     render();
-    toast(done ? "チェックを送りました" : "チェックを外しました");
-  }catch(err){
-    if(row) row.disabled = false;
-    toast(String(err.message || err), true);
-  }
+    toast("送れませんでした: " + String(err.message || err), true);
+  });
 }
 
 // ================================================================ 画面の部品
@@ -1004,12 +1063,28 @@ function switchTab(isBoard){
 }
 
 document.getElementById("helpBtn").addEventListener("click", function(){ openSheet("helpSheet"); });
-document.getElementById("settingsBtn").addEventListener("click", function(){
+
+/** 設定画面を開く。いまの設定を入れ、保存できる端末かどうかも出す。 */
+function openSettings(){
   const cfg = getConfig();
   document.getElementById("cfgUrl").value = cfg ? cfg.url : "";
   document.getElementById("cfgToken").value = cfg ? cfg.token : "";
+  const st = document.getElementById("cfgState");
+  if(!storageWorks()){
+    st.className = "cfg-state bad";
+    st.textContent = "この端末には設定を残せません。プライベートブラウズを解除するか、"
+                   + "ふつうのSafariで開き直してください。";
+  }else if(cfg){
+    st.className = "cfg-state ok";
+    st.textContent = "この端末に保存済みです。次に開いたときは入力し直す必要はありません。";
+  }else{
+    st.className = "cfg-state";
+    st.textContent = "まだ設定されていません。下の2つを入れて「保存してつなぐ」を押してください。";
+  }
   openSheet("settingsSheet");
-});
+}
+
+document.getElementById("settingsBtn").addEventListener("click", openSettings);
 document.getElementById("refreshBtn").addEventListener("click", function(){ clearBanner(); load(true); });
 document.getElementById("backdrop").addEventListener("click", closeSheets);
 document.querySelectorAll("[data-close]").forEach(function(b){ b.addEventListener("click", closeSheets); });
@@ -1021,18 +1096,35 @@ document.getElementById("cfgSave").addEventListener("click", function(){
   if(!/^https:\/\/script\.google(usercontent)?\.com\//.test(url)){
     toast("ウェブアプリのURLを入れてください", true); return;
   }
-  writeJson(KEY_CONFIG, { url:url, token:token });
-  localStorage.removeItem(KEY_CACHE);
+  // 保存できたかを読み直して確かめる。黙って落ちると、次に開いたとき
+  // また入力させられて「設定が消えた」ように見えるため。
+  if(!saveConfig(url, token)){
+    const st = document.getElementById("cfgState");
+    st.className = "cfg-state bad";
+    st.textContent = "この端末に保存できませんでした。プライベートブラウズを解除するか、"
+                   + "ふつうのSafariで開き直してからもう一度お試しください。";
+    toast("設定を保存できませんでした", true);
+    return;
+  }
+  try{ localStorage.removeItem(KEY_CACHE); }catch(e){}
   pending = {}; writeJson(KEY_PENDING, pending);
+  cpWait = {}; writeJson(KEY_CPWAIT, cpWait);
   closeSheets(); clearBanner(); load(true);
 });
 
 document.getElementById("cfgClear").addEventListener("click", function(){
-  localStorage.removeItem(KEY_CONFIG);
-  localStorage.removeItem(KEY_CACHE);
+  // 押し間違いで設定が飛ぶと、また入力し直しになる。一度だけ確かめる。
+  if(!window.confirm("接続の設定を消します。\nまた使うときはURLと合言葉を入れ直すことになります。\nよろしいですか。")){
+    return;
+  }
+  try{
+    localStorage.removeItem(KEY_CONFIG);
+    localStorage.removeItem(KEY_CACHE);
+  }catch(e){}
   pending = {}; writeJson(KEY_PENDING, pending);
+  cpWait = {}; writeJson(KEY_CPWAIT, cpWait);
   closeSheets(); clearBanner(); load(false);
-  toast("見本データに戻しました");
+  toast("設定を消しました");
 });
 
 // 画面を再び開いたときは黙って取り直す
