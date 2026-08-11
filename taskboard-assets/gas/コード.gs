@@ -120,9 +120,11 @@ function readMaster_() {
     // 添付の読み替えでしくじっても、ボードは必ず返す。
     // 見たいのはまず項目そのもので、リンクはその付け足しなので。
     let links = {};
+    const linksInfo = { 版: LINK_LOGIC_VERSION };
     try {
-      links = resolveLinks_(board);
+      links = resolveLinks_(board, linksInfo);
     } catch (err) {
+      linksInfo.しくじり = String((err && err.message) || err).slice(0, 200);
       console.warn('添付の読み替えをまとめて諦めました: ' + err);
     }
 
@@ -134,6 +136,8 @@ function readMaster_() {
       // 「添付」の列に書かれた場所のうち、ドライブの中にあるものを
       // 携帯から開けるURLに読み替えたもの。{場所: URL}
       links: links,
+      // うまくいかないときに、どこで止まっているかを外から見るための内訳
+      linksInfo: linksInfo,
     };
   } finally {
     try {
@@ -200,6 +204,9 @@ const LINK_MISS_SEC = 60;
 // 溢れたぶんは覚えないだけで、次の読み取り(1分ごとの自動更新)で続きをやる。
 const LINK_NEW_PER_CALL = 5;
 
+// 返事に混ぜる目印。どの版が動いているかを外から確かめられるようにする。
+const LINK_LOGIC_VERSION = 'links-2';
+
 /**
  * ボードの行から場所を集めて、{場所: URL} を返す。
  *
@@ -207,37 +214,66 @@ const LINK_NEW_PER_CALL = 5;
  * 一度たどれたものはスクリプトのプロパティに覚えるので、2回目からは
  * APIを1回も呼ばずに必ず返る。
  */
-function resolveLinks_(rows) {
+function resolveLinks_(rows, info) {
   const out = {};
   const paths = collectLinkPaths_(rows);
   let budget = LINK_NEW_PER_CALL;
 
+  info = info || {};
+  info.見つけた場所 = paths.length;
+  info.覚えていた = 0;
+  info.今たどれた = 0;
+  info.たどれない = 0;
+  info.持ち越し = 0;
+  info.ドライブ以外 = 0;
+
   for (let i = 0; i < paths.length; i++) {
     const path = paths[i];
     try {
+      if (!isDrivePath_(path)) {          // PCの中のもの。読み替える相手がいない。
+        info.ドライブ以外++;
+        continue;
+      }
       const known = storedLink_(path);
       if (known) {
         out[path] = known;
+        info.覚えていた++;
         continue;
       }
-      if (budget <= 0) continue;          // 続きは次の読み取りで
-      if (recentlyMissed_(path)) continue;
+      if (budget <= 0) {                  // 続きは次の読み取りで
+        info.持ち越し++;
+        continue;
+      }
+      if (recentlyMissed_(path)) {
+        info.たどれない++;
+        continue;
+      }
       budget--;
 
       const url = driveUrlForPath_(path);
       if (url) {
         rememberLink_(path, url);
         out[path] = url;
+        info.今たどれた++;
       } else {
         rememberMiss_(path);
+        info.たどれない++;
       }
     } catch (err) {
       // ここで止めない。1件の失敗で添付が全部消えるほうが困る。
       console.warn('添付をたどれませんでした(' + path + '): ' + err);
+      info.たどれない++;
+      info.しくじり = String((err && err.message) || err).slice(0, 200);
       rememberMiss_(path);
     }
   }
   return out;
+}
+
+/** ドライブの中の場所か(PCの中のものは読み替えようがない) */
+function isDrivePath_(path) {
+  const parts = String(path).replace(/\//g, '\\').split('\\').filter(String);
+  return parts.indexOf(LINK_ROOT_MY) >= 0 || parts.indexOf(LINK_ROOT_SHARED) >= 0;
 }
 
 /** ボードの「添付」列から、場所だけを重複なく集める */
