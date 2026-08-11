@@ -108,11 +108,15 @@ function readMaster_() {
   );
   try {
     const ss = SpreadsheetApp.openById(copy.id);
+    const board = rowsOf_(ss.getSheetByName(CONFIG.BOARD_SHEET));
     return {
       ok: true,
       fetchedAt: Utilities.formatDate(new Date(), CONFIG.TIMEZONE, 'yyyy-MM-dd HH:mm'),
-      board: rowsOf_(ss.getSheetByName(CONFIG.BOARD_SHEET)),
+      board: board,
       done: rowsOf_(ss.getSheetByName(CONFIG.DONE_SHEET)).slice(0, CONFIG.DONE_LIMIT),
+      // 「添付」の列に書かれた場所のうち、ドライブの中にあるものを
+      // 携帯から開けるURLに読み替えたもの。{場所: URL}
+      links: resolveLinks_(board),
     };
   } finally {
     try {
@@ -153,6 +157,124 @@ function cellText_(v) {
     return Utilities.formatDate(v, CONFIG.TIMEZONE, 'yyyy-MM-dd HH:mm');
   }
   return String(v).trim();
+}
+
+
+// ---------------------------------------------------------------- 添付をドライブのURLに読み替える
+//
+// PC側は「添付」の列に「ラベル|場所」を1行ずつ書く。場所はPCから見た道
+// (G:\マイドライブ\… / G:\共有ドライブ\<ドライブ名>\…)なので、携帯からは開けない。
+// ここで名前をたどってファイルIDを見つけ、ブラウザで開けるURLに読み替える。
+//
+// たどるのは1件につき階層のぶんだけAPIを呼ぶので、結果は覚えておく。
+// 見つかったものは消えるまで(スクリプトのプロパティ)、
+// 見つからなかったものは10分だけ(キャッシュ)覚える。あとで置かれることがあるため。
+
+const LINK_ROOT_MY = 'マイドライブ';
+const LINK_ROOT_SHARED = '共有ドライブ';
+const LINK_MISS_SEC = 600;
+
+/** ボードの行から場所を集めて、{場所: URL} を返す */
+function resolveLinks_(rows) {
+  const paths = {};
+  (rows || []).forEach(function (r) {
+    String(r['添付'] || '').split('\n').forEach(function (line) {
+      const path = linkPathOf_(line);
+      if (path) paths[path] = true;
+    });
+  });
+
+  const out = {};
+  Object.keys(paths).forEach(function (path) {
+    const url = cachedDriveUrl_(path);
+    if (url) out[path] = url;
+  });
+  return out;
+}
+
+/** 「ラベル|場所」から場所だけ取り出す */
+function linkPathOf_(line) {
+  const s = String(line == null ? '' : line).trim();
+  if (!s) return '';
+  const i = s.indexOf('|');
+  return (i < 0 ? s : s.slice(i + 1)).trim();
+}
+
+function cachedDriveUrl_(path) {
+  const props = PropertiesService.getScriptProperties();
+  const key = 'link:' + Utilities.base64Encode(Utilities.newBlob(path).getBytes()).slice(0, 400);
+  const hit = props.getProperty(key);
+  if (hit) return hit;
+
+  const cache = CacheService.getScriptCache();
+  if (cache.get(key) === 'miss') return '';
+
+  let url = '';
+  try {
+    url = driveUrlForPath_(path);
+  } catch (err) {
+    console.warn('添付の場所をたどれませんでした(' + path + '): ' + err);
+  }
+  if (url) {
+    props.setProperty(key, url);
+  } else {
+    cache.put(key, 'miss', LINK_MISS_SEC);
+  }
+  return url;
+}
+
+/** G:\マイドライブ\a\b.pdf のような道を、開けるURLに読み替える。無ければ空。 */
+function driveUrlForPath_(path) {
+  const parts = String(path).replace(/\//g, '\\').split('\\').filter(String);
+
+  let at = parts.indexOf(LINK_ROOT_MY);
+  let parentId = null;
+  if (at >= 0) {
+    parentId = 'root';
+  } else {
+    at = parts.indexOf(LINK_ROOT_SHARED);
+    if (at < 0) return '';               // ドライブの外(PCの中のもの)
+    const driveName = parts[at + 1];
+    if (!driveName) return '';
+    parentId = sharedDriveId_(driveName);
+    if (!parentId) return '';
+    at += 1;                              // ドライブ名まで読み終えた
+  }
+
+  const rest = parts.slice(at + 1);
+  if (!rest.length) return '';
+
+  let id = parentId;
+  for (let i = 0; i < rest.length; i++) {
+    id = childIdByName_(id, rest[i]);
+    if (!id) return '';
+  }
+  const meta = Drive.Files.get(id, { fields: 'webViewLink', supportsAllDrives: true });
+  return (meta && meta.webViewLink) || '';
+}
+
+/** 共有ドライブを名前で探す */
+function sharedDriveId_(name) {
+  const res = Drive.Drives.list({ q: "name = '" + escapeQuery_(name) + "'", pageSize: 10 });
+  const list = (res && res.drives) || [];
+  return list.length ? list[0].id : '';
+}
+
+/** 親の中から名前で1つ探す(フォルダでもファイルでもよい) */
+function childIdByName_(parentId, name) {
+  const res = Drive.Files.list({
+    q: "'" + parentId + "' in parents and name = '" + escapeQuery_(name) + "' and trashed = false",
+    fields: 'files(id)',
+    pageSize: 2,
+    supportsAllDrives: true,
+    includeItemsFromAllDrives: true,
+  });
+  const files = (res && res.files) || [];
+  return files.length ? files[0].id : '';
+}
+
+function escapeQuery_(s) {
+  return String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
 }
 
 

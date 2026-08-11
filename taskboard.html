@@ -197,6 +197,27 @@
   .cp-row.waiting .box{box-shadow:0 0 0 2px rgba(214,176,140,.35);}
   .cp-note{font-size:11.5px;color:var(--fg-disabled);line-height:1.6;margin-top:10px;}
 
+  /* ---------------------------------------------------- 添付 */
+  .link-chip{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;color:var(--subtle-fg);
+    background:var(--input-bg);border:1px solid var(--line);
+    border-radius:var(--radius-pill);padding:3px 10px;margin:0 0 10px 6px;}
+  .link-chip::before{content:"📎";font-size:11px;}
+  .link-block{margin-top:14px;border-top:1px dashed var(--line);padding-top:12px;}
+  .link-row{display:flex;align-items:center;gap:10px;text-decoration:none;
+    border:1px solid var(--outline);background:var(--subtle);border-radius:var(--radius-md);
+    padding:11px 12px;margin-bottom:8px;color:var(--fg);}
+  .link-row:active{background:var(--subtle-pressed);}
+  .link-row .ico{font-size:16px;flex:none;}
+  .link-row .txt{flex:1;min-width:0;font-size:13.5px;font-weight:600;line-height:1.4;
+    overflow-wrap:anywhere;}
+  .link-row .txt .sub{display:block;font-size:11px;font-weight:400;color:var(--fg-sub);
+    margin-top:3px;overflow-wrap:anywhere;}
+  .link-row .go{flex:none;color:var(--label);font-size:18px;}
+  /* 携帯からは開けないもの。押せそうに見せない。 */
+  .link-row.off{background:transparent;border-style:dashed;border-color:var(--line);}
+  .link-row.off .txt{color:var(--fg-disabled);font-weight:600;}
+  .link-row.off .ico{opacity:.5;}
+
   /* ---------------------------------------------------- 詳細画面 */
   .detail{position:fixed;inset:0;z-index:25;background:var(--bg);
     display:flex;flex-direction:column;transform:translateX(100%);
@@ -343,6 +364,9 @@
       <h4>■ 検収チェックポイント</h4>
       <p>観点のある項目は、詳細画面に一覧が出ます。行をタップすればその場でチェックを入れたり外したりできます。PCの画面のチェックと同じ扱いです。まとめて付けるときは右上の「すべてチェック」を押してください。</p>
       <p>タップした瞬間にチェックが付きます。送るのは裏で行うので、続けて押して構いません。送れなかったときだけ、元に戻して知らせます。</p>
+      <h4>■ 見るもの・開くもの(添付)</h4>
+      <p>詳細画面に「見るもの・開くもの」が出ることがあります。Googleドライブの中のものはタップでそのまま開けます(ドライブのアプリかブラウザが開きます)。<br>
+      PCの中のファイルや bat は、携帯からは開けません。「PCで開くもの」と薄く出るので、PCのタスクボードから開いてください。</p>
       <h4>■ 終わったタスクにチェックを入れる</h4>
       <p>カード下の「済にする」を押してください。押した時点で一覧から消えます。PCが受け取ると、その項目に書いてある次の作業をClaudeが自動で始めます。<br>
       PCの電源が入っていないなどで一日たっても受け取られなかったときは、消したままにせず一覧に出し直します。</p>
@@ -698,6 +722,24 @@ function splitBody(body){
   return { text: lines.slice(0, head).join("\n").replace(/\s+$/, ""), items: items };
 }
 
+// ================================================================ 添付(見るもの・開くもの)
+// 台帳の「添付」の列に「ラベル|場所」が1行ずつ入っている。場所はPCから見た道なので、
+// そのままでは携帯で開けない。ドライブの中のものは向こう(GAS)がURLに読み替えて
+// data.links に {場所: URL} で入れてくれる。無いものは「PCで開くもの」として出す。
+function taskLinks(r){
+  return String((r && r["添付"]) || "").split(/\r?\n/).map(function(line){
+    const s = line.trim();
+    if(!s) return null;
+    const i = s.indexOf("|");
+    const label = i < 0 ? "" : s.slice(0, i).trim();
+    const path = (i < 0 ? s : s.slice(i + 1)).trim();
+    if(!path) return null;
+    const url = (data && data.links) ? (data.links[path] || "") : "";
+    const name = path.replace(/\//g, "\\").split("\\").filter(Boolean).pop() || path;
+    return { label: label || name, path: path, url: url };
+  }).filter(Boolean);
+}
+
 /** 送信済みでPC未反映のチェックを重ねた、いま画面に出すべき状態 */
 function cpView(id, items){
   const waits = cpWait[id] || {};
@@ -821,6 +863,7 @@ function cardHtml(r){
     +   (parts.text ? '<p class="body">' + escapeHtml(parts.text) + '</p>' : "")
     +   '<button class="more-btn" data-open>詳しく見る（全文）<span>›</span></button>'
     +   (cps.length ? '<div class="cp-chip">検収 ' + doneCount + '/' + cps.length + '</div>' : "")
+    +   (taskLinks(r).length ? '<div class="link-chip">添付 ' + taskLinks(r).length + '</div>' : "")
     +   (r["期限"] ? '<div class="due">' + escapeHtml(r["期限"]) + ' 期限</div>' : "")
     +   '<div class="task-id">Excel ID: ' + escapeHtml(id) + '</div>'
     +   actionHtml(r, isAsk, parts.text)
@@ -834,6 +877,27 @@ function detailHtml(r){
   const parts = splitBody(r["本文・説明"]);
   const cps   = cpView(id, parts.items);
   const doneCount = cps.filter(function(c){ return c.done; }).length;
+
+  const links = taskLinks(r);
+  let linkBlock = "";
+  if(links.length){
+    linkBlock = '<div class="link-block">'
+      + '<div class="cp-head"><span class="label">見るもの・開くもの</span>'
+      +   '<span class="prog">' + links.length + '件</span></div>'
+      + links.map(function(a){
+          if(a.url){
+            return '<a class="link-row" href="' + escapeHtml(a.url) + '" target="_blank" rel="noopener">'
+                 + '<span class="ico">📄</span>'
+                 + '<span class="txt">' + escapeHtml(a.label) + '<span class="sub">ドライブで開く</span></span>'
+                 + '<span class="go">›</span></a>';
+          }
+          return '<div class="link-row off">'
+               + '<span class="ico">💻</span>'
+               + '<span class="txt">' + escapeHtml(a.label)
+               + '<span class="sub">PCで開くもの — ' + escapeHtml(a.path) + '</span></span></div>';
+        }).join("")
+      + '</div>';
+  }
 
   let cpBlock = "";
   if(cps.length){
@@ -865,6 +929,7 @@ function detailHtml(r){
     +   '<h2>' + escapeHtml(r["内容"]) + '</h2>'
     +   (r["期限"] ? '<div class="due">' + escapeHtml(r["期限"]) + ' 期限</div>' : "")
     +   (parts.text ? '<p class="full">' + escapeHtml(parts.text) + '</p>' : "")
+    +   linkBlock
     +   cpBlock
     +   actionHtml(r, isAsk, parts.text)
     +   '<div class="meta">Excel ID: ' + escapeHtml(id)
