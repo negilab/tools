@@ -81,6 +81,16 @@ function doPost(e) {
         回答: String(body.answer || ''),
         補足: String(body.note || ''),
       };
+    } else if (body.kind === 'sendback') {
+      // やり直してもらう。理由が無いと、受け取った側は何を直せばよいか分からない。
+      const comment = String(body.comment || '').trim();
+      if (!comment) throw new Error('差し戻しには理由が要ります');
+      record = {
+        受信日時: now,
+        ID: String(body.id),
+        種別: '差し戻し',
+        コメント: comment,
+      };
     } else if (body.kind === 'check') {
       // 検収チェックポイントの1つを入り／切りする。番号は画面と同じく1から数える。
       const num = parseInt(body.number, 10);
