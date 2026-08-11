@@ -386,7 +386,7 @@
       <h4>■ 確認依頼に答える</h4>
       <p>選択肢が読み取れたときはボタンで、そうでないときは自由記入で答えてください。「済」は入れなくてかまいません。回答した時点で片付いた扱いになります。</p>
       <h4>■ 更新のしかた</h4>
-      <p>この画面を開いているあいだは、<b>1分ごとに台帳を取り直します</b>。画面下の「最終取得」の時刻が進みます。ほかのことをしているあいだは止まり、戻ってきたときにその場で取り直します。<br>
+      <p>この画面を開いているあいだは、<b>30秒ごとに台帳を取り直します</b>。画面下の「最終取得」の時刻(秒まで)が進みます。ほかのことをしているあいだは止まり、戻ってきたときにその場で取り直します。<br>
       右上の⟳は、待たずにいますぐ取り直すボタンです。<br>
       画面の作りそのものを新しくするときは、⚙の「アプリを再読み込み」を押してください。</p>
       <h4>■ 注意</h4>
@@ -448,7 +448,7 @@ const KEY_CPWAIT  = "taskboard_cpwait_v1";   // 検収チェックの送信済�
 const KEY_HIDDEN  = "taskboard_hidden_v1";   // 済にしてこの端末では隠した項目 {ID:隠した時刻}
 
 // 台帳を取り直す間隔。画面を見ているあいだだけ動かす。
-const AUTO_RELOAD_MS = 60 * 1000;
+const AUTO_RELOAD_MS = 30 * 1000;
 
 // 隠した項目をいつまで隠しておくか。
 // PCが受け取れないまま(電源が入っていない等)いつまでも消えていると、
@@ -468,6 +468,7 @@ let cpWait = {};
 let cpBusy = {};        // 送信中の検収チェック {"ID|番号":true}。連打で二重に送らないための札。
 let hidden = {};        // 済にしてこの端末では隠した項目 {ID:隠した時刻}
 let autoTimer = null;   // 台帳を取り直す時計
+let queuedRefresh = null; // 取り直しの最中に⟳が押されたときの、次の1回
 let openId = null;      // 詳細画面で開いている行のID（null なら一覧）
 let loading = false;
 
@@ -589,7 +590,13 @@ async function apiPost(payload){
  */
 async function load(showToastOnOk, opts){
   opts = opts || {};
-  if(loading) return;
+  if(loading){
+    // 手で押したぶんは捨てない。取り直しは1回6秒ほどかかることがあり、
+    // その最中に⟳を押すと黙って無視されて「効かない」ように見えていた。
+    // いま走っているぶんが終わったら、続けてもう一度取りに行く。
+    if(!opts.quiet) queuedRefresh = { toast: showToastOnOk };
+    return;
+  }
   const cfg = getConfig();
 
   if(!cfg){
@@ -615,7 +622,9 @@ async function load(showToastOnOk, opts){
     writeJson(KEY_CACHE, fresh);
     reconcilePending(fresh);
     render();
-    setStatus("live", "最終取得 " + (fresh.fetchedAt || "—"));
+    // 出すのは端末側で受け取った時刻。向こうが返す時刻は分どまりで、
+    // 同じ分のうちに押し直すと数字が動かず、効いていないように見えるため。
+    setStatus("live", "最終取得 " + nowClock());
     if(showToastOnOk) toast("最新にしました");
   }catch(err){
     // 自動の取り直しで一度しくじっただけなら、いま出ているものをそのままにする。
@@ -638,7 +647,20 @@ async function load(showToastOnOk, opts){
   }finally{
     loading = false;
     document.getElementById("refreshBtn").classList.remove("spinning");
+    // 取り直しの最中に⟳が押されていたら、ここで続けて取りに行く
+    if(queuedRefresh){
+      const q = queuedRefresh;
+      queuedRefresh = null;
+      setTimeout(function(){ load(q.toast, { fresh: true }); }, 0);
+    }
   }
+}
+
+/** いま何時か(秒まで)。押したら数字が動く、を成り立たせるために使う。 */
+function nowClock(){
+  const d = new Date();
+  const two = function(n){ return (n < 10 ? "0" : "") + n; };
+  return two(d.getHours()) + ":" + two(d.getMinutes()) + ":" + two(d.getSeconds());
 }
 
 /** 台帳側に反映されたものを「反映待ち」から外す */
