@@ -384,7 +384,7 @@
       <p>カード下の「済にする」を押してください。押した時点で一覧から消えます。PCが受け取ると、その項目に書いてある次の作業をClaudeが自動で始めます。<br>
       PCの電源が入っていないなどで一日たっても受け取られなかったときは、消したままにせず一覧に出し直します。</p>
       <h4>■ 確認依頼に答える</h4>
-      <p>選択肢が読み取れたときはボタンで、そうでないときは自由記入で答えてください。「済」は入れなくてかまいません。回答した時点で片付いた扱いになります。</p>
+      <p>選択肢が用意されているときはボタンで、そうでないときは自由記入で答えてください。「済」は入れなくてかまいません。回答した時点で片付いた扱いになります。</p>
       <h4>■ 更新のしかた</h4>
       <p>この画面を開いているあいだは、<b>30秒ごとに台帳を取り直します</b>。画面下の「最終取得」の時刻(秒まで)が進みます。ほかのことをしているあいだは止まり、戻ってきたときにその場で取り直します。<br>
       右上の⟳は、待たずにいますぐ取り直すボタンです。<br>
@@ -806,6 +806,28 @@ function extractOptions(body){
   return out.length >= 2 ? out.slice(0, 6) : [];
 }
 
+/**
+ * カードの選択肢を決める。
+ *
+ * PC側が「選択肢」列に `選択肢1|選択肢2|…` の形で書いていれば、それをそのまま使う。
+ * 本文の書き方に左右されないので、こちらが本筋。
+ * 列がまだ無い台帳・空欄の行だけ、今までどおり本文からの推測に回す。
+ */
+function optionsOf(r, text){
+  const raw = String((r && r["選択肢"]) || "").trim();
+  if(raw){
+    const items = raw.split("|")
+      .map(function(s){ return s.trim(); })
+      .filter(Boolean);
+    if(items.length){
+      return items.slice(0, 6).map(function(t, i){
+        return { mark: String(i + 1), text: t };
+      });
+    }
+  }
+  return extractOptions(text);
+}
+
 function boardRows(){
   return (data && data.board ? data.board : []).filter(function(r){
     return r["ID"] && !r["済"] && !r["回答"] && !hidden[r["ID"]];
@@ -870,7 +892,7 @@ function actionHtml(r, isAsk, text){
          + '<span class="check">✓</span><span class="txt">終わったら押してください(済にする)</span></button>'
          + '<button class="sendback-open" data-sb-open>やり直してもらう(差し戻す)</button>';
   }
-  const opts = extractOptions(text);
+  const opts = optionsOf(r, text);
   const optHtml = opts.map(function(o){
     return '<button class="opt-btn" data-opt="' + escapeHtml(o.text) + '">'
          + escapeHtml(o.mark) + '. ' + escapeHtml(o.text) + '</button>';
