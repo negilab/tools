@@ -5,6 +5,9 @@
  *
  *   読み取り … xlsx を一時的にGoogleスプレッドシート形式へ複製して中身を読み、
  *              読み終わったら複製を消す。台帳そのものには一切書き込まない。
+ *   資料    … ?md=<ファイル名> を付けて呼ぶと、「タスクボード_資料」フォルダの
+ *              直下にある同じ名前のファイルを、そのまま文字として返す。
+ *              携帯でmdを読むためのもの。そのフォルダの外は読めない。
  *   書き込み … 台帳には直接書かず、「タスクボード_受信箱」フォルダへ
  *              小さなファイルを1件ずつ置くだけ。PC側がそれを読んで台帳へ反映し、
  *              終わったらそのファイルを消す。
@@ -13,7 +16,7 @@
  * 片方の変更が消えてしまうため。受信箱をはさむことでその事故を防いでいる。
  * 1件1ファイルにしているのは、同時に複数の回答が来ても混ざらないようにするため。
  *
- * 設置手順は taskboard-assets/gas/README.md を参照。
+ * 設置手順・デプロイのしかたは、リポジトリの「タスクボード.md」を参照。
  */
 
 const CONFIG = {
@@ -26,6 +29,15 @@ const CONFIG = {
 
   // 受信箱フォルダの名前（台帳と同じ場所に自動で作られる）
   INBOX_NAME: 'タスクボード_受信箱',
+
+  // PC側が添付のmdをコピーしてくるフォルダ。携帯からはこの中のものだけ読める。
+  DOCS_NAME: 'タスクボード_資料',
+
+  // 1つの資料の上限。これを超えるものは携帯で開いても読み切れないので断る。
+  DOC_MAX_BYTES: 512 * 1024,
+
+  // 資料の中身を何秒とっておくか。同じものを続けて開いても取りに行かない。
+  DOC_CACHE_SECONDS: 120,
 
   // PC側が xlsx と一緒に置く「写し」。同じ中身を素のJSONで持っているので、
   // これがあれば xlsx を複製せずに1回読むだけで済む（6秒 → 1秒未満）。
@@ -50,6 +62,11 @@ const CONFIG = {
 function doGet(e) {
   return reply_(safely_(function () {
     checkToken_(e);
+
+    // 資料(md)を1つ返すだけの呼び方。台帳は読まない。
+    const wantDoc = e && e.parameter && e.parameter.md;
+    if (wantDoc) return readDoc_(String(wantDoc));
+
     const cache = CacheService.getScriptCache();
     // ファイルを動かしたあとや、たどり直しを確かめたいときの逃げ道。
     // 覚えた読み替えを捨ててから読む(合言葉が要るので誰でも押せるわけではない)。
@@ -384,11 +401,7 @@ function linkPathOf_(line) {
 
 /** 覚え書きの見出し。長さが変わらないよう、道そのものではなく指紋を使う。 */
 function linkKey_(path) {
-  const d = Utilities.computeDigest(
-    Utilities.DigestAlgorithm.SHA_256, String(path), Utilities.Charset.UTF_8);
-  return 'link:' + d.map(function (b) {
-    return ('0' + (b & 0xFF).toString(16)).slice(-2);
-  }).join('');
+  return 'link:' + digest_(path);
 }
 
 // 覚え書きの読み書きは、どれもここで失敗を受け止める。
@@ -514,6 +527,113 @@ function escapeQuery_(s) {
 }
 
 
+// ---------------------------------------------------------------- 資料(md)を読む
+//
+// PC側が添付のmdを「タスクボード_資料」フォルダへコピーし、写し(JSON)の各行に
+//     資料: [{"label":"見積の考え方","file":"T0031_見積の考え方.md"}]
+// を書く。携帯はそのファイル名だけを持って、ここへ取りに来る。
+//
+// **受け取るのは名前だけで、道は受け取らない。** 探すのも
+// 「タスクボード_資料」フォルダの直下だけ(getFilesByName)なので、
+// 名前に何を書かれてもそのフォルダの外は読めない。
+// 念のため、区切り文字や .. を含む名前はその場で断る。
+
+/** 資料フォルダの中の1件を、そのまま文字として返す */
+function readDoc_(name) {
+  const clean = String(name == null ? '' : name).trim();
+  if (!clean) throw new Error('資料の名前がありません');
+  if (/[\\\/]/.test(clean) || clean.indexOf('..') >= 0) {
+    throw new Error('資料の名前が不正です');
+  }
+
+  const cache = CacheService.getScriptCache();
+  const key = 'doc:' + digest_(clean);
+  const hit = cache.get(key);
+  if (hit) return JSON.parse(hit);
+
+  const folder = docsFolder_();
+  if (!folder) {
+    throw new Error('資料の置き場(' + CONFIG.DOCS_NAME + ')が見つかりません');
+  }
+
+  // 名前が完全に一致するものだけ。フォルダの直下しか見ないので、外へは出られない。
+  const it = folder.getFilesByName(clean);
+  if (!it.hasNext()) {
+    throw new Error('この資料はまだ届いていません。PCの同期が終わるのを待ってください');
+  }
+
+  const file = it.next();
+  const size = file.getSize();
+  if (size > CONFIG.DOC_MAX_BYTES) {
+    throw new Error('資料が大きすぎて携帯では開けません(' + Math.round(size / 1024) + 'KB)');
+  }
+
+  const out = {
+    ok: true,
+    file: clean,
+    text: file.getBlob().getDataAsString('UTF-8'),
+    updatedAt: Utilities.formatDate(file.getLastUpdated(), CONFIG.TIMEZONE, 'yyyy-MM-dd HH:mm'),
+  };
+  try {
+    cache.put(key, JSON.stringify(out), CONFIG.DOC_CACHE_SECONDS);
+  } catch (err) {
+    // 大きくて取り置けなくても、返すものは返す
+  }
+  return out;
+}
+
+/**
+ * 資料フォルダを返す。無ければ null。
+ *
+ * 台帳と同じ場所を先に見て、無ければマイドライブの直下を見る。
+ * PC側の置き場所(G:\マイドライブ\タスクボード_資料)がどちらでも拾えるようにするため。
+ * 受信箱と違って**作らない**。無いのは「まだPC側が置いていない」ということなので、
+ * 空のフォルダを作ってしまうと、届いていないことが分からなくなる。
+ */
+function docsFolder_() {
+  const props = PropertiesService.getScriptProperties();
+  const key = 'docs:' + CONFIG.DOCS_NAME;
+  try {
+    const saved = props.getProperty(key);
+    if (saved) return DriveApp.getFolderById(saved);
+  } catch (err) {
+    console.warn('資料フォルダの覚え書きが使えないので探し直します: ' + err);
+  }
+
+  const places = [];
+  try {
+    const parents = DriveApp.getFileById(CONFIG.MASTER_FILE_ID).getParents();
+    if (parents.hasNext()) places.push(parents.next());
+  } catch (err) {
+    console.warn('台帳の場所が分かりません: ' + err);
+  }
+  places.push(DriveApp.getRootFolder());
+
+  for (let i = 0; i < places.length; i++) {
+    const it = places[i].getFoldersByName(CONFIG.DOCS_NAME);
+    if (it.hasNext()) {
+      const folder = it.next();
+      try {
+        props.setProperty(key, folder.getId());
+      } catch (err) {
+        // 覚えられなくても動く
+      }
+      return folder;
+    }
+  }
+  return null;
+}
+
+/** 覚え書き・取り置きの見出し用。長さが変わらないよう指紋にする。 */
+function digest_(s) {
+  const d = Utilities.computeDigest(
+    Utilities.DigestAlgorithm.SHA_256, String(s), Utilities.Charset.UTF_8);
+  return d.map(function (b) {
+    return ('0' + (b & 0xFF).toString(16)).slice(-2);
+  }).join('');
+}
+
+
 // ---------------------------------------------------------------- 受信箱
 
 /** 受信箱フォルダに1件分のファイルを置き、ファイル名を返す */
@@ -591,4 +711,16 @@ function 動作確認() {
   console.log('ボード: ' + data.board.length + '件 / 完了ずみ: ' + data.done.length + '件');
   if (data.board.length) console.log(JSON.stringify(data.board[0], null, 2));
   console.log('受信箱フォルダ: ' + inboxFolder_().getUrl());
+
+  const docs = docsFolder_();
+  if (!docs) {
+    console.log('資料フォルダ(' + CONFIG.DOCS_NAME + '): まだありません'
+      + '(PC側が資料を置くと作られます。無くても台帳の読み書きには影響しません)');
+    return;
+  }
+  const names = [];
+  const it = docs.getFiles();
+  while (it.hasNext() && names.length < 10) names.push(it.next().getName());
+  console.log('資料フォルダ: ' + docs.getUrl() + ' / ' + names.length + '件(最大10件まで表示)');
+  names.forEach(function (n) { console.log('  ' + n); });
 }

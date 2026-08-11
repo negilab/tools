@@ -212,6 +212,10 @@
     background:var(--input-bg);border:1px solid var(--line);
     border-radius:var(--radius-pill);padding:3px 10px;margin:0 0 10px 6px;}
   .link-chip::before{content:"📎";font-size:11px;}
+  .doc-chip{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;color:var(--label);
+    background:rgba(224,154,106,.08);border:1px solid rgba(224,154,106,.35);
+    border-radius:var(--radius-pill);padding:3px 10px;margin:0 0 10px 6px;}
+  .doc-chip::before{content:"📖";font-size:11px;}
   .link-block{margin-top:14px;border-top:1px dashed var(--line);padding-top:12px;}
   .link-row{display:flex;align-items:center;gap:10px;text-decoration:none;
     border:1px solid var(--outline);background:var(--subtle);border-radius:var(--radius-md);
@@ -223,6 +227,8 @@
   .link-row .txt .sub{display:block;font-size:11px;font-weight:400;color:var(--fg-sub);
     margin-top:3px;overflow-wrap:anywhere;}
   .link-row .go{flex:none;color:var(--label);font-size:18px;}
+  /* 資料は画面の中で開くので、リンクではなくボタンにしてある */
+  button.link-row{width:100%;text-align:left;font:inherit;}
   /* 携帯からは開けないもの。押せそうに見せない。 */
   .link-row.off{background:transparent;border-style:dashed;border-color:var(--line);}
   .link-row.off .txt{color:var(--fg-disabled);font-weight:600;}
@@ -251,6 +257,69 @@
   .detail-body .answer-block{border-top:1px dashed var(--line);margin-top:16px;}
   .detail-body .meta{margin-top:16px;padding-top:12px;border-top:1px dashed var(--line);
     font-size:11.5px;color:var(--fg-disabled);line-height:1.9;}
+
+  /* ---------------------------------------------------- 資料(md)の画面 */
+  .docview{position:fixed;inset:0;z-index:28;background:var(--bg);
+    display:flex;flex-direction:column;transform:translateX(100%);
+    transition:transform .22s cubic-bezier(.32,.72,0,1);visibility:hidden;}
+  .docview.open{transform:translateX(0);visibility:visible;}
+  .docview .detail-head{align-items:baseline;}
+  .doc-title{margin-left:auto;font-size:12px;color:var(--fg-sub);text-align:right;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:56%;}
+  .doc-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;
+    padding:16px 16px calc(40px + env(safe-area-inset-bottom));}
+  .doc-state{display:flex;align-items:center;gap:9px;color:var(--fg-sub);font-size:13px;
+    padding:26px 4px;line-height:1.7;}
+  .doc-state .spinner{width:13px;height:13px;border-radius:50%;flex:none;
+    border:2px solid rgba(214,176,140,.3);border-top-color:var(--ok-text);animation:spin 1s linear infinite;}
+  .doc-state.bad{color:var(--danger);align-items:flex-start;}
+  .doc-retry{margin-top:14px;}
+  .doc-updated{font-size:11px;color:var(--fg-disabled);margin-bottom:14px;
+    padding-bottom:10px;border-bottom:1px dashed var(--line);}
+
+  /* 資料の中身。読み物なので、カードより行間を広く取る。 */
+  .md{font-size:14.5px;line-height:1.9;color:var(--fg-sub);overflow-wrap:anywhere;}
+  .md > :first-child{margin-top:0;}
+  .md h1,.md h2,.md h3,.md h4,.md h5,.md h6{color:var(--fg);line-height:1.5;font-weight:700;}
+  .md h1{font-size:20px;margin:26px 0 12px;padding-bottom:8px;border-bottom:2px solid var(--accent);}
+  .md h2{font-size:17px;margin:24px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line);}
+  .md h3{font-size:15px;margin:20px 0 8px;color:var(--label);}
+  .md h4,.md h5,.md h6{font-size:14px;margin:16px 0 6px;color:var(--label);}
+  .md p{margin:0 0 12px;}
+  .md ul,.md ol{margin:0 0 12px;padding-left:1.5em;}
+  .md li{margin:2px 0;}
+  .md li > ul,.md li > ol{margin:2px 0;}
+  .md ul{list-style:disc;}
+  .md ul ul{list-style:circle;}
+  .md ul ul ul{list-style:square;}
+  .md strong{color:var(--fg);font-weight:700;}
+  .md em{font-style:italic;}
+  .md del{color:var(--fg-disabled);}
+  .md a{color:var(--label);}
+  .md hr{border:none;border-top:1px solid var(--line);margin:22px 0;}
+  .md code{background:var(--input-bg);border:1px solid var(--line);border-radius:5px;
+    padding:1px 5px;font-size:12.5px;color:var(--subtle-fg);
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;}
+  .md pre{background:var(--input-bg);border:1px solid var(--line);border-radius:var(--radius-md);
+    padding:12px;overflow-x:auto;margin:0 0 14px;-webkit-overflow-scrolling:touch;}
+  .md pre code{background:none;border:none;padding:0;font-size:12.5px;line-height:1.7;
+    white-space:pre;color:var(--subtle-fg);}
+  .md blockquote{margin:0 0 14px;padding:2px 0 2px 12px;border-left:3px solid var(--outline);
+    color:var(--fg-disabled);}
+  .md blockquote > :last-child{margin-bottom:0;}
+  /* 表は畳まずに横へ流す。折り返すと数字の並びが読めなくなる。 */
+  .md .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 0 14px;
+    border:1px solid var(--line);border-radius:var(--radius-md);}
+  .md table{border-collapse:collapse;width:100%;font-size:13px;}
+  .md th,.md td{border:1px solid var(--line);padding:8px 11px;text-align:left;
+    line-height:1.6;white-space:nowrap;}
+  .md th{background:var(--band);color:var(--fg);font-weight:700;}
+  .md td{color:var(--fg-sub);}
+  .md tbody tr:nth-child(even) td{background:rgba(255,255,255,.02);}
+  .md .t-c{text-align:center;}
+  .md .t-r{text-align:right;font-variant-numeric:tabular-nums;}
+  .md .task{list-style:none;margin-left:-1.2em;}
+  .md .task > .box{margin-right:6px;color:var(--ok-text);}
 
   /* ---------------------------------------------------- フッター */
   footer.bottombar{position:fixed;left:0;right:0;bottom:0;z-index:15;background:var(--band);
@@ -359,6 +428,15 @@
     <div class="detail-body" id="detailBody"></div>
   </section>
 
+  <!-- 資料(md)の画面。詳細画面の「見るもの・開くもの」から開く。 -->
+  <section class="docview" id="docView" aria-hidden="true">
+    <div class="detail-head">
+      <button class="back-btn" id="docBack"><span class="arrow">‹</span>戻る</button>
+      <span class="doc-title" id="docTitle"></span>
+    </div>
+    <div class="doc-body" id="docBody"></div>
+  </section>
+
   <div class="sheet-backdrop" id="backdrop"></div>
 
   <!-- 使い方 -->
@@ -377,6 +455,9 @@
       <h4>■ 見るもの・開くもの(添付)</h4>
       <p>詳細画面に「見るもの・開くもの」が出ることがあります。Googleドライブの中のものはタップでそのまま開けます(ドライブのアプリかブラウザが開きます)。<br>
       PCの中のファイルや bat は、携帯からは開けません。「PCで開くもの」と薄く出るので、PCのタスクボードから開いてください。</p>
+      <h4>■ 資料を読む</h4>
+      <p>「📖 …(この画面で読む)」と出ているものは、この画面の中でそのまま読めます。見出しや表も整えて出すので、ドライブのアプリに移らずに読み終われます。左上の「戻る」で元の項目に返ります。<br>
+      一度開いた資料は覚えておくので、二度目からはすぐ出ます。まだPCの同期が終わっていないときは「まだ届いていません」と出るので、少し待ってからもう一度押してください。</p>
       <h4>■ やり直してもらう(差し戻す)</h4>
       <p>出来上がったものが駄目だったときは、詳細画面のいちばん下から差し戻せます。理由は必須です。書いた理由はそのままClaudeに渡り、それを読んでやり直します。<br>
       押したあとはカードに「差し戻し送信済み」と出ます。PCが受け取ると未着手に戻ります。</p>
@@ -559,6 +640,26 @@ async function apiGet(wantFresh){
   if(!res.ok) throw new Error("接続できませんでした (" + res.status + ")");
   const json = await res.json();
   if(!json.ok) throw new Error(json.error || "取得に失敗しました");
+  return json;
+}
+
+/**
+ * 資料(md)を1つ読む。返るのは中身の文字そのもの。
+ *
+ * 渡すのはファイル名だけ。向こうは「タスクボード_資料」フォルダの直下しか見ないので、
+ * ここから台帳やほかの場所を読ませることはできない。
+ */
+async function apiDoc(file){
+  const cfg = getConfig();
+  if(!cfg) throw new Error("接続の設定がまだです");
+  const url = cfg.url
+    + (cfg.url.indexOf("?") >= 0 ? "&" : "?")
+    + "token=" + encodeURIComponent(cfg.token)
+    + "&md=" + encodeURIComponent(file);
+  const res = await fetch(url, { method:"GET", redirect:"follow" });
+  if(!res.ok) throw new Error("接続できませんでした (" + res.status + ")");
+  const json = await res.json();
+  if(!json.ok) throw new Error(json.error || "資料を読めませんでした");
   return json;
 }
 
@@ -775,6 +876,265 @@ function taskLinks(r){
   }).filter(Boolean);
 }
 
+// ================================================================ 資料(md)
+// PC側が添付のmdを「タスクボード_資料」フォルダへコピーし、写し(JSON)の各行に
+//     資料: [{"label":"見積の考え方","file":"T0031_見積の考え方.md"}]
+// を書く。ここではその一覧を取り出すだけ。中身は開いたときに取りに行く。
+//
+// 「資料」が無い台帳では空を返すので、今までどおり動く。
+function taskDocs(r){
+  const raw = r && r["資料"];
+  if(!raw) return [];
+
+  let list = raw;
+  let guessed = false;
+  if(typeof raw === "string"){
+    const s = raw.trim();
+    if(!s) return [];
+    try{
+      list = JSON.parse(s);
+    }catch(e){
+      // 写しではなくxlsxから読んだときは、ただの文字列で来ることがある。
+      // 「ラベル|ファイル名」を1行1件で拾う(添付の列と同じ書き方)。
+      guessed = true;
+      list = s.split(/\r?\n/).map(function(line){
+        const t = line.trim();
+        if(!t) return null;
+        const i = t.indexOf("|");
+        return i < 0 ? { label:"", file:t } : { label:t.slice(0, i).trim(), file:t.slice(i + 1).trim() };
+      });
+    }
+  }
+  if(!Array.isArray(list)) return [];
+
+  return list.map(function(d){
+    if(!d) return null;
+    const file = String(d.file || "").trim();
+    if(!file) return null;
+    // 資料フォルダの直下にある「名前」だけを扱う。道が書かれていたら相手にしない。
+    if(/[\\\/]/.test(file) || file.indexOf("..") >= 0) return null;
+    // 文字列から推し量ったぶんは、拡張子のあるものだけ。書き方が違うだけの行を
+    // ファイル名と思い込んで、無いものを取りに行かせないため。
+    if(guessed && !/\.[0-9A-Za-z]+$/.test(file)) return null;
+    return { label: String(d.label || "").trim() || file, file: file };
+  }).filter(Boolean);
+}
+
+// ================================================================ mdを読める形にする
+//
+// 外のライブラリは使えない(この画面は1枚のHTMLで完結させている)ので、
+// 出先で読むのに要るぶんだけを自前で組み立てる。
+// 見出し・箇条書き(入れ子)・番号付き・表・引用・コード・区切り線・
+// 太字/斜体/打ち消し/コード/リンク。それ以外は素の文として出す。
+
+/** 開いてよいURLか。javascript: などを踏ませない。 */
+function safeUrl(u){
+  return /^(https?:\/\/|mailto:)/i.test(String(u).trim());
+}
+
+// `コード` を先に抜いて預けておくときの目印。本文には出てこない字を使う。
+const MD_KEEP = String.fromCharCode(1);
+
+/** 行の中の飾り。まずHTMLとして殺してから、飾りだけを組み立て直す。 */
+function mdInline(s){
+  let t = escapeHtml(s);
+
+  // `コード` の中は飾らない。先に抜いておいて、最後に戻す。
+  const kept = [];
+  t = t.replace(/`([^`]+)`/g, function(_, code){
+    kept.push("<code>" + code + "</code>");
+    return MD_KEEP + (kept.length - 1) + MD_KEEP;
+  });
+
+  // 画像は携帯では開けないことが多い。説明の文字だけ残す。
+  t = t.replace(/!\[([^\]]*)\]\([^)]*\)/g, "$1");
+  t = t.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, function(whole, text, url){
+    // escapeHtml のあとなので、&amp; などはこのままでよい(属性の中では正しい形)
+    if(!safeUrl(url.replace(/&amp;/g, "&"))) return text;
+    return '<a href="' + url + '" target="_blank" rel="noopener">' + text + "</a>";
+  });
+
+  t = t.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+  t = t.replace(/(^|[^*\w])\*([^*\n]+)\*(?!\*)/g, "$1<em>$2</em>");
+  t = t.replace(/~~([^~]+)~~/g, "<del>$1</del>");
+
+  return t.replace(new RegExp(MD_KEEP + "(\\d+)" + MD_KEEP, "g"), function(_, i){
+    return kept[i];
+  });
+}
+
+const MD_HEAD   = /^(#{1,6})\s+(.*)$/;
+const MD_HR     = /^\s*([-*_])(\s*\1){2,}\s*$/;
+const MD_FENCE  = /^\s*(```|~~~)/;
+const MD_QUOTE  = /^\s*>\s?(.*)$/;
+const MD_BULLET = /^(\s*)[-*+]\s+(.*)$/;
+const MD_NUMBER = /^(\s*)\d+[.)]\s+(.*)$/;
+const MD_TASK   = /^\[([ xX])\]\s+(.*)$/;
+// 表の2行目。|---|:--:|---:| のような区切り。
+const MD_TSEP   = /^\s*\|?[\s:|-]*-[\s:|-]*\|?\s*$/;
+
+/** 表の1行をセルに割る。両端の | は飾りなので落とす。 */
+function mdCells(line){
+  let s = line.trim();
+  if(s.charAt(0) === "|") s = s.slice(1);
+  if(s.charAt(s.length - 1) === "|") s = s.slice(0, -1);
+  return s.split("|").map(function(c){ return c.trim(); });
+}
+
+/** 区切り行の : から、そのセルの寄せ方を決める */
+function mdAlign(cell){
+  const s = cell.trim();
+  const left = s.charAt(0) === ":";
+  const right = s.charAt(s.length - 1) === ":";
+  if(left && right) return ' class="t-c"';
+  if(right) return ' class="t-r"';
+  return "";
+}
+
+function mdToHtml(src){
+  const lines = String(src == null ? "" : src).replace(/\r\n?/g, "\n").split("\n");
+  const out = [];
+  const stack = [];        // いま開いている箇条書きの入れ子 [{tag, indent}]
+  let para = [];           // 続いている段落の行
+  let quote = [];          // 続いている引用の行
+  let blank = false;       // 直前が空行だったか(箇条書きを続けるかの判断に使う)
+
+  // 1段閉じる。項目の <li> は開いたままにしてあるので、まず閉じる。
+  function closeLevel(){
+    const lv = stack.pop();
+    out.push("</li>");
+    out.push(lv.tag === "ol" ? "</ol>" : "</ul>");
+  }
+  function endLists(){ while(stack.length) closeLevel(); }
+  function endPara(){
+    if(para.length){
+      out.push("<p>" + para.map(mdInline).join("<br>") + "</p>");
+      para = [];
+    }
+  }
+  function endQuote(){
+    if(quote.length){
+      out.push("<blockquote>" + mdToHtml(quote.join("\n")) + "</blockquote>");
+      quote = [];
+    }
+  }
+  function endAll(){ endPara(); endQuote(); endLists(); }
+
+  for(let i = 0; i < lines.length; i++){
+    const line = lines[i];
+
+    // ``` で囲まれたところは、中を一切いじらずそのまま出す
+    if(MD_FENCE.test(line)){
+      endAll();
+      const fence = line.trim().slice(0, 3);
+      const body = [];
+      i++;
+      for(; i < lines.length; i++){
+        if(lines[i].trim().indexOf(fence) === 0) break;
+        body.push(lines[i]);
+      }
+      out.push("<pre><code>" + escapeHtml(body.join("\n")) + "</code></pre>");
+      blank = false;
+      continue;
+    }
+
+    // 空行では箇条書きを閉じない。項目のあいだが1行空いているだけのことが多く、
+    // ここで閉じると、続きが別の箇条書きになって番号が振り直される。
+    if(!line.trim()){ endPara(); endQuote(); blank = true; continue; }
+
+    if(MD_HR.test(line)){ endAll(); out.push("<hr>"); blank = false; continue; }
+
+    const h = line.match(MD_HEAD);
+    if(h){
+      endAll();
+      const n = h[1].length;
+      out.push("<h" + n + ">" + mdInline(h[2].trim()) + "</h" + n + ">");
+      blank = false;
+      continue;
+    }
+
+    const q = line.match(MD_QUOTE);
+    if(q){ endPara(); endLists(); quote.push(q[1]); blank = false; continue; }
+    endQuote();
+
+    // 表。見出し行のすぐ下に区切り行があるときだけ表とみなす。
+    if(line.indexOf("|") >= 0 && i + 1 < lines.length
+       && lines[i + 1].indexOf("|") >= 0 && MD_TSEP.test(lines[i + 1])){
+      endAll();
+      const head = mdCells(line);
+      const aligns = mdCells(lines[i + 1]).map(mdAlign);
+      const rows = [];
+      i += 2;
+      for(; i < lines.length; i++){
+        if(!lines[i].trim() || lines[i].indexOf("|") < 0) break;
+        rows.push(mdCells(lines[i]));
+      }
+      i--;
+      out.push('<div class="table-wrap"><table><thead><tr>'
+        + head.map(function(c, n){
+            return "<th" + (aligns[n] || "") + ">" + mdInline(c) + "</th>";
+          }).join("")
+        + "</tr></thead><tbody>"
+        + rows.map(function(cells){
+            return "<tr>" + head.map(function(_, n){
+              return "<td" + (aligns[n] || "") + ">"
+                   + mdInline(cells[n] == null ? "" : cells[n]) + "</td>";
+            }).join("") + "</tr>";
+          }).join("")
+        + "</tbody></table></div>");
+      blank = false;
+      continue;
+    }
+
+    const b = line.match(MD_BULLET);
+    const o = b ? null : line.match(MD_NUMBER);
+    if(b || o){
+      endPara();
+      const indent = (b ? b[1] : o[1]).replace(/\t/g, "  ").length;
+      const tag = b ? "ul" : "ol";
+      const text = b ? b[2] : o[2];
+
+      // 自分より深いところは閉じる
+      while(stack.length && stack[stack.length - 1].indent > indent) closeLevel();
+
+      const top = stack.length ? stack[stack.length - 1] : null;
+      if(!top || top.indent < indent){
+        // 一段深くなった。親の <li> は開いたままなので、その中に入る。
+        stack.push({ tag: tag, indent: indent });
+        out.push("<" + tag + ">");
+      }else{
+        out.push("</li>");                    // 同じ深さの、次の項目
+        if(top.tag !== tag){
+          // 箇条書きと番号付きが入れ替わった。閉じて開き直す。
+          stack.pop();
+          out.push(top.tag === "ol" ? "</ol>" : "</ul>");
+          stack.push({ tag: tag, indent: indent });
+          out.push("<" + tag + ">");
+        }
+      }
+
+      const t = text.match(MD_TASK);
+      out.push(t
+        ? '<li class="task"><span class="box">' + (t[1] === " " ? "☐" : "☑") + "</span>" + mdInline(t[2])
+        : "<li>" + mdInline(text));
+      blank = false;
+      continue;
+    }
+
+    // 箇条書きの途中で、印の無い行が来たとき。
+    // 空行をはさんでいなければ同じ項目のぶら下がり、はさんでいれば箇条書きは終わり。
+    if(stack.length && !blank){
+      out.push("<br>" + mdInline(line.trim()));
+      continue;
+    }
+    endLists();
+    para.push(line.trim());
+    blank = false;
+  }
+
+  endAll();
+  return out.join("\n");
+}
 /** 送信済みでPC未反映のチェックを重ねた、いま画面に出すべき状態 */
 function cpView(id, items){
   const waits = cpWait[id] || {};
@@ -937,6 +1297,7 @@ function cardHtml(r){
     +   '<button class="more-btn" data-open>詳しく見る（全文）<span>›</span></button>'
     +   (cps.length ? '<div class="cp-chip">検収 ' + doneCount + '/' + cps.length + '</div>' : "")
     +   (taskLinks(r).length ? '<div class="link-chip">添付 ' + taskLinks(r).length + '</div>' : "")
+    +   (taskDocs(r).length ? '<div class="doc-chip">資料 ' + taskDocs(r).length + '</div>' : "")
     +   (r["期限"] ? '<div class="due">' + escapeHtml(r["期限"]) + ' 期限</div>' : "")
     +   '<div class="task-id">Excel ID: ' + escapeHtml(id) + '</div>'
     +   actionHtml(r, isAsk, parts.text)
@@ -952,11 +1313,20 @@ function detailHtml(r){
   const doneCount = cps.filter(function(c){ return c.done; }).length;
 
   const links = taskLinks(r);
+  const docs  = taskDocs(r);
   let linkBlock = "";
-  if(links.length){
+  if(links.length || docs.length){
     linkBlock = '<div class="link-block">'
       + '<div class="cp-head"><span class="label">見るもの・開くもの</span>'
-      +   '<span class="prog">' + links.length + '件</span></div>'
+      +   '<span class="prog">' + (links.length + docs.length) + '件</span></div>'
+      // 資料(md)はこの画面の中で読める。外に出ないぶん先に並べる。
+      + docs.map(function(d){
+          return '<button class="link-row" data-md="' + escapeHtml(d.file) + '">'
+               + '<span class="ico">📖</span>'
+               + '<span class="txt">' + escapeHtml(d.label)
+               + '<span class="sub">この画面で読む</span></span>'
+               + '<span class="go">›</span></button>';
+        }).join("")
       + links.map(function(a){
           if(a.url){
             return '<a class="link-row" href="' + escapeHtml(a.url) + '" target="_blank" rel="noopener">'
@@ -1037,6 +1407,7 @@ function renderDetail(){
   view.setAttribute("aria-hidden", "false");
   bindActions(body, r["ID"]);
   bindCheckpoints(body, r);
+  bindDocs(body);
 }
 
 function openDetail(id){
@@ -1048,6 +1419,7 @@ function openDetail(id){
 /** 画面を閉じるだけ（履歴は触らない） */
 function hideDetail(){
   openId = null;
+  hideDoc();                       // 上に資料が乗っていたら一緒に下ろす
   const view = document.getElementById("detailView");
   view.classList.remove("open");
   view.setAttribute("aria-hidden", "true");
@@ -1059,9 +1431,92 @@ function closeDetail(){
   if(hadState){ try{ history.back(); }catch(e){} }
 }
 
+// 戻るは、いちばん上に出ている画面から1枚ずつ下ろす
 window.addEventListener("popstate", function(){
+  if(openDocFile){ hideDoc(); return; }
   if(openId) hideDetail();
 });
+
+// ================================================================ 資料(md)の画面
+//
+// 詳細画面の「見るもの・開くもの」から開く。中身はGASから取ってきて、
+// この画面の中で整形して出す。ドライブのアプリに移らずに読めるようにするため。
+
+let openDocFile = null;   // いま開いている資料のファイル名(null なら閉じている)
+const docCache = {};      // 一度読んだものは覚えておく {ファイル名:{text, updatedAt}}
+
+function openDoc(file, label){
+  openDocFile = file;
+  document.getElementById("docTitle").textContent = label || file;
+  try{ history.pushState({ doc: file }, ""); }catch(e){}
+  const view = document.getElementById("docView");
+  view.classList.add("open");
+  view.setAttribute("aria-hidden", "false");
+  loadDoc(file);
+}
+
+function hideDoc(){
+  if(!openDocFile) return;
+  openDocFile = null;
+  const view = document.getElementById("docView");
+  view.classList.remove("open");
+  view.setAttribute("aria-hidden", "true");
+}
+
+function closeDoc(){
+  const hadState = !!(history.state && history.state.doc);
+  hideDoc();
+  if(hadState){ try{ history.back(); }catch(e){} }
+}
+
+/** 失敗の理由を、出先で読んで分かる言い方に直す */
+function docErrorText(err){
+  const m = String((err && err.message) || err);
+  if(/failed to fetch|networkerror|load failed|network request failed/i.test(m)){
+    return "つながりませんでした。電波の届くところで、もう一度お試しください。";
+  }
+  return m;
+}
+
+async function loadDoc(file){
+  const body = document.getElementById("docBody");
+
+  const hit = docCache[file];
+  if(hit){ paintDoc(hit); return; }
+
+  body.innerHTML = '<div class="doc-state"><span class="spinner"></span>資料を読み込んでいます…</div>';
+  try{
+    const res = await apiDoc(file);
+    if(openDocFile !== file) return;      // 読んでいるあいだに戻られた
+    docCache[file] = { text: res.text || "", updatedAt: res.updatedAt || "" };
+    paintDoc(docCache[file]);
+  }catch(err){
+    if(openDocFile !== file) return;
+    body.innerHTML = '<div class="doc-state bad">'
+      + '<div>読めませんでした。<br>' + escapeHtml(docErrorText(err)) + '</div></div>'
+      + '<button class="ghost-btn doc-retry" data-doc-retry>もう一度読む</button>';
+    const again = body.querySelector("[data-doc-retry]");
+    if(again) again.addEventListener("click", function(){ loadDoc(file); });
+  }
+}
+
+function paintDoc(d){
+  const body = document.getElementById("docBody");
+  body.innerHTML =
+    (d.updatedAt ? '<div class="doc-updated">PCが置いた日時: ' + escapeHtml(d.updatedAt) + '</div>' : "")
+    + '<div class="md">' + mdToHtml(d.text) + '</div>';
+  body.scrollTop = 0;
+}
+
+/** 詳細画面の資料ボタン */
+function bindDocs(scope){
+  scope.querySelectorAll("[data-md]").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      const label = btn.querySelector(".txt");
+      openDoc(btn.dataset.md, label ? label.firstChild.nodeValue : "");
+    });
+  });
+}
 
 function doneHtml(d){
   const chips = [d["決着"], d["閉じた人"] ? "閉じた人: " + d["閉じた人"] : "", d["完了日時"]]
@@ -1298,6 +1753,7 @@ function closeSheets(){
 document.getElementById("driveLink").href = DRIVE_FILE_URL;
 
 document.getElementById("detailBack").addEventListener("click", closeDetail);
+document.getElementById("docBack").addEventListener("click", closeDoc);
 
 document.getElementById("tabBoard").addEventListener("click", function(){ switchTab(true); });
 document.getElementById("tabDone").addEventListener("click", function(){ switchTab(false); });
