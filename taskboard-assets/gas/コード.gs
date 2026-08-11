@@ -27,6 +27,11 @@ const CONFIG = {
   // 受信箱フォルダの名前（台帳と同じ場所に自動で作られる）
   INBOX_NAME: 'タスクボード_受信箱',
 
+  // PC側が xlsx と一緒に置く「写し」。同じ中身を素のJSONで持っているので、
+  // これがあれば xlsx を複製せずに1回読むだけで済む（6秒 → 1秒未満）。
+  // 無ければ今までどおり xlsx を複製して読む。
+  SNAPSHOT_NAME: 'タスクボード.json',
+
   BOARD_SHEET: 'ボード',
   DONE_SHEET: '完了ずみ',
 
@@ -117,7 +122,17 @@ function doPost(e) {
 
 // ---------------------------------------------------------------- 台帳を読む
 
+/**
+ * 台帳を読む。
+ *
+ * PC側は xlsx と一緒に、同じ中身の「写し」(タスクボード.json)を置いている。
+ * 写しがあればそれを1回読むだけで済む(1秒未満)。
+ * 無い・壊れている・古い作りのときは、今までどおり xlsx を複製して読む(6秒ほど)。
+ */
 function readMaster_() {
+  const snap = readSnapshot_();
+  if (snap) return withLinks_(snap.board, snap.done, 'json', snap.writtenAt);
+
   // xlsx はそのままでは読めないので、スプレッドシート形式の複製を一時的に作る
   const copy = Drive.Files.copy(
     { name: '__タスクボード_一時__', mimeType: MimeType.GOOGLE_SHEETS },
@@ -125,30 +140,11 @@ function readMaster_() {
   );
   try {
     const ss = SpreadsheetApp.openById(copy.id);
-    const board = rowsOf_(ss.getSheetByName(CONFIG.BOARD_SHEET));
-
-    // 添付の読み替えでしくじっても、ボードは必ず返す。
-    // 見たいのはまず項目そのもので、リンクはその付け足しなので。
-    let links = {};
-    const linksInfo = { 版: LINK_LOGIC_VERSION };
-    try {
-      links = resolveLinks_(board, linksInfo);
-    } catch (err) {
-      linksInfo.しくじり = String((err && err.message) || err).slice(0, 200);
-      console.warn('添付の読み替えをまとめて諦めました: ' + err);
-    }
-
-    return {
-      ok: true,
-      fetchedAt: Utilities.formatDate(new Date(), CONFIG.TIMEZONE, 'yyyy-MM-dd HH:mm'),
-      board: board,
-      done: rowsOf_(ss.getSheetByName(CONFIG.DONE_SHEET)).slice(0, CONFIG.DONE_LIMIT),
-      // 「添付」の列に書かれた場所のうち、ドライブの中にあるものを
-      // 携帯から開けるURLに読み替えたもの。{場所: URL}
-      links: links,
-      // うまくいかないときに、どこで止まっているかを外から見るための内訳
-      linksInfo: linksInfo,
-    };
+    return withLinks_(
+      rowsOf_(ss.getSheetByName(CONFIG.BOARD_SHEET)),
+      rowsOf_(ss.getSheetByName(CONFIG.DONE_SHEET)).slice(0, CONFIG.DONE_LIMIT),
+      'xlsx', ''
+    );
   } finally {
     try {
       Drive.Files.remove(copy.id);
@@ -157,6 +153,82 @@ function readMaster_() {
       console.warn('一時ファイルを消せませんでした: ' + err);
     }
   }
+}
+
+/** ボードと完了ずみに、添付の読み替えを添えて返す形にそろえる */
+function withLinks_(board, done, source, writtenAt) {
+  // 添付の読み替えでしくじっても、ボードは必ず返す。
+  // 見たいのはまず項目そのもので、リンクはその付け足しなので。
+  let links = {};
+  const linksInfo = { 版: LINK_LOGIC_VERSION };
+  try {
+    links = resolveLinks_(board, linksInfo);
+  } catch (err) {
+    linksInfo.しくじり = String((err && err.message) || err).slice(0, 200);
+    console.warn('添付の読み替えをまとめて諦めました: ' + err);
+  }
+  return {
+    ok: true,
+    fetchedAt: Utilities.formatDate(new Date(), CONFIG.TIMEZONE, 'yyyy-MM-dd HH:mm'),
+    board: board,
+    done: done,
+    // 「添付」の列に書かれた場所のうち、ドライブの中にあるものを
+    // 携帯から開けるURLに読み替えたもの。{場所: URL}
+    links: links,
+    // うまくいかないときに、どこで止まっているかを外から見るための内訳
+    linksInfo: linksInfo,
+    // どちらの道で読んだか(json=写し・xlsx=複製)。速さの切り分け用。
+    source: source,
+    writtenAt: writtenAt || '',
+  };
+}
+
+/**
+ * PC側が置いた写し(JSON)を読む。無ければ null を返して、呼び側は xlsx に回る。
+ *
+ * ファイルIDは名前で1回引いて覚えておく(毎回探すと、その1回ぶんが無駄になる)。
+ */
+function readSnapshot_() {
+  try {
+    const id = snapshotFileId_();
+    if (!id) return null;
+    const text = DriveApp.getFileById(id).getBlob().getDataAsString('UTF-8');
+    const d = JSON.parse(text);
+    if (!d || !Array.isArray(d.board)) return null;      // 作りが違えば使わない
+    return {
+      board: d.board,
+      done: Array.isArray(d.done) ? d.done.slice(0, CONFIG.DONE_LIMIT) : [],
+      writtenAt: String(d.writtenAt || ''),
+    };
+  } catch (err) {
+    // 書きかけに当たった・消えている等。xlsx から読めばよいので黙って戻す。
+    console.warn('写し(JSON)を読めなかったので xlsx から読みます: ' + err);
+    return null;
+  }
+}
+
+function snapshotFileId_() {
+  const props = PropertiesService.getScriptProperties();
+  const key = 'snapshot:' + CONFIG.SNAPSHOT_NAME;
+  try {
+    const hit = props.getProperty(key);
+    if (hit) return hit;
+  } catch (err) {
+    // 覚え書きが読めなくても探し直せばよい
+  }
+  let parent = null;
+  const parents = DriveApp.getFileById(CONFIG.MASTER_FILE_ID).getParents();
+  if (parents.hasNext()) parent = parents.next();
+  if (!parent) return '';
+  const it = parent.getFilesByName(CONFIG.SNAPSHOT_NAME);
+  if (!it.hasNext()) return '';
+  const id = it.next().getId();
+  try {
+    props.setProperty(key, id);
+  } catch (err) {
+    // 覚えられなくても動く
+  }
+  return id;
 }
 
 /** 1行目を見出しとして、各行を {見出し: 値} の形に変える */
