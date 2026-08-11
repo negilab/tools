@@ -265,6 +265,8 @@
     color:var(--fg-sub);}
   .cfg-state.ok{color:var(--ok-text);border-color:rgba(214,176,140,.35);}
   .cfg-state.bad{color:var(--danger);border-color:rgba(196,99,91,.5);}
+  .sheet-body .build{font-size:11.5px;color:var(--fg-disabled);margin-top:8px;
+    font-variant-numeric:tabular-nums;}
   .ghost-btn{margin-top:14px;width:100%;border:1px solid var(--outline);background:var(--subtle);
     color:var(--subtle-fg);font-size:12.5px;font-weight:600;padding:10px;border-radius:var(--radius-pill);}
 
@@ -345,6 +347,9 @@
       <p>カード下の「済にする」を押してください。PCが受け取ると、その項目に書いてある次の作業をClaudeが自動で始めます。</p>
       <h4>■ 確認依頼に答える</h4>
       <p>選択肢が読み取れたときはボタンで、そうでないときは自由記入で答えてください。「済」は入れなくてかまいません。回答した時点で片付いた扱いになります。</p>
+      <h4>■ 更新のしかた</h4>
+      <p>右上の⟳は、台帳を取り直すボタンです(いつでも最新を取りに行きます)。<br>
+      画面の作りそのものを新しくするときは、⚙の「アプリを再読み込み」を押してください。</p>
       <h4>■ 注意</h4>
       <p>・IDは台帳側でPCが行を見分ける目印です。書き換えないでください。<br>
       ・押してもすぐには消えません。PCが受け取って台帳に書くまで「反映待ち」と出ます。<br>
@@ -376,6 +381,13 @@
       </div>
 
       <button class="primary-btn" id="cfgSave">保存してつなぐ</button>
+
+      <h4>■ アプリの更新</h4>
+      <p>画面の作りを直したときは、ここから読み込み直してください。ホーム画面から開いたときはアドレス欄が無く、ふつうの再読み込みができないためです。設定は消えません。</p>
+      <button class="ghost-btn" id="cfgReload">アプリを再読み込み(最新版にする)</button>
+      <p class="build">この画面の版: <span id="buildStamp"></span></p>
+
+      <h4>■ つなぎ先を変える・やめる</h4>
       <button class="ghost-btn" id="cfgClear">接続の設定を消す</button>
 
       <p class="warn">設定はこの端末の中だけに保存されます。一度入れれば、次からは入力不要です。<br>
@@ -1081,11 +1093,24 @@ function openSettings(){
     st.className = "cfg-state";
     st.textContent = "まだ設定されていません。下の2つを入れて「保存してつなぐ」を押してください。";
   }
+  // いま動いている画面がいつのものか。古いまま残っていないかの目印になる。
+  document.getElementById("buildStamp").textContent = document.lastModified || "不明";
   openSheet("settingsSheet");
 }
 
 document.getElementById("settingsBtn").addEventListener("click", openSettings);
 document.getElementById("refreshBtn").addEventListener("click", function(){ clearBanner(); load(true); });
+
+/**
+ * 画面そのものを読み込み直す。
+ *
+ * 右上の⟳は台帳を取り直すだけで、画面の作り(このHTML)は入れ替わらない。
+ * ホーム画面から開いているとアドレス欄が無く、ふつうの再読み込みもできないので、
+ * 直したはずの画面が古いまま残ってしまう。URLの末尾を毎回変えて取りに行かせる。
+ */
+document.getElementById("cfgReload").addEventListener("click", function(){
+  location.replace(location.pathname + "?v=" + Date.now());
+});
 document.getElementById("backdrop").addEventListener("click", closeSheets);
 document.querySelectorAll("[data-close]").forEach(function(b){ b.addEventListener("click", closeSheets); });
 
