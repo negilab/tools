@@ -82,6 +82,30 @@
     border-radius:var(--radius-pill);padding:1px 7px;}
   .segment button.active .count{background:rgba(255,255,255,.22);}
 
+  /* ---------------------------------------------------- 絞り込み
+     **箱にしない。** 画面の主役は一覧なので、絞り込みは上端に小さく並ぶ脇役に留める。
+     塗りも枠も持たせず、本文より小さい文字だけを置く。
+     選んであるかどうかは、箱ではなく文字の濃さ・太さ・下線で示す。 */
+  .filters{padding-bottom:10px;}
+  .fbar{display:flex;align-items:baseline;flex-wrap:nowrap;gap:6px;font-size:11.5px;}
+  .ftext{border:none;background:none;padding:1px 0;font-size:11.5px;
+    color:var(--fg-sub);white-space:nowrap;flex:none;}
+  .ftext:active{color:var(--fg);}
+  .ftext.on{color:var(--label);font-weight:700;text-decoration:underline;}
+  .ftext[disabled]{opacity:.45;}
+  /* 「自分だけ」はいちばん押される。太字ぶんだけ強くする(大きくはしない)。 */
+  .ftext.mine{font-weight:700;color:var(--fg-sub);}
+  .ftext.mine.on{color:var(--accent);}
+  .fsep{color:var(--line);flex:none;}
+  .fcount{color:var(--fg-sub);font-variant-numeric:tabular-nums;flex:none;margin-left:2px;}
+  .fcount.on{color:var(--label);font-weight:700;}
+  .fnow{color:var(--fg-disabled);flex:1;min-width:0;overflow:hidden;
+    text-overflow:ellipsis;white-space:nowrap;}
+  /* 選択肢は切り口の名前ごと1本の流れに並べる。行を分けるとそのぶん一覧が狭くなる。 */
+  .fgroups{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 9px;margin-top:5px;}
+  .fglabel{font-size:11px;color:var(--fg-disabled);flex:none;}
+  .fgroups .ftext{max-width:100%;overflow:hidden;text-overflow:ellipsis;}
+
   /* ---------------------------------------------------- 本体 */
   main{flex:1;overflow-y:auto;padding:14px 14px calc(90px + env(safe-area-inset-bottom));}
 
@@ -113,6 +137,9 @@
   .who::before{content:"";width:14px;height:14px;border-radius:50%;
     background:var(--nav-btn);border:1px solid var(--band-line);}
   .task-id{font-size:10.5px;color:var(--fg-disabled);font-variant-numeric:tabular-nums;letter-spacing:.03em;}
+  /* カードの先頭に出す番号。狭い幅でも折り返さないよう等幅で置く。 */
+  .task-id.lead{font-size:11.5px;color:var(--subtle-fg);font-weight:700;flex:none;
+    white-space:nowrap;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;}
 
   .card h2{font-size:15.5px;margin:0 0 6px;font-weight:700;line-height:1.45;}
   .card .body{font-size:13px;color:var(--fg-sub);line-height:1.7;margin:0 0 8px;
@@ -403,6 +430,8 @@
       <button class="active" id="tabBoard">ボード <span class="count" id="countBoard">0</span></button>
       <button id="tabDone">完了ずみ <span class="count" id="countDone">0</span></button>
     </div>
+    <!-- 絞り込み(中身はデータから作るので、ここは入れ物だけ) -->
+    <div class="filters" id="filterWrap"></div>
   </div>
 
   <main>
@@ -449,6 +478,12 @@
     <div class="sheet-body">
       <h4>■ 見る</h4>
       <p>「ボード」に、いま残っている項目が並びます。上に来ているのが返事待ちの確認依頼です。カードをタップすると詳細画面が開き、端折らずに全文が読めます。左上の「ボードへ戻る」で一覧に戻ります。</p>
+      <h4>■ 自分の分だけを見る(絞り込み)</h4>
+      <p>タブのすぐ下に小さな文字が並んでいます。「<b>中地さんの分だけ</b>」を押すと、あなた宛の未処理だけが残ります。もう一度押すと元に戻ります。選んであるものは色が付いて下線が引かれます。</p>
+      <p>もっと細かく絞るときは「絞り込み▼」を押してください。<b>担当・状態・種別・元(どのセッションが積んだか)</b>が並びます。<br>
+      別の種類どうしは「かつ」で、同じ種類の中で2つ以上押したときは「または」で効きます(例:「担当=中地」かつ「状態=未着手 または 進行中」)。</p>
+      <p>いま何件出ているかは「<b>3/12件</b>」の形で出ます。戻すときは「全部解除」です。選んだ絞り込みはこの端末が覚えているので、次に開いたときも同じ絞り込みのままになります。</p>
+      <p class="warn">文字を小さくしてあるのは、画面の主役が一覧だからです。絞り込みは上端に控えめに置いてあります。</p>
       <h4>■ 検収チェックポイント</h4>
       <p>観点のある項目は、詳細画面に一覧が出ます。行をタップすればその場でチェックを入れたり外したりできます。PCの画面のチェックと同じ扱いです。まとめて付けるときは右上の「すべてチェック」を押してください。</p>
       <p>タップした瞬間にチェックが付きます。送るのは裏で行うので、続けて押して構いません。送れなかったときだけ、元に戻して知らせます。</p>
@@ -527,6 +562,7 @@ const KEY_CACHE   = "taskboard_cache_v1";    // 最後に取れたデータ（�
 const KEY_PENDING = "taskboard_pending_v1";  // 送信したがPC未反映のもの
 const KEY_CPWAIT  = "taskboard_cpwait_v1";   // 検収チェックの送信済み・PC未反映 {ID:{番号:"済"|"未"}}
 const KEY_HIDDEN  = "taskboard_hidden_v1";   // 済にしてこの端末では隠した項目 {ID:隠した時刻}
+const KEY_FILTER  = "taskboard_filter_v1";   // 絞り込みの選択 {"担当":["中地"], ...}
 
 // 台帳を取り直す間隔。画面を見ているあいだだけ動かす。
 const AUTO_RELOAD_MS = 30 * 1000;
@@ -1194,15 +1230,231 @@ function boardRows(){
   });
 }
 
+// ================================================================ 絞り込み
+//
+// 一覧が伸びるほど「自分の分だけ見たい」が要る。タブ(ボード/完了ずみ)は
+// そのままにして、その中を担当・状態・種別・元で削る層を1枚だけ足す。
+//
+// 鍵には台帳の列名をそのまま使う。PC側(core.py の FACETS)も同じ4つ・同じ日本語で
+// 選ばせているので、どちらで絞っても同じ意味になる。
+const FACETS = ["担当", "状態", "種別", "元"];
+const SESSION_NONE = "元なし";     // 起票元の記録が無いカードのまとめ先
+
+// 切り口ごとの並び。よく押すものを左に置く(押す位置が毎回変わらないように)。
+const FACET_ORDER = {
+  "担当": ["中地", "Claude"],
+  "状態": ["未着手", "進行中", "完了"],
+  "種別": ["タスク", "確認依頼"],
+};
+
+// 「中地さんの分だけ」。この画面のボードには終わった項目がそもそも並ばないので、
+// 担当ひとつで「中地さんの未処理」になる
+// (PCの画面は完了も出せるため、向こうでは状態も併せて指定している)。
+const MINE = { "担当": ["中地"] };
+
+let filterSel = readJson(KEY_FILTER, {}) || {};
+let filterOpen = false;   // 選択肢を開いているか(画面の高さを食うので既定は畳む)
+
+function facetValue(r, f){
+  const v = String((r && r[f]) || "").trim();
+  if(f === "元") return v || SESSION_NONE;
+  return v;
+}
+
+function facetSorter(f){
+  const order = FACET_ORDER[f];
+  if(order){
+    return function(a, b){
+      const ia = order.indexOf(a), ib = order.indexOf(b);
+      return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib) || (a < b ? -1 : a > b ? 1 : 0);
+    };
+  }
+  // 起票元は決まった並びが無い。名前順にして、記録の無いものだけ最後へ回す。
+  return function(a, b){
+    const ra = (a === SESSION_NONE) ? 1 : 0, rb = (b === SESSION_NONE) ? 1 : 0;
+    return ra - rb || (a < b ? -1 : a > b ? 1 : 0);
+  };
+}
+
+/** いま一覧に出ている分から選択肢を拾う。押しても0件になるボタンは作らない。 */
+function facetValues(rows, f){
+  const seen = {};
+  rows.forEach(function(r){ const v = facetValue(r, f); if(v) seen[v] = true; });
+  const vals = Object.keys(seen);
+  // すでに選ばれている値は必ず並べる(消えると外せなくなる)
+  (filterSel[f] || []).forEach(function(v){ if(vals.indexOf(v) < 0) vals.push(v); });
+  return vals.sort(facetSorter(f));
+}
+
+function selectedOf(f){
+  const v = filterSel[f];
+  return Array.isArray(v) ? v : [];
+}
+
+/** 切り口どうしはAND、同じ切り口の中で複数選んだときはOR。 */
+function matchFilter(r){
+  for(let i = 0; i < FACETS.length; i++){
+    const f = FACETS[i], vals = selectedOf(f);
+    if(vals.length && vals.indexOf(facetValue(r, f)) < 0) return false;
+  }
+  return true;
+}
+
+function applyFilter(rows){
+  return filterCount() === 0 ? rows : rows.filter(matchFilter);
+}
+
+function filterCount(){
+  let n = 0;
+  FACETS.forEach(function(f){ n += selectedOf(f).length; });
+  return n;
+}
+
+function isMineFilter(){
+  const keys = FACETS.filter(function(f){ return selectedOf(f).length; });
+  if(keys.length !== 1 || keys[0] !== "担当") return false;
+  const v = selectedOf("担当");
+  return v.length === 1 && v[0] === MINE["担当"][0];
+}
+
+function filterSummary(){
+  if(filterCount() === 0) return "";
+  if(isMineFilter()) return "中地さんの分だけ";
+  return FACETS.filter(function(f){ return selectedOf(f).length; })
+               .map(function(f){ return f + ": " + selectedOf(f).join("・"); })
+               .join(" / ");
+}
+
+function saveFilter(){ writeJson(KEY_FILTER, filterSel); }
+
+/**
+ * 台帳に無くなった値の選択を落とす。
+ *
+ * 絞り込みは端末に覚えさせてある。その担当・そのセッションのカードが片付いたあとも
+ * 選択だけが残り、次に開いた瞬間に0件の画面が出る。「壊れた」と見えるので必ず削る。
+ * まだ台帳が届いていないとき(0件)は触らない。届いていないことと無くなったことは違う。
+ */
+function pruneFilter(rows){
+  if(!rows.length) return;
+  let changed = false;
+  FACETS.forEach(function(f){
+    const vals = selectedOf(f);
+    if(!vals.length) return;
+    const alive = {};
+    rows.forEach(function(r){ alive[facetValue(r, f)] = true; });
+    const keep = vals.filter(function(v){ return alive[v]; });
+    if(keep.length !== vals.length){
+      changed = true;
+      if(keep.length) filterSel[f] = keep; else delete filterSel[f];
+    }
+  });
+  if(changed) saveFilter();
+}
+
+function toggleFacet(f, v){
+  const vals = selectedOf(f).slice();
+  const i = vals.indexOf(v);
+  if(i >= 0) vals.splice(i, 1); else vals.push(v);
+  if(vals.length) filterSel[f] = vals; else delete filterSel[f];
+  saveFilter();
+  render();
+}
+
+function toggleMine(){
+  filterSel = isMineFilter() ? {} : JSON.parse(JSON.stringify(MINE));
+  saveFilter();
+  render();
+}
+
+function clearFilter(){
+  filterSel = {};
+  saveFilter();
+  render();
+}
+
+/** 絞り込みの操作列を組み立てる。選択肢はデータから作る(決め打ちにしない)。 */
+function renderFilters(all, shown){
+  const wrap = document.getElementById("filterWrap");
+  const on = filterCount() > 0;
+  // いま何で絞っているかは、選択肢を開いていればその印(色と下線)で読める。
+  // 「中地さんの分だけ」もその文字自体に印が付く。どちらの場合も言い直さない
+  // (狭い幅では畳まれて「担当: …」になるだけで、読めるものが増えない)。
+  const now = (filterOpen || isMineFilter()) ? "" : filterSummary();
+
+  // 出すものが無いとき(未設定・読み込めない・本当に0件)は場所ごと畳む。
+  // ただし絞り込みが効いているあいだは、外せなくなるので必ず出す。
+  // 「完了ずみ」タブは列の中身が別物なので、こちらの絞り込みは掛けない。
+  const boardTab = document.getElementById("tabBoard").classList.contains("active");
+  if((!all.length && !on) || !boardTab){
+    wrap.innerHTML = "";
+    wrap.style.display = "none";
+    return;
+  }
+  wrap.style.display = "block";
+
+  let groups = "";
+  if(filterOpen){
+    FACETS.forEach(function(f){
+      const vals = facetValues(all, f);
+      // 値が1種類しかない切り口は、押しても何も変わらない。並べない。
+      if(vals.length < 2) return;
+      groups += '<span class="fglabel">' + escapeHtml(f) + ':</span>'
+        + vals.map(function(v){
+            const sel = selectedOf(f).indexOf(v) >= 0;
+            return '<button class="ftext chip' + (sel ? " on" : "") + '" data-facet="' + escapeHtml(f)
+                 + '" data-value="' + escapeHtml(v) + '">' + escapeHtml(v) + '</button>';
+          }).join("");
+    });
+    if(!groups) groups = '<span class="fglabel">絞り込める項目がまだありません</span>';
+  }
+
+  wrap.innerHTML = ''
+    + '<div class="fbar">'
+    +   '<button class="ftext mine' + (isMineFilter() ? " on" : "") + '" id="mineBtn">'
+    +     '中地さんの分だけ</button>'
+    +   '<span class="fsep">/</span>'
+    +   '<button class="ftext' + (filterOpen ? " on" : "") + '" id="filterToggle">絞り込み'
+    +     (filterOpen ? "▲" : "▼") + '</button>'
+    +   '<span class="fsep">/</span>'
+    +   '<button class="ftext" id="clearFilterBtn"' + (on ? "" : " disabled") + '>全部解除</button>'
+    +   '<span class="fcount' + (shown !== all.length ? " on" : "") + '">'
+    +     shown + '/' + all.length + '件</span>'
+    +   '<span class="fnow">' + (now ? escapeHtml(now) : "") + '</span>'
+    + '</div>'
+    + (filterOpen ? '<div class="fgroups">' + groups + '</div>' : "");
+
+  document.getElementById("mineBtn").addEventListener("click", toggleMine);
+  document.getElementById("clearFilterBtn").addEventListener("click", clearFilter);
+  document.getElementById("filterToggle").addEventListener("click", function(){
+    filterOpen = !filterOpen;
+    render();
+  });
+  wrap.querySelectorAll(".chip").forEach(function(b){
+    b.addEventListener("click", function(){
+      toggleFacet(b.dataset.facet, b.dataset.value);
+    });
+  });
+}
+
 function render(){
-  const rows = boardRows();
+  const all = boardRows();
+  pruneFilter(all);
+  const rows = applyFilter(all);
   const done = (data && data.done ? data.done : []);
-  document.getElementById("countBoard").textContent = rows.length;
+  // タブの数字は「ボードに何件あるか」。絞り込んだ結果は 3/12件 のほうに出す。
+  document.getElementById("countBoard").textContent = all.length;
   document.getElementById("countDone").textContent = done.length;
+  renderFilters(all, rows.length);
 
   const boardEl = document.getElementById("boardList");
   if(rows.length === 0){
-    if(data && data.unset){
+    if(all.length && filterCount() > 0){
+      // 絞り込みのせいで空になったのなら、まずそれを言う。
+      // 「残っていません」と出すと、消した覚えのない項目が無いことになる。
+      boardEl.innerHTML = '<div class="empty-state"><div class="glyph">🔍</div>'
+        + 'いまの絞り込みに当てはまる項目はありません。<br>ボードには ' + all.length + ' 件あります。'
+        + '<br><br><button class="ghost-btn" id="emptyClear">絞り込みを全部解除する</button></div>';
+    }else if(data && data.unset){
       boardEl.innerHTML = '<div class="empty-state"><div class="glyph">⚙</div>'
         + 'まだ台帳につながっていません。<br>接続の設定をすると、ここに項目が並びます。'
         + '<br><br><button class="ghost-btn" id="emptyCfg">接続の設定をする</button></div>';
@@ -1225,6 +1477,8 @@ function render(){
   document.getElementById("modeChip").textContent = (data && data.unset) ? "未設定" : "出先用";
   const emptyCfg = document.getElementById("emptyCfg");
   if(emptyCfg) emptyCfg.addEventListener("click", openSettings);
+  const emptyClear = document.getElementById("emptyClear");
+  if(emptyClear) emptyClear.addEventListener("click", clearFilter);
   bindCards(boardEl);
   renderDetail();
 }
@@ -1232,7 +1486,9 @@ function render(){
 function isAskType(type){ return /確認|質問|問/.test(type); }
 
 function topHtml(r, isAsk){
+  // 番号はいちばん先に置く。開かずに「T0188の件」と言えるようにするための並び。
   return '<div class="card-top">'
+    + '<span class="task-id lead">' + escapeHtml(r["ID"] || "") + '</span>'
     + '<span class="badge type' + (isAsk ? " ask" : "") + '">' + escapeHtml(r["種別"] || "タスク") + '</span>'
     + (r["状態"] ? '<span class="badge">' + escapeHtml(r["状態"]) + '</span>' : "")
     + (r["担当"] ? '<span class="who">' + escapeHtml(r["担当"]) + '</span>' : "")
@@ -1299,7 +1555,6 @@ function cardHtml(r){
     +   (taskLinks(r).length ? '<div class="link-chip">添付 ' + taskLinks(r).length + '</div>' : "")
     +   (taskDocs(r).length ? '<div class="doc-chip">資料 ' + taskDocs(r).length + '</div>' : "")
     +   (r["期限"] ? '<div class="due">' + escapeHtml(r["期限"]) + ' 期限</div>' : "")
-    +   '<div class="task-id">Excel ID: ' + escapeHtml(id) + '</div>'
     +   actionHtml(r, isAsk, parts.text)
     + '</div>';
 }
@@ -1376,7 +1631,8 @@ function detailHtml(r){
     +   cpBlock
     +   actionHtml(r, isAsk, parts.text)
     +   sendBackHtml(r)
-    +   '<div class="meta">Excel ID: ' + escapeHtml(id)
+    +   '<div class="meta">' + escapeHtml(id)
+    +     (r["元"] ? '　元: ' + escapeHtml(r["元"]) : "")
     +     (r["担当"] ? '　担当: ' + escapeHtml(r["担当"]) : "")
     +     (r["状態"] ? '　状態: ' + escapeHtml(r["状態"]) : "") + '</div>'
     + '</div>';
@@ -1396,7 +1652,7 @@ function renderDetail(){
     toast("この項目は片付きました");
     return;
   }
-  document.getElementById("detailId").textContent = "Excel ID: " + r["ID"];
+  document.getElementById("detailId").textContent = r["ID"];
   const body = document.getElementById("detailBody");
   // チェックを1つ押すたびに描き直すので、同じ項目のあいだは読んでいた位置を保つ
   const keep = (body.dataset.shown === r["ID"]) ? body.scrollTop : 0;
@@ -1525,7 +1781,7 @@ function doneHtml(d){
   return ''
     + '<div class="card done">'
     +   '<h2><span class="done-check">✓</span>' + escapeHtml(d["内容"]) + '</h2>'
-    +   '<div class="task-id">Excel ID: ' + escapeHtml(d["ID"]) + '</div>'
+    +   '<div class="task-id">' + escapeHtml(d["ID"]) + '</div>'
     +   '<div class="done-meta">' + chips + '</div>'
     + '</div>';
 }
@@ -1765,6 +2021,8 @@ function switchTab(isBoard){
   document.getElementById("tabDone").classList.toggle("active", !isBoard);
   document.getElementById("boardList").style.display = isBoard ? "flex" : "none";
   document.getElementById("doneList").style.display = isBoard ? "none" : "flex";
+  // 絞り込みはボードの列に対するもの。完了ずみは列が別物なので一緒に畳む。
+  render();
 }
 
 document.getElementById("helpBtn").addEventListener("click", function(){ openSheet("helpSheet"); });
