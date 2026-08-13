@@ -798,10 +798,13 @@ async function load(showToastOnOk, opts){
 
   try{
     const fresh = await apiGet(opts.fresh !== false);
+    // 取り直しても中身が同じなら、画面には手を触れない。作り直せばそのぶん
+    // 書きかけが戻し直されるし、読んでいた位置も動く。動かす理由が無いなら動かさない。
+    const before = screenKey();
     data = fresh;
     writeJson(KEY_CACHE, fresh);
     reconcilePending(fresh);
-    render();
+    if(screenKey() !== before) render();
     // 出すのは端末側で受け取った時刻。向こうが返す時刻は分どまりで、
     // 同じ分のうちに押し直すと数字が動かず、効いていないように見えるため。
     setStatus("live", "最終取得 " + nowClock());
@@ -841,6 +844,11 @@ function nowClock(){
   const d = new Date();
   const two = function(n){ return (n < 10 ? "0" : "") + n; };
   return two(d.getHours()) + ":" + two(d.getMinutes()) + ":" + two(d.getSeconds());
+}
+
+/** いま画面に出ているものを一つなぎの文字列にする。取り直しの前後で見比べるため。 */
+function screenKey(){
+  return JSON.stringify([data, pending, cpWait, hidden]);
 }
 
 /** 台帳側に反映されたものを「反映待ち」から外す */
@@ -1861,6 +1869,22 @@ function bindCards(root){
   });
 }
 
+// ================================================================ 書きかけの控え
+//
+// 選んだ選択肢も書きかけの文章も、これまで画面の中にしか無かった。
+// 画面は台帳を取り直すたび・検収チェックを押すたびに丸ごと作り直すので、
+// そのたびに選んだものが外れ、書いた文字も消えていた。
+// 押したのに未選択に戻る、という取りこぼしの正体はこれ。
+//
+// ここに控えておき、作り直したあとで画面に戻す。送れたら消す。
+
+const draft = {};   // {ID:{opt:選んだ選択肢か"__free__", answer:自由記入, note:補足, sb:差し戻しの理由}}
+
+function draftOf(id){
+  if(!draft[id]) draft[id] = { opt:null, answer:"", note:"", sb:"" };
+  return draft[id];
+}
+
 /**
  * 書き込み欄の高さを中身に合わせる。
  *
@@ -1918,11 +1942,15 @@ function bindActions(scope, id){
     });
   }
 
+  const memo = draftOf(id);
+
   const sbSend = scope.querySelector("[data-sb-send]");
   const sbText = scope.querySelector("[data-sb-comment]");
   if(sbSend && sbText){
     const ready = function(){ sbSend.disabled = !sbText.value.trim(); };
-    sbText.addEventListener("input", ready);
+    sbText.addEventListener("input", function(){ memo.sb = sbText.value; ready(); });
+    sbText.value = memo.sb;              // 書きかけを戻す
+    fitHeight(sbText);
     ready();
     sbSend.addEventListener("click", function(){
       const comment = sbText.value.trim();
@@ -1936,42 +1964,52 @@ function bindActions(scope, id){
 
   const freeWrap = scope.querySelector("[data-free]");
   const answerEl = scope.querySelector("[data-answer]");
-  let chosen = null;
+  const noteEl   = scope.querySelector("[data-note]");
 
   function currentAnswer(){
-    if(chosen) return chosen;
+    if(memo.opt && memo.opt !== "__free__") return memo.opt;
     return answerEl ? answerEl.value.trim() : "";
+  }
+
+  /** 控えの内容を画面に出す。作り直した直後もここを通るので、選んだものが残る。 */
+  function paint(){
+    scope.querySelectorAll(".opt-btn").forEach(function(b){
+      b.classList.toggle("selected", memo.opt === b.dataset.opt);
+    });
+    if(freeWrap && memo.opt) freeWrap.style.display = (memo.opt === "__free__") ? "" : "none";
+    sendBtn.disabled = !currentAnswer();
   }
 
   scope.querySelectorAll(".opt-btn").forEach(function(btn){
     btn.addEventListener("click", function(){
-      scope.querySelectorAll(".opt-btn").forEach(function(b){ b.classList.remove("selected"); });
-      btn.classList.add("selected");
-      if(btn.dataset.opt === "__free__"){
-        chosen = null;
-        if(freeWrap) freeWrap.style.display = "";
-        // 出したばかりの欄はここで初めて測れる(隠れているあいだは測れない)
-        if(answerEl){ fitHeight(answerEl); answerEl.focus(); }
-      }else{
-        chosen = btn.dataset.opt;
-        if(freeWrap) freeWrap.style.display = "none";
-      }
-      sendBtn.disabled = !currentAnswer();
+      memo.opt = btn.dataset.opt;
+      paint();
+      // 出したばかりの欄はここで初めて測れる(隠れているあいだは測れない)
+      if(memo.opt === "__free__" && answerEl){ fitHeight(answerEl); answerEl.focus(); }
     });
   });
 
   if(answerEl){
-    answerEl.addEventListener("input", function(){ sendBtn.disabled = !currentAnswer(); });
+    answerEl.value = memo.answer;        // 書きかけを戻す
+    fitHeight(answerEl);
+    answerEl.addEventListener("input", function(){
+      memo.answer = answerEl.value;
+      sendBtn.disabled = !currentAnswer();
+    });
+  }
+  if(noteEl){
+    noteEl.value = memo.note;            // 書きかけを戻す
+    fitHeight(noteEl);
+    noteEl.addEventListener("input", function(){ memo.note = noteEl.value; });
   }
   // 選択肢が無い場合は最初から自由記入が出ているので、入力次第で有効になる
-  sendBtn.disabled = !currentAnswer();
+  paint();
 
   sendBtn.addEventListener("click", function(){
-    const note = scope.querySelector("[data-note]");
     send(id, {
       id: id, kind: "answer",
       answer: currentAnswer(),
-      note: note ? note.value.trim() : ""
+      note: noteEl ? noteEl.value.trim() : ""
     }, "回答を送りました", sendBtn);
   });
 }
@@ -2004,6 +2042,7 @@ async function send(id, payload, okMessage, btn){
   if(btn) btn.disabled = true;
   try{
     await apiPost(payload);
+    delete draft[id];                 // 送れたので控えは要らない(欄も高さも元に戻る)
     pending[id] = { at: Date.now(), kind: payload.kind };
     writeJson(KEY_PENDING, pending);
     if(payload.kind === "done" || payload.kind === "answer"){
