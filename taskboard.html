@@ -164,6 +164,9 @@
 
   .answer-block{margin-top:6px;border-top:1px dashed var(--line);padding-top:12px;}
   .answer-label{font-size:11px;font-weight:700;color:var(--label);letter-spacing:.03em;margin-bottom:8px;}
+  /* 前に書いたものを戻したときの断り。読み飛ばせる大きさにとどめる。 */
+  .draft-note{font-size:11px;color:var(--fg-disabled);margin:-2px 0 8px;}
+  .draft-note::before{content:"✎";margin-right:5px;}
   .options{display:flex;flex-direction:column;gap:8px;}
   .opt-btn{text-align:left;border:1px solid var(--outline);background:var(--subtle);color:var(--fg);
     font-size:13px;font-weight:600;padding:11px 14px;border-radius:var(--radius-pill);line-height:1.4;}
@@ -588,9 +591,23 @@ const KEY_CPWAIT  = "taskboard_cpwait_v1";   // 検収チェックの送信済�
 const KEY_HIDDEN  = "taskboard_hidden_v1";   // 済にしてこの端末では隠した項目 {ID:隠した時刻}
 const KEY_FILTER  = "taskboard_filter_v1";   // 絞り込みの選択 {"担当":["中地"], ...}
 const KEY_OUTBOX  = "taskboard_outbox_v1";   // 裏で送っている最中のもの {操作番号:{ID, 中身, 書きかけ}}
+const KEY_DRAFT   = "taskboard_draft_v1";    // まだ送っていない書きかけ {ID:{opt, answer, note, sb, at}}
 
 // 台帳を取り直す間隔。画面を見ているあいだだけ動かす。
 const AUTO_RELOAD_MS = 30 * 1000;
+
+// 書きかけをいつまで端末に残しておくか。
+//
+// 資料を読みながら少しずつ書き足す使い方なので、その日のうちに終わるとは限らない。
+// 一日で消すと、翌朝つづきを書こうとして消えている。かといって永久に残すと、
+// ずっと前に書きかけて忘れたものが、新しい依頼を開いたときに出てきて混乱する。
+// 一週間あれば「先週のうちに書いたもの」は拾えて、それより古いものは自然と片付く。
+const DRAFT_KEEP_MS = 7 * 24 * 60 * 60 * 1000;
+
+// 書きかけを端末に書き出す間隔。打つたびには書かない(一文字ごとに保存する必要はない)。
+// 画面を離れるときは別途その場で書き出すので、これは「打ちっぱなしのまま
+// 不意に閉じられた」ときの備え。
+const DRAFT_SAVE_MS = 2000;
 
 // 隠した項目をいつまで隠しておくか。
 // PCが受け取れないまま(電源が入っていない等)いつまでも消えていると、
@@ -876,6 +893,7 @@ function reconcilePending(fresh){
   });
   if(changed) writeJson(KEY_PENDING, pending);
   pruneHidden(openIds);
+  pruneDrafts(openIds);
   reconcileCpWait(fresh);
 }
 
@@ -1576,8 +1594,14 @@ function actionHtml(r, isAsk, text){
     ? '<div class="fail-note"><span class="mark">!</span>'
       + escapeHtml(sendFail[r["ID"]]) + '</div>'
     : "";
+  // 前に開いたときの書きかけを戻したときだけ、小さく断っておく。
+  // 断りが無いと、自分が書いたものか台帳から来たものか見分けがつかない。
+  // いま書いているぶんには出さない(出しっぱなしでは邪魔になる)。
+  const resume = (draftRestored[r["ID"]] && !draftIsEmpty(draft[r["ID"]]))
+    ? '<div class="draft-note">書きかけを残してあります</div>'
+    : "";
   if(!isAsk){
-    return bad
+    return bad + resume
          + '<button class="done-toggle-btn" data-done>'
          + '<span class="check">✓</span><span class="txt">終わったら押してください(済にする)</span></button>'
          + '<button class="sendback-open" data-sb-open>やり直してもらう(差し戻す)</button>';
@@ -1590,6 +1614,7 @@ function actionHtml(r, isAsk, text){
   return bad
     + '<div class="answer-block">'
     + '<div class="answer-label">回答してください</div>'
+    + resume
     + (opts.length ? '<div class="options">' + optHtml
         + '<button class="opt-btn free" data-opt="__free__">自由に書く</button></div>' : "")
     + '<div class="field"' + (opts.length ? ' style="display:none"' : "") + ' data-free>'
@@ -1751,6 +1776,7 @@ function openDetail(id){
 
 /** 画面を閉じるだけ（履歴は触らない） */
 function hideDetail(){
+  saveDraftNow();                  // 画面を離れる。書きかけをここで端末に残す。
   openId = null;
   hideDoc();                       // 上に資料が乗っていたら一緒に下ろす
   const view = document.getElementById("detailView");
@@ -1758,14 +1784,28 @@ function hideDetail(){
   view.setAttribute("aria-hidden", "true");
 }
 
+/**
+ * 自分で history.back() したぶんの札。
+ *
+ * 画面の「戻る」を押すと、その場で1枚下ろしたうえで履歴も1つ戻す。すると少しあとに
+ * popstate が来るが、これは中地さんが戻ったのではなく、こちらが戻したぶん。
+ * 見分けずに下ろすと、資料から戻ったときにカードまで続けて閉じ、
+ * 書きかけごと一覧へ飛ばされていた。1枚ぶんは読み飛ばす。
+ */
+let popSkip = 0;
+
 function closeDetail(){
   const hadState = !!(history.state && history.state.detail);
   hideDetail();
-  if(hadState){ try{ history.back(); }catch(e){} }
+  if(hadState){
+    popSkip++;
+    try{ history.back(); }catch(e){ popSkip--; }
+  }
 }
 
 // 戻るは、いちばん上に出ている画面から1枚ずつ下ろす
 window.addEventListener("popstate", function(){
+  if(popSkip > 0){ popSkip--; return; }   // こちらが戻したぶん。画面はもう下ろしてある。
   if(openDocFile){ hideDoc(); return; }
   if(openId) hideDetail();
 });
@@ -1779,6 +1819,7 @@ let openDocFile = null;   // いま開いている資料のファイル名(null 
 const docCache = {};      // 一度読んだものは覚えておく {ファイル名:{text, updatedAt}}
 
 function openDoc(file, label){
+  saveDraftNow();           // 資料を読みに行くあいだ、書きかけを端末に預けておく
   openDocFile = file;
   document.getElementById("docTitle").textContent = label || file;
   try{ history.pushState({ doc: file }, ""); }catch(e){}
@@ -1796,10 +1837,14 @@ function hideDoc(){
   view.setAttribute("aria-hidden", "true");
 }
 
+/** 資料の「戻る」。資料だけを下ろし、下のカードはそのまま残す。 */
 function closeDoc(){
   const hadState = !!(history.state && history.state.doc);
   hideDoc();
-  if(hadState){ try{ history.back(); }catch(e){} }
+  if(hadState){
+    popSkip++;
+    try{ history.back(); }catch(e){ popSkip--; }
+  }
 }
 
 /** 電波が届かなかったたぐいのしくじりか。ブラウザによって言い方が違う。 */
@@ -1903,11 +1948,73 @@ function bindCards(root){
 //
 // ここに控えておき、作り直したあとで画面に戻す。送れたら消す。
 
-const draft = {};   // {ID:{opt:選んだ選択肢か"__free__", answer:自由記入, note:補足, sb:差し戻しの理由}}
+// 控えは端末にも残す。画面の中だけに置いていたころは、資料(md)を読みに行って
+// 戻る・アプリを閉じて開き直す、といった画面の移動で丸ごと消えていた。
+// 送るまでは端末に置き、送れたら消す。
+//
+// 送信待ちの控え(outbox)とは入れ物を分ける。混ぜると、送信中のものと
+// まだ送っていないものが見分けられなくなり、送れたかどうかの判定が狂う。
+const draft = readJson(KEY_DRAFT, {});   // {ID:{opt, answer, note, sb, at:最後に書いた時刻}}
+
+// 前に開いたときに書いたもの。カードにひとこと添えるためだけに使う。
+// 端末には残さない(この画面を開いているあいだの話なので)。
+const draftRestored = {};
+Object.keys(draft).forEach(function(id){ draftRestored[id] = true; });
+
+let draftTimer = null;    // まとめて書き出すための待ち時計
 
 function draftOf(id){
   if(!draft[id]) draft[id] = { opt:null, answer:"", note:"", sb:"" };
   return draft[id];
+}
+
+/** 中身が空の控えは残す意味がない(開いただけの件で埋まってしまう) */
+function draftIsEmpty(d){
+  return !d || (!d.opt && !d.answer && !d.note && !d.sb);
+}
+
+/** いま持っている控えを端末に書き出す。空のものは持ち越さない。 */
+function saveDraftNow(){
+  if(draftTimer){ clearTimeout(draftTimer); draftTimer = null; }
+  const out = {};
+  Object.keys(draft).forEach(function(id){
+    if(!draftIsEmpty(draft[id])) out[id] = draft[id];
+  });
+  writeJson(KEY_DRAFT, out);
+}
+
+/**
+ * 書いたことを控える。書き出しは少し待ってからまとめて行う。
+ * 一文字ごとに端末へ書きに行く必要はない。
+ */
+function touchDraft(id){
+  draftOf(id).at = Date.now();
+  delete draftRestored[id];      // いま書いている。もう「前に書いたもの」ではない。
+  if(draftTimer) return;
+  draftTimer = setTimeout(function(){ draftTimer = null; saveDraftNow(); }, DRAFT_SAVE_MS);
+}
+
+/** その件の控えを捨てる(送れた・もう要らない) */
+function dropDraft(id){
+  delete draft[id];
+  delete draftRestored[id];
+  saveDraftNow();
+}
+
+/**
+ * 残しておく意味がなくなった書きかけを片付ける。
+ *
+ * ・台帳から消えた … PCが受け取って片付いた。その件に書きかけても行き先がない。
+ * ・一週間たった … 書きかけたことを忘れているころ。出してもかえって迷う。
+ */
+function pruneDrafts(openIds){
+  const now = Date.now();
+  let changed = false;
+  Object.keys(draft).forEach(function(id){
+    const old = (now - (draft[id].at || 0)) > DRAFT_KEEP_MS;
+    if(!openIds[id] || old){ delete draft[id]; delete draftRestored[id]; changed = true; }
+  });
+  if(changed) saveDraftNow();
 }
 
 /**
@@ -1920,9 +2027,14 @@ function draftOf(id){
 function fitHeight(el){
   if(!el) return;
   if(el.offsetParent === null) return;   // 隠れているものは中身の高さを測れない
+  // 画面が見えていないあいだ(背面に回っている等)は、どこを測っても0で返る。
+  // その0で高さを決めると、戻ってきたときに欄が潰れたままになる。測らずに帰る。
   const max = Math.round(window.innerHeight * 0.5);
+  if(!max) return;
   el.style.height = "auto";              // いったん潰さないと、縮むほうに動かない
+  el.style.overflowY = "hidden";         // 巻き上げの幅に横を削られたまま測らない
   const need = el.scrollHeight;
+  if(!need) return;
   el.style.height = Math.min(need, max) + "px";
   el.style.overflowY = (need > max) ? "auto" : "hidden";
 }
@@ -1973,7 +2085,7 @@ function bindActions(scope, id){
   const sbText = scope.querySelector("[data-sb-comment]");
   if(sbSend && sbText){
     const ready = function(){ sbSend.disabled = !sbText.value.trim(); };
-    sbText.addEventListener("input", function(){ memo.sb = sbText.value; ready(); });
+    sbText.addEventListener("input", function(){ memo.sb = sbText.value; touchDraft(id); ready(); });
     sbText.value = memo.sb;              // 書きかけを戻す
     fitHeight(sbText);
     ready();
@@ -2008,6 +2120,7 @@ function bindActions(scope, id){
   scope.querySelectorAll(".opt-btn").forEach(function(btn){
     btn.addEventListener("click", function(){
       memo.opt = btn.dataset.opt;
+      touchDraft(id);
       paint();
       // 出したばかりの欄はここで初めて測れる(隠れているあいだは測れない)
       if(memo.opt === "__free__" && answerEl){ fitHeight(answerEl); answerEl.focus(); }
@@ -2019,16 +2132,20 @@ function bindActions(scope, id){
     fitHeight(answerEl);
     answerEl.addEventListener("input", function(){
       memo.answer = answerEl.value;
+      touchDraft(id);
       sendBtn.disabled = !currentAnswer();
     });
   }
   if(noteEl){
     noteEl.value = memo.note;            // 書きかけを戻す
     fitHeight(noteEl);
-    noteEl.addEventListener("input", function(){ memo.note = noteEl.value; });
+    noteEl.addEventListener("input", function(){ memo.note = noteEl.value; touchDraft(id); });
   }
   // 選択肢が無い場合は最初から自由記入が出ているので、入力次第で有効になる
   paint();
+  // 隠れているあいだは中身の高さを測れない。paint() で出たあとにもう一度合わせる。
+  // これを飛ばすと、前に書いた長い回答を戻したとき一行分に潰れて出る。
+  fitHeight(answerEl);
 
   sendBtn.addEventListener("click", function(){
     send(id, {
@@ -2073,7 +2190,11 @@ function isSending(id){
  */
 function restoreSend(entry, why){
   const id = entry.id;
-  if(entry.draft) draft[id] = entry.draft;
+  if(entry.draft){
+    draft[id] = entry.draft;
+    draft[id].at = Date.now();   // 戻したいま書き直したものとして数える(古い扱いで消されないように)
+    saveDraftNow();
+  }
   delete pending[id]; writeJson(KEY_PENDING, pending);
   delete hidden[id];  writeJson(KEY_HIDDEN, hidden);
   sendFail[id] = why;
@@ -2122,7 +2243,7 @@ function send(id, payload, okMessage, btn){
   writeJson(KEY_OUTBOX, outbox);
 
   delete sendFail[id];
-  delete draft[id];                 // 画面の書きかけはもう要らない(控えは outbox 側にある)
+  dropDraft(id);                    // 書きかけはもう要らない(控えは outbox 側にある)
   pending[id] = { at: Date.now(), kind: payload.kind };
   writeJson(KEY_PENDING, pending);
   if(payload.kind === "done" || payload.kind === "answer"){
@@ -2364,8 +2485,14 @@ document.addEventListener("visibilitychange", function(){
     if(getConfig()) load(false, { quiet: true, fresh: false });
   }else{
     stopAutoReload();
+    // ここを離れる。書きかけを端末に残す。
+    // iPhoneはこのあと黙って画面を捨てることがあり、閉じる知らせは当てにできない。
+    saveDraftNow();
   }
 });
+
+// ホーム画面へ戻る・タブを閉じる。ここを逃すと書きかけを丸ごと失う。
+window.addEventListener("pagehide", saveDraftNow);
 
 recoverOutbox();     // 前に開いたときの送り残しがあれば、カードごと戻す
 startAutoReload();
