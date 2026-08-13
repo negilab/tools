@@ -226,6 +226,26 @@
     background:rgba(214,176,140,.10);border:1px solid rgba(214,176,140,.25);
     border-radius:var(--radius-pill);padding:3px 10px;margin-bottom:10px;}
   .cp-chip::before{content:"☑";font-size:11px;}
+  /* 持ち主の会話が閉じているカード。押す前に分かるようにする印。 */
+  .from.closed{color:var(--danger);}
+  .handoff-block{margin-top:14px;border-top:1px dashed var(--line);padding-top:12px;}
+  .ho-why{font-size:12.5px;color:var(--danger);line-height:1.6;margin:2px 0 6px;}
+  .ho-list{display:flex;flex-direction:column;gap:2px;margin-top:8px;}
+  .ho-row{all:unset;display:flex;align-items:center;gap:10px;cursor:pointer;
+    padding:10px 4px;border-radius:var(--radius-md);width:100%;box-sizing:border-box;}
+  .ho-row:active{background:var(--input-bg);}
+  .ho-row .box{flex:none;width:20px;height:20px;border:1px solid var(--outline);
+    border-radius:6px;display:flex;align-items:center;justify-content:center;
+    font-size:12px;color:transparent;}
+  .ho-row.on .box{background:var(--accent);border-color:var(--accent);color:var(--fg-on-accent);}
+  .ho-row .txt{font-size:13.5px;line-height:1.5;}
+  .ho-btns{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}
+  .ho-send,.ho-close{flex:1 1 auto;border-radius:var(--radius-pill);font-weight:700;
+    font-size:13.5px;padding:11px 14px;border:1px solid var(--outline);}
+  .ho-send{background:var(--accent);color:var(--fg-on-accent);border-color:var(--accent);}
+  .ho-send:disabled{opacity:.45;}
+  .ho-close{background:var(--subtle);color:var(--subtle-fg);}
+
   /* 出どころ(どのカードから生まれたか)。近い親から順に下へ降りる並び。 */
   .route-block{margin-top:14px;border-top:1px dashed var(--line);padding-top:12px;}
   .route-head{font-size:11px;font-weight:700;color:var(--label);letter-spacing:.03em;
@@ -1580,8 +1600,13 @@ function topHtml(r, isAsk){
   // 「ボード自動」と出しても行き先にならない。その起動はカード1枚で終わっていて、
   // もう話しかける窓が無いため。親をさかのぼった結果(出どころ)があればそちらを出す。
   const from = String(r["出どころ"] || r["元"] || "").trim();
+  // 持ち主の会話がもう開いていないカードは、押す前に分かるようにする。
+  // 押してから「届きません」と言われるのでは遅い。
+  const closed = isOrphan(r);
   const right = (r["担当"] ? '<span class="who">' + escapeHtml(r["担当"]) + '</span>' : "")
-    + (from ? '<span class="from" title="' + escapeHtml(from) + '">' + escapeHtml(from) + '</span>' : "");
+    + (from ? '<span class="from' + (closed ? " closed" : "") + '" title="'
+              + escapeHtml(closed ? "この会話はもう開いていません: " + from : from) + '">'
+              + (closed ? "× " : "") + escapeHtml(from) + '</span>' : "");
   return '<div class="card-top">'
     + '<span class="task-id lead">' + escapeHtml(r["ID"] || "") + '</span>'
     + '<span class="badge type' + (isAsk ? " ask" : "") + '">' + escapeHtml(r["種別"] || "タスク") + '</span>'
@@ -1638,6 +1663,55 @@ function actionHtml(r, isAsk, text){
 }
 
 /** 詳細画面の「差し戻す」。理由が空のままでは送れない。 */
+/**
+ * このカードの持ち主の会話が、もう開いていないか。
+ *
+ * 判定はPC側で済ませて写しに載せてある(携帯からは名簿を引けない)。
+ * ここでは受け取った値を読むだけ。古い写し(項目が無い)では何も出さない。
+ */
+function isOrphan(r){
+  return String((r || {})["押したら"] || "") === "orphan";
+}
+
+/** 引き継ぎ先に選べる会話。写しの末尾に1つだけ入っている。 */
+function handoffChoices(){
+  const list = (data && data["引き継ぎ先候補"]) || [];
+  return Array.isArray(list) ? list.filter(function(x){ return String(x || "").trim(); }) : [];
+}
+
+/**
+ * 持ち主の会話が閉じているときに出す欄。
+ *
+ * このカードを積んだ会話はもう開いていないので、続きを話す相手がいない。
+ * 黙って別の会話へ回すと、事情を知らない相手に仕事が渡る。決めるのは中地さん。
+ * 選べるのは、いま動いている会話だけ(閉じた先に渡しても届かないため)。
+ */
+function handoffHtml(r){
+  if(!isOrphan(r) || pending[r["ID"]]) return "";
+  const why = String(r["届かない理由"] || "この件の持ち主の会話が分かりません");
+  const choices = handoffChoices();
+  const list = choices.length
+    ? '<div class="ho-list">'
+      + choices.map(function(name){
+          return '<button class="ho-row" data-ho-pick="' + escapeHtml(name) + '">'
+               + '<span class="box">✓</span><span class="txt">' + escapeHtml(name) + '</span></button>';
+        }).join("")
+      + '</div>'
+    : '<div class="cp-note">いま動いている会話がありません。'
+      + 'このカードを閉じるか、あとで決めてください。</div>';
+  return '<div class="handoff-block">'
+    + '<div class="cp-head"><span class="label">この会話はもう開いていません</span></div>'
+    + '<div class="ho-why">⚠ ' + escapeHtml(why) + '</div>'
+    + '<div class="cp-note">続きを話す相手がいません。'
+    + 'このカードを閉じるか、いま動いている別の会話に引き受けてもらうかを選んでください。</div>'
+    + list
+    + '<div class="ho-btns">'
+    +   (choices.length ? '<button class="ho-send" data-ho-send disabled>この会話に引き継ぐ</button>' : "")
+    +   '<button class="ho-close" data-ho-close>このカードを閉じる</button>'
+    + '</div>'
+    + '</div>';
+}
+
 function sendBackHtml(r){
   if(pending[r["ID"]]) return "";
   return '<div class="sendback-block" id="sendbackBlock">'
@@ -1759,6 +1833,7 @@ function detailHtml(r){
     +   (parts.text ? '<p class="full">' + escapeHtml(parts.text) + '</p>' : "")
     +   linkBlock
     +   routeBlock
+    +   handoffHtml(r)
     +   cpBlock
     +   actionHtml(r, isAsk, parts.text)
     +   sendBackHtml(r)
@@ -2122,6 +2197,33 @@ function bindActions(scope, id){
       const comment = sbText.value.trim();
       if(!comment){ toast("理由を書いてください", true); return; }
       send(id, { id:id, kind:"sendback", comment:comment }, "差し戻しました", sbSend);
+    });
+  }
+
+  // 引き継ぎ先を選ぶ。選ぶだけでは送らない(押し間違いで別の会話へ渡らないように)。
+  const hoRows = Array.prototype.slice.call(scope.querySelectorAll("[data-ho-pick]"));
+  const hoSend = scope.querySelector("[data-ho-send]");
+  if(hoRows.length){
+    let picked = "";
+    hoRows.forEach(function(row){
+      row.addEventListener("click", function(){
+        picked = row.getAttribute("data-ho-pick") || "";
+        hoRows.forEach(function(x){ x.classList.toggle("on", x === row); });
+        if(hoSend) hoSend.disabled = !picked;
+      });
+    });
+    if(hoSend){
+      hoSend.addEventListener("click", function(){
+        if(!picked){ toast("引き継ぎ先を選んでください", true); return; }
+        send(id, { id:id, kind:"handoff", to:picked },
+             "「" + picked + "」に引き継ぎました", hoSend);
+      });
+    }
+  }
+  const hoClose = scope.querySelector("[data-ho-close]");
+  if(hoClose){
+    hoClose.addEventListener("click", function(){
+      send(id, { id:id, kind:"done" }, "このカードを閉じました", hoClose);
     });
   }
 
