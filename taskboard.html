@@ -691,6 +691,11 @@ async function apiGet(wantFresh){
   return json;
 }
 
+// 資料を待つ上限。fetch は自分では諦めないので、これを過ぎたらこちらから打ち切る。
+// 待たせ続けて「読み込んでいます…」のまま止まるより、理由を出して押し直せる方がよい。
+const DOC_WAIT_MS = 25000;
+const DOC_TIMEOUT_MSG = "時間内に返事がありませんでした";
+
 /**
  * 資料(md)を1つ読む。返るのは中身の文字そのもの。
  *
@@ -704,10 +709,31 @@ async function apiDoc(file){
     + (cfg.url.indexOf("?") >= 0 ? "&" : "?")
     + "token=" + encodeURIComponent(cfg.token)
     + "&md=" + encodeURIComponent(file);
-  const res = await fetch(url, { method:"GET", redirect:"follow" });
-  if(!res.ok) throw new Error("接続できませんでした (" + res.status + ")");
-  const json = await res.json();
+
+  // 中身を読み終わるまで打ち切りの手を離さない。頭だけ返って本文が来ない、
+  // という止まり方もあるため。
+  const stop = (typeof AbortController === "function") ? new AbortController() : null;
+  const timer = setTimeout(function(){ if(stop) stop.abort(); }, DOC_WAIT_MS);
+  let json;
+  try{
+    const res = await fetch(url, {
+      method:"GET", redirect:"follow",
+      signal: stop ? stop.signal : undefined
+    });
+    if(!res.ok) throw new Error("接続できませんでした (" + res.status + ")");
+    json = await res.json();
+  }catch(err){
+    if(stop && stop.signal.aborted) throw new Error(DOC_TIMEOUT_MSG);
+    throw err;
+  }finally{
+    clearTimeout(timer);
+  }
   if(!json.ok) throw new Error(json.error || "資料を読めませんでした");
+  // 資料ではなく台帳が返ってきたときは、向こう(Apps Script)が ?md= を知らない
+  // 古い版のまま公開されている。黙って空の画面を出さず、そう言う。
+  if(typeof json.text !== "string"){
+    throw new Error("台帳側(Apps Script)が資料に対応していません。新しい版でデプロイし直してください");
+  }
   return json;
 }
 
@@ -1748,6 +1774,9 @@ function docErrorText(err){
   if(/failed to fetch|networkerror|load failed|network request failed/i.test(m)){
     return "つながりませんでした。電波の届くところで、もう一度お試しください。";
   }
+  if(m === DOC_TIMEOUT_MSG){
+    return DOC_TIMEOUT_MSG + "。電波の届くところで、もう一度お試しください。";
+  }
   return m;
 }
 
@@ -1775,6 +1804,10 @@ async function loadDoc(file){
 
 function paintDoc(d){
   const body = document.getElementById("docBody");
+  if(!String(d.text || "").trim()){
+    body.innerHTML = '<div class="doc-state bad"><div>この資料は中身が空でした。</div></div>';
+    return;
+  }
   body.innerHTML =
     (d.updatedAt ? '<div class="doc-updated">PCが置いた日時: ' + escapeHtml(d.updatedAt) + '</div>' : "")
     + '<div class="md">' + mdToHtml(d.text) + '</div>';
