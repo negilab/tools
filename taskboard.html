@@ -226,6 +226,14 @@
     background:rgba(214,176,140,.10);border:1px solid rgba(214,176,140,.25);
     border-radius:var(--radius-pill);padding:3px 10px;margin-bottom:10px;}
   .cp-chip::before{content:"☑";font-size:11px;}
+  /* 出どころ(どのカードから生まれたか)。近い親から順に下へ降りる並び。 */
+  .route-block{margin-top:14px;border-top:1px dashed var(--line);padding-top:12px;}
+  .route-head{font-size:11px;font-weight:700;color:var(--label);letter-spacing:.03em;
+    margin-bottom:8px;}
+  .route-list{display:flex;flex-direction:column;gap:4px;}
+  .route-row{font-size:12.5px;color:var(--fg-sub);line-height:1.5;padding:5px 8px;
+    border-left:2px solid var(--line);}
+  .route-note{font-size:11.5px;color:var(--fg-disabled);line-height:1.6;margin-top:10px;}
   .cp-block{margin-top:14px;border-top:1px dashed var(--line);padding-top:12px;}
   .cp-head{display:flex;align-items:baseline;gap:8px;margin-bottom:8px;}
   .cp-head .label{font-size:11px;font-weight:700;color:var(--label);letter-spacing:.03em;}
@@ -1569,7 +1577,9 @@ function topHtml(r, isAsk){
   // 番号はいちばん先に置く。開かずに「T0188の件」と言えるようにするための並び。
   // その対角(右端)に担当と起票元。どの会話が積んだ件かを、開かずに見分けるため。
   // 起票元の記録が無い古いカードには何も出さない(「元なし」と書くと目障りなだけ)。
-  const from = String(r["元"] || "").trim();
+  // 「ボード自動」と出しても行き先にならない。その起動はカード1枚で終わっていて、
+  // もう話しかける窓が無いため。親をさかのぼった結果(出どころ)があればそちらを出す。
+  const from = String(r["出どころ"] || r["元"] || "").trim();
   const right = (r["担当"] ? '<span class="who">' + escapeHtml(r["担当"]) + '</span>' : "")
     + (from ? '<span class="from" title="' + escapeHtml(from) + '">' + escapeHtml(from) + '</span>' : "");
   return '<div class="card-top">'
@@ -1723,6 +1733,24 @@ function detailHtml(r){
       + '</div>';
   }
 
+  // 出どころの経路。どのカードから生まれたかを1段ずつ出す。
+  // ここまで見せておけば、途中で記録が切れていても「どこまでは行けるか」が分かる。
+  let routeBlock = "";
+  const route = Array.isArray(r["経路"]) ? r["経路"] : [];
+  if(route.length){
+    routeBlock = '<div class="route-block">'
+      + '<div class="route-head">この件の出どころ</div>'
+      + '<div class="route-list">'
+      + route.map(function(line){
+          return '<div class="route-row">' + escapeHtml(line) + '</div>';
+        }).join("")
+      + '</div>'
+      + '<div class="route-note">この会話に行けば続きを話せます。'
+      + '「元」が「ボード自動」のカードは、自動で動いた回が積んだもので、その回はもう終わっています。'
+      + '</div>'
+      + '</div>';
+  }
+
   return ''
     + '<div class="card-wrap" data-id="' + escapeHtml(id) + '">'
     +   topHtml(r, isAsk)
@@ -1730,6 +1758,7 @@ function detailHtml(r){
     +   (r["期限"] ? '<div class="due">' + escapeHtml(r["期限"]) + ' 期限</div>' : "")
     +   (parts.text ? '<p class="full">' + escapeHtml(parts.text) + '</p>' : "")
     +   linkBlock
+    +   routeBlock
     +   cpBlock
     +   actionHtml(r, isAsk, parts.text)
     +   sendBackHtml(r)
