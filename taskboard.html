@@ -173,10 +173,15 @@
 
   .field{margin-top:10px;}
   .field label{display:block;font-size:11px;color:var(--fg-sub);margin-bottom:6px;}
+  /* 文字は16px以上。これを下回ると、iPhoneのSafariは触った拍子に画面を勝手に
+     拡大してしまい、いちいち戻すことになる。 */
   .field textarea,.field input[type=text]{width:100%;background:var(--input-bg);
     border:1px solid var(--line);border-radius:var(--radius-md);color:var(--fg);
-    font-size:13px;padding:9px 11px;line-height:1.5;}
-  .field textarea{min-height:56px;resize:vertical;}
+    font-size:16px;padding:9px 11px;line-height:1.55;}
+  /* 高さは打った分だけ伸ばす(fitHeight)。上限は画面の高さの半分までとし、
+     そこから先は中でスクロールする。画面が入力欄に食われないようにするため。
+     手でつまんで伸ばす必要はもう無いので、右下の斜線は出さない。 */
+  .field textarea{min-height:56px;max-height:50vh;resize:none;overflow-y:hidden;}
   .field textarea::placeholder,.field input::placeholder{color:var(--fg-disabled);}
 
   .primary-btn{width:100%;border:none;background:var(--accent);color:var(--fg-on-accent);
@@ -1561,7 +1566,9 @@ function actionHtml(r, isAsk, text){
     + (opts.length ? '<div class="options">' + optHtml
         + '<button class="opt-btn free" data-opt="__free__">自由に書く</button></div>' : "")
     + '<div class="field"' + (opts.length ? ' style="display:none"' : "") + ' data-free>'
-    +   '<label>回答</label><input type="text" data-answer placeholder="答えを入力" /></div>'
+    // 自由記入は一行の窓ではなく、書いた分だけ伸びる窓にする。長い答えを
+    // 一行の窓に書くと、いま書いているところしか見えない。
+    +   '<label>回答</label><textarea data-answer rows="1" placeholder="答えを入力"></textarea></div>'
     + '<div class="field"><label>補足(任意)</label>'
     +   '<textarea data-note placeholder="一言添えたいことがあれば"></textarea></div>'
     + '<button class="primary-btn" data-send disabled>この内容で送信</button>'
@@ -1854,8 +1861,43 @@ function bindCards(root){
   });
 }
 
+/**
+ * 書き込み欄の高さを中身に合わせる。
+ *
+ * 高さが決め打ちだと、長い文章は窓の中でスクロールになり、書いたものを見渡せない。
+ * 打つほど下に伸ばし、消せば縮む。ただし伸びっぱなしでは画面が入力欄に食われるので、
+ * 画面の高さの半分で止めて、そこから先は窓の中でスクロールする。
+ */
+function fitHeight(el){
+  if(!el) return;
+  if(el.offsetParent === null) return;   // 隠れているものは中身の高さを測れない
+  const max = Math.round(window.innerHeight * 0.5);
+  el.style.height = "auto";              // いったん潰さないと、縮むほうに動かない
+  const need = el.scrollHeight;
+  el.style.height = Math.min(need, max) + "px";
+  el.style.overflowY = (need > max) ? "auto" : "hidden";
+}
+
+/** この範囲の書き込み欄を、打つたびに伸びるようにする。 */
+function bindGrow(scope){
+  scope.querySelectorAll(".field textarea").forEach(function(el){
+    el.addEventListener("input", function(){ fitHeight(el); });
+    // キーボードが出ると見えている範囲が半分になる。出きったところで
+    // 書いている欄を真ん中まで送り、キーボードの下に隠れないようにする。
+    el.addEventListener("focus", function(){
+      setTimeout(function(){
+        fitHeight(el);
+        el.scrollIntoView({ block:"center" });
+      }, 250);
+    });
+    fitHeight(el);                       // 画面を作り直した直後にも中身に合わせる
+  });
+}
+
 /** 「済にする」と回答欄。カードでも詳細画面でも同じように動く。 */
 function bindActions(scope, id){
+  bindGrow(scope);
+
   const doneBtn = scope.querySelector("[data-done]");
   if(doneBtn){
     doneBtn.addEventListener("click", function(){
@@ -1908,7 +1950,8 @@ function bindActions(scope, id){
       if(btn.dataset.opt === "__free__"){
         chosen = null;
         if(freeWrap) freeWrap.style.display = "";
-        if(answerEl) answerEl.focus();
+        // 出したばかりの欄はここで初めて測れる(隠れているあいだは測れない)
+        if(answerEl){ fitHeight(answerEl); answerEl.focus(); }
       }else{
         chosen = btn.dataset.opt;
         if(freeWrap) freeWrap.style.display = "none";
