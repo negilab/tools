@@ -197,6 +197,13 @@
   .done-toggle-btn .txt{font-size:12.5px;color:var(--fg-sub);}
   .done-toggle-btn:active .check{background:var(--subtle-pressed);}
 
+  /* 送れずに戻してきたカードの一言。戻ってきたこと自体が知らせなので、控えめに。 */
+  .fail-note{margin-top:10px;font-size:12px;color:var(--danger);line-height:1.6;
+    display:flex;align-items:flex-start;gap:7px;}
+  .fail-note .mark{width:15px;height:15px;border-radius:50%;flex:none;margin-top:2px;
+    border:1px solid var(--danger);display:flex;align-items:center;justify-content:center;
+    font-size:10px;font-weight:700;}
+
   /* 送信済み・PC反映待ち */
   .card.pending{opacity:.65;}
   .pending-note{margin-top:10px;font-size:12px;color:var(--ok-text);
@@ -580,6 +587,7 @@ const KEY_PENDING = "taskboard_pending_v1";  // 送信したがPC未反映のも
 const KEY_CPWAIT  = "taskboard_cpwait_v1";   // 検収チェックの送信済み・PC未反映 {ID:{番号:"済"|"未"}}
 const KEY_HIDDEN  = "taskboard_hidden_v1";   // 済にしてこの端末では隠した項目 {ID:隠した時刻}
 const KEY_FILTER  = "taskboard_filter_v1";   // 絞り込みの選択 {"担当":["中地"], ...}
+const KEY_OUTBOX  = "taskboard_outbox_v1";   // 裏で送っている最中のもの {操作番号:{ID, 中身, 書きかけ}}
 
 // 台帳を取り直す間隔。画面を見ているあいだだけ動かす。
 const AUTO_RELOAD_MS = 30 * 1000;
@@ -601,6 +609,8 @@ let pending = {};
 let cpWait = {};
 let cpBusy = {};        // 送信中の検収チェック {"ID|番号":true}。連打で二重に送らないための札。
 let hidden = {};        // 済にしてこの端末では隠した項目 {ID:隠した時刻}
+let outbox = {};        // 裏で送っている最中のもの。端末にも保存する(閉じられても内容を失わないため)
+let sendFail = {};      // 送れずに戻したカードに出す一言 {ID:理由}
 let autoTimer = null;   // 台帳を取り直す時計
 let queuedRefresh = null; // 取り直しの最中に⟳が押されたときの、次の1回
 let openId = null;      // 詳細画面で開いている行のID（null なら一覧）
@@ -672,6 +682,7 @@ migrateConfig();
 pending = readJson(KEY_PENDING, {});
 cpWait = readJson(KEY_CPWAIT, {});
 hidden = readJson(KEY_HIDDEN, {});
+outbox = readJson(KEY_OUTBOX, {});
 
 // ================================================================ 通信
 /**
@@ -1559,8 +1570,15 @@ function actionHtml(r, isAsk, text){
     return '<div class="pending-note"><span class="spinner"></span>'
          + what + ' — PCが受け取るのを待っています</div>';
   }
+  // 送れずに戻してきたカードには、戻ってきた理由を小さく添える。
+  // 画面いっぱいの警告は出さない。戻ってきたこと自体が知らせになっている。
+  const bad = sendFail[r["ID"]]
+    ? '<div class="fail-note"><span class="mark">!</span>'
+      + escapeHtml(sendFail[r["ID"]]) + '</div>'
+    : "";
   if(!isAsk){
-    return '<button class="done-toggle-btn" data-done>'
+    return bad
+         + '<button class="done-toggle-btn" data-done>'
          + '<span class="check">✓</span><span class="txt">終わったら押してください(済にする)</span></button>'
          + '<button class="sendback-open" data-sb-open>やり直してもらう(差し戻す)</button>';
   }
@@ -1569,7 +1587,8 @@ function actionHtml(r, isAsk, text){
     return '<button class="opt-btn" data-opt="' + escapeHtml(o.text) + '">'
          + escapeHtml(o.mark) + '. ' + escapeHtml(o.text) + '</button>';
   }).join("");
-  return '<div class="answer-block">'
+  return bad
+    + '<div class="answer-block">'
     + '<div class="answer-label">回答してください</div>'
     + (opts.length ? '<div class="options">' + optHtml
         + '<button class="opt-btn free" data-opt="__free__">自由に書く</button></div>' : "")
@@ -1783,10 +1802,16 @@ function closeDoc(){
   if(hadState){ try{ history.back(); }catch(e){} }
 }
 
+/** 電波が届かなかったたぐいのしくじりか。ブラウザによって言い方が違う。 */
+function isOffline(err){
+  return /failed to fetch|networkerror|load failed|network request failed/i
+    .test(String((err && err.message) || err));
+}
+
 /** 失敗の理由を、出先で読んで分かる言い方に直す */
 function docErrorText(err){
   const m = String((err && err.message) || err);
-  if(/failed to fetch|networkerror|load failed|network request failed/i.test(m)){
+  if(isOffline(err)){
     return "つながりませんでした。電波の届くところで、もう一度お試しください。";
   }
   if(m === DOC_TIMEOUT_MSG){
@@ -2036,32 +2061,96 @@ function bindCheckpoints(scope, r){
   }
 }
 
-async function send(id, payload, okMessage, btn){
+/** その件をいま裏で送っている最中か。二度押しをここで止める。 */
+function isSending(id){
+  return Object.keys(outbox).some(function(op){ return outbox[op] && outbox[op].id === id; });
+}
+
+/**
+ * 送れなかったものを画面に戻す。
+ *
+ * 押した内容(選んだ選択肢・書いた文章)も一緒に戻すので、打ち直しにはならない。
+ */
+function restoreSend(entry, why){
+  const id = entry.id;
+  if(entry.draft) draft[id] = entry.draft;
+  delete pending[id]; writeJson(KEY_PENDING, pending);
+  delete hidden[id];  writeJson(KEY_HIDDEN, hidden);
+  sendFail[id] = why;
+}
+
+/**
+ * 前に開いたときの送り残しを拾う。
+ *
+ * 送っている最中にアプリを閉じられると、向こうに届いたかどうかはこちらには分からない。
+ * 黙って送り直すと、同じ回答が二度届くことになる(受信箱で弾かれた実績がある)。
+ * こちらからは送り直さず、カードと書いた内容を戻して、中地さんが押し直せる形にする。
+ */
+function recoverOutbox(){
+  const left = Object.keys(outbox);
+  if(!left.length) return;
+  left.forEach(function(op){
+    const entry = outbox[op];
+    if(entry && entry.id){
+      restoreSend(entry, "送れたかどうか分かりません。台帳を確かめてから、もう一度押してください");
+    }
+  });
+  outbox = {};
+  writeJson(KEY_OUTBOX, outbox);
+}
+
+/**
+ * 押したことを台帳へ送る。
+ *
+ * 押した瞬間に画面を先へ進める。詳細画面は閉じてボードへ戻し、そのカードは一覧から
+ * 下ろす。送るのは裏で続け、届けば何も起きない。しくじったらカードを戻し、
+ * 押した内容もそのまま戻す。
+ *
+ * 送り直しはこちらからは行わない。しくじったように見えても向こうには届いている
+ * ことがあり(返事だけ落ちた場合)、黙って送り直すと同じ回答が二度届く。
+ * 押し直すかどうかは中地さんに委ねる。
+ */
+function send(id, payload, okMessage, btn){
   if(!getConfig()){ openSettings(); return; }
+  if(isSending(id)) return;           // すでに裏で送っている。同じものを二度は出さない。
 
   if(btn) btn.disabled = true;
-  try{
-    await apiPost(payload);
-    delete draft[id];                 // 送れたので控えは要らない(欄も高さも元に戻る)
-    pending[id] = { at: Date.now(), kind: payload.kind };
-    writeJson(KEY_PENDING, pending);
-    if(payload.kind === "done" || payload.kind === "answer"){
-      // 済にしたもの・答えたものは、PCが受け取るのを待たずにこの端末の一覧から下ろす。
-      // 押したのに残っていると、押せていないのかと何度も押すことになる。
-      // 台帳が片付けば pruneHidden が札を外し、一日たっても片付かなければ出し直す。
-      //
-      // 差し戻しはここに入れない。やり直したものが出直してくるまでのあいだ、
-      // 頼んだこと自体が見えなくなってしまうため(カードに「差し戻し送信済み」と出す)。
-      hidden[id] = Date.now();
-      writeJson(KEY_HIDDEN, hidden);
-      if(openId === id) closeDetail();
-    }
-    render();
-    toast(okMessage);
-  }catch(err){
-    if(btn) btn.disabled = false;
-    toast(String(err.message || err), true);
+
+  // 押した内容は端末にも保存する。送信中にアプリを閉じられても失わないように。
+  const opId = id + "|" + payload.kind + "|" + Date.now();
+  outbox[opId] = { id:id, at:Date.now(), payload:payload, draft:draft[id] || null };
+  writeJson(KEY_OUTBOX, outbox);
+
+  delete sendFail[id];
+  delete draft[id];                 // 画面の書きかけはもう要らない(控えは outbox 側にある)
+  pending[id] = { at: Date.now(), kind: payload.kind };
+  writeJson(KEY_PENDING, pending);
+  if(payload.kind === "done" || payload.kind === "answer"){
+    // 済にしたもの・答えたものは、送り終わるのを待たずにこの端末の一覧から下ろす。
+    // 押したのに残っていると、押せていないのかと何度も押すことになる。
+    // 台帳が片付けば pruneHidden が札を外し、一日たっても片付かなければ出し直す。
+    //
+    // 差し戻しはここに入れない。やり直したものが出直してくるまでのあいだ、
+    // 頼んだこと自体が見えなくなってしまうため(カードに「差し戻し送信済み」と出す)。
+    hidden[id] = Date.now();
+    writeJson(KEY_HIDDEN, hidden);
   }
+  if(openId === id) closeDetail();  // 送り終わるのを待たずにボードへ戻す
+  render();
+  toast(okMessage);
+
+  apiPost(payload).then(function(){
+    delete outbox[opId];
+    writeJson(KEY_OUTBOX, outbox);  // 届いた。カードは下ろしたままでよい。
+  }).catch(function(err){
+    const entry = outbox[opId];
+    delete outbox[opId];
+    writeJson(KEY_OUTBOX, outbox);
+    const why = isOffline(err) ? "電波が届かなかったようです" : String(err.message || err);
+    if(entry) restoreSend(entry, "送れませんでした(" + why + ")。もう一度押してください");
+    render();
+    toast("送れませんでした。カードを戻しました", true);
+  });
 }
 
 /**
@@ -2215,6 +2304,7 @@ document.getElementById("cfgSave").addEventListener("click", function(){
     return;
   }
   try{ localStorage.removeItem(KEY_CACHE); }catch(e){}
+  recoverOutbox();   // 送り残しがあれば、押した内容ごとカードに戻してから片付ける
   pending = {}; writeJson(KEY_PENDING, pending);
   cpWait = {}; writeJson(KEY_CPWAIT, cpWait);
   hidden = {}; writeJson(KEY_HIDDEN, hidden);
@@ -2230,6 +2320,7 @@ document.getElementById("cfgClear").addEventListener("click", function(){
     localStorage.removeItem(KEY_CONFIG);
     localStorage.removeItem(KEY_CACHE);
   }catch(e){}
+  recoverOutbox();   // 送り残しがあれば、押した内容ごとカードに戻してから片付ける
   pending = {}; writeJson(KEY_PENDING, pending);
   cpWait = {}; writeJson(KEY_CPWAIT, cpWait);
   hidden = {}; writeJson(KEY_HIDDEN, hidden);
@@ -2276,6 +2367,7 @@ document.addEventListener("visibilitychange", function(){
   }
 });
 
+recoverOutbox();     // 前に開いたときの送り残しがあれば、カードごと戻す
 startAutoReload();
 load(false);
 </script>
