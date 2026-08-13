@@ -17,6 +17,12 @@
     /* sumitsubo dark テーマから移植した配色 */
     --bg:#211E1C;
     --surface:#2E2A27;
+    /* 中地さん担当のカードの地。台紙(--surface)に白を12%混ぜた色。
+       濃さを変えたいときは、この3つだけを差し替える(白8%なら #3F3B38 / #BBB4AE / #7E7670、
+       白16%なら #4F4C4A / #D1CDC8 / #918A85)。 */
+    --row-mine-bg:#474441;
+    --row-mine-fg-sub:#C7C1BC;
+    --row-mine-fg-dim:#88817B;
     --input-bg:#262220;
     --band:#26221F;
     --band-line:#4A423C;
@@ -127,6 +133,11 @@
   /* ---------------------------------------------------- カード */
   .card{background:var(--surface);border:1px solid var(--line);
     border-radius:var(--radius-lg);padding:14px;transition:opacity .2s ease, transform .2s ease;}
+  /* 中地さん担当のカード。地に白をほんの少しだけ混ぜて、自分のぶんだと分かるようにする。
+     地が明るくなると薄い文字が沈むので、説明文と小さな字も同じだけ持ち上げる
+     (読みやすさは白みなしのときと同じ水準に保つ)。 */
+  .card.mine{background:var(--row-mine-bg);
+    --fg-sub:var(--row-mine-fg-sub);--fg-disabled:var(--row-mine-fg-dim);}
   .card.leaving{opacity:0;transform:translateY(-6px) scale(.98);}
   .card-top{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:9px;}
   .badge{font-size:11px;font-weight:700;padding:3px 9px;border-radius:var(--radius-pill);
@@ -1436,27 +1447,16 @@ function filterSummary(){
 function saveFilter(){ writeJson(KEY_FILTER, filterSel); }
 
 /**
- * 台帳に無くなった値の選択を落とす。
+ * 0件になったときに出す一言。
  *
- * 絞り込みは端末に覚えさせてある。その担当・そのセッションのカードが片付いたあとも
- * 選択だけが残り、次に開いた瞬間に0件の画面が出る。「壊れた」と見えるので必ず削る。
- * まだ台帳が届いていないとき(0件)は触らない。届いていないことと無くなったことは違う。
+ * **絞り込みは外さない。**以前は「台帳に無くなった値の選択を落とす」処理を
+ * 描き直すたびに掛けていたが、中地さんが自分のカードを全部片付けた瞬間に
+ * 「中地さんの分だけ」が丸ごと消え、Claude担当のカードが一気に出ていた。
+ * 選択はそのまま残し、代わりにここで理由を言う。
  */
-function pruneFilter(rows){
-  if(!rows.length) return;
-  let changed = false;
-  FACETS.forEach(function(f){
-    const vals = selectedOf(f);
-    if(!vals.length) return;
-    const alive = {};
-    rows.forEach(function(r){ alive[facetValue(r, f)] = true; });
-    const keep = vals.filter(function(v){ return alive[v]; });
-    if(keep.length !== vals.length){
-      changed = true;
-      if(keep.length) filterSel[f] = keep; else delete filterSel[f];
-    }
-  });
-  if(changed) saveFilter();
+function emptyHeadline(){
+  if(isMineFilter()) return "現在中地さんのタスクはありません";
+  return "該当するカードはありません";
 }
 
 function toggleFacet(f, v){
@@ -1546,7 +1546,6 @@ function renderFilters(all, shown){
 
 function render(){
   const all = boardRows();
-  pruneFilter(all);
   const rows = applyFilter(all);
   const done = (data && data.done ? data.done : []);
   // タブの数字は「ボードに何件あるか」。絞り込んだ結果は 3/12件 のほうに出す。
@@ -1560,7 +1559,7 @@ function render(){
       // 絞り込みのせいで空になったのなら、まずそれを言う。
       // 「残っていません」と出すと、消した覚えのない項目が無いことになる。
       boardEl.innerHTML = '<div class="empty-state"><div class="glyph">🔍</div>'
-        + 'いまの絞り込みに当てはまる項目はありません。<br>ボードには ' + all.length + ' 件あります。'
+        + escapeHtml(emptyHeadline()) + '<br>ボードには ' + all.length + ' 件あります。'
         + '<br><br><button class="ghost-btn" id="emptyClear">絞り込みを全部解除する</button></div>';
     }else if(data && data.unset){
       boardEl.innerHTML = '<div class="empty-state"><div class="glyph">⚙</div>'
@@ -1724,6 +1723,11 @@ function sendBackHtml(r){
     + '</div>';
 }
 
+/** 中地さん担当のカードか。地の色を少しだけ変えて、自分のぶんだと分かるようにする。 */
+function isMine(r){
+  return String((r || {})["担当"] || "").trim() === MINE["担当"][0];
+}
+
 function cardHtml(r){
   const id    = r["ID"];
   const isAsk = isAskType(r["種別"] || "タスク");
@@ -1732,7 +1736,8 @@ function cardHtml(r){
   const doneCount = cps.filter(function(c){ return c.done; }).length;
 
   return ''
-    + '<div class="card' + (pending[id] ? " pending" : "") + '" data-id="' + escapeHtml(id) + '">'
+    + '<div class="card' + (isMine(r) ? " mine" : "") + (pending[id] ? " pending" : "")
+      + '" data-id="' + escapeHtml(id) + '">'
     +   topHtml(r, isAsk)
     +   '<h2>' + escapeHtml(r["内容"]) + '</h2>'
     +   (parts.text ? '<p class="body">' + escapeHtml(parts.text) + '</p>' : "")
