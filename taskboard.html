@@ -133,9 +133,20 @@
     border:1px solid var(--outline);color:var(--subtle-fg);letter-spacing:.02em;}
   .badge.type{color:var(--fg-sub);background:var(--input-bg);border-color:var(--line);}
   .badge.ask{color:var(--label);border-color:rgba(224,154,106,.45);background:rgba(224,154,106,.08);}
-  .who{margin-left:auto;font-size:11px;color:var(--fg-disabled);display:flex;align-items:center;gap:4px;}
+  /* 右上は担当と起票元。左上の番号の対角に置く。
+     残りの幅をこの塊に全部与えたうえで中身を右へ寄せる。こうしておくと、
+     種別や状態の文字が長い日でも、この塊だけが次の行へ落ちることがない
+     (幅が足りないときは、下の .from が縮んで名前の後ろが省かれる)。 */
+  .card-right{flex:1 1 0;min-width:0;overflow:hidden;
+    display:flex;justify-content:flex-end;align-items:center;gap:8px;}
+  .who{font-size:11px;color:var(--fg-disabled);display:flex;align-items:center;gap:4px;flex:none;}
   .who::before{content:"";width:14px;height:14px;border-radius:50%;
     background:var(--nav-btn);border:1px solid var(--band-line);}
+  /* どのセッションが積んだ件か。主役は内容なので、文字だけを薄く小さく置く。
+     「大中p03r02答え合わせ」のような長い名前で行が折れるとカードが崩れるので、
+     幅を切って後ろを省く。全部はカードを開けば「元: …」で読める。 */
+  .from{font-size:10.5px;color:var(--fg-disabled);opacity:.8;flex:0 1 auto;min-width:0;
+    max-width:112px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .task-id{font-size:10.5px;color:var(--fg-disabled);font-variant-numeric:tabular-nums;letter-spacing:.03em;}
   /* カードの先頭に出す番号。狭い幅でも折り返さないよう等幅で置く。 */
   .task-id.lead{font-size:11.5px;color:var(--subtle-fg);font-weight:700;flex:none;
@@ -478,6 +489,7 @@
     <div class="sheet-body">
       <h4>■ 見る</h4>
       <p>「ボード」に、いま残っている項目が並びます。上に来ているのが返事待ちの確認依頼です。カードをタップすると詳細画面が開き、端折らずに全文が読めます。左上の「ボードへ戻る」で一覧に戻ります。</p>
+      <p>カードの左上は<b>番号</b>、右上は<b>担当と起票元</b>(どのセッションが積んだか)です。起票元の名前が長いときは後ろを省くので、全部は詳細画面のいちばん下に「元: …」で出ます。古い項目には起票元の記録が無いことがあり、そのときは何も出ません。</p>
       <h4>■ 自分の分だけを見る(絞り込み)</h4>
       <p>タブのすぐ下に小さな文字が並んでいます。「<b>中地さんの分だけ</b>」を押すと、あなた宛の未処理だけが残ります。もう一度押すと元に戻ります。選んであるものは色が付いて下線が引かれます。</p>
       <p>もっと細かく絞るときは「絞り込み▼」を押してください。<b>担当・状態・種別・元(どのセッションが積んだか)</b>が並びます。<br>
@@ -1487,11 +1499,16 @@ function isAskType(type){ return /確認|質問|問/.test(type); }
 
 function topHtml(r, isAsk){
   // 番号はいちばん先に置く。開かずに「T0188の件」と言えるようにするための並び。
+  // その対角(右端)に担当と起票元。どの会話が積んだ件かを、開かずに見分けるため。
+  // 起票元の記録が無い古いカードには何も出さない(「元なし」と書くと目障りなだけ)。
+  const from = String(r["元"] || "").trim();
+  const right = (r["担当"] ? '<span class="who">' + escapeHtml(r["担当"]) + '</span>' : "")
+    + (from ? '<span class="from" title="' + escapeHtml(from) + '">' + escapeHtml(from) + '</span>' : "");
   return '<div class="card-top">'
     + '<span class="task-id lead">' + escapeHtml(r["ID"] || "") + '</span>'
     + '<span class="badge type' + (isAsk ? " ask" : "") + '">' + escapeHtml(r["種別"] || "タスク") + '</span>'
     + (r["状態"] ? '<span class="badge">' + escapeHtml(r["状態"]) + '</span>' : "")
-    + (r["担当"] ? '<span class="who">' + escapeHtml(r["担当"]) + '</span>' : "")
+    + (right ? '<span class="card-right">' + right + '</span>' : "")
     + '</div>';
 }
 
