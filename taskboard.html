@@ -82,9 +82,11 @@
   .segment-wrap{padding:12px 16px 0;background:var(--band);border-bottom:1px solid var(--band-line);}
   .segment{display:flex;gap:6px;background:var(--nav-btn-pressed);
     border-radius:var(--radius-pill);padding:4px;margin-bottom:12px;}
+  /* タブは3つ(保存・ボード・完了ずみ)。狭い画面でも文字が折れないよう、
+     字とすき間を少し詰めてある。 */
   .segment button{flex:1;border:none;background:transparent;color:var(--fg-sub);
-    font-size:13px;font-weight:600;padding:9px 10px;border-radius:var(--radius-pill);
-    display:flex;align-items:center;justify-content:center;gap:6px;}
+    font-size:12.5px;font-weight:600;padding:9px 7px;border-radius:var(--radius-pill);
+    display:flex;align-items:center;justify-content:center;gap:5px;white-space:nowrap;}
   .segment button.active{background:var(--accent);color:var(--fg-on-accent);}
   .segment button .count{font-size:11px;opacity:.85;background:rgba(0,0,0,.18);
     border-radius:var(--radius-pill);padding:1px 7px;}
@@ -343,6 +345,30 @@
   .link-row.off .txt{color:var(--fg-disabled);font-weight:600;}
   .link-row.off .ico{opacity:.5;}
 
+  /* 行そのものは今までどおり押して開ける。控える星は行の外に並べる
+     (<a>の中にボタンを入れると、開くのと控えるのが押し分けられない)。 */
+  .link-item{display:flex;align-items:stretch;gap:8px;margin-bottom:8px;}
+  .link-item > .link-row{flex:1;min-width:0;margin-bottom:0;}
+  .save-btn{flex:none;width:46px;border:1px solid var(--outline);background:var(--subtle);
+    color:var(--fg-disabled);font-size:19px;line-height:1;border-radius:var(--radius-md);
+    display:flex;align-items:center;justify-content:center;}
+  .save-btn:active{background:var(--subtle-pressed);}
+  .save-btn.on{color:var(--label);border-color:rgba(224,154,106,.5);
+    background:rgba(224,154,106,.10);}
+  .save-btn.drop{font-size:15px;color:var(--fg-sub);}
+
+  /* ---------------------------------------------------- 保存した資料の一覧
+     行の見た目は詳細画面の「見るもの・開くもの」と同じにしてある。
+     同じものが同じ形で出ていないと、押していいものかが分からない。 */
+  .saved-list{gap:0;}
+  .saved-head{font-size:11.5px;color:var(--fg-disabled);line-height:1.75;margin:-2px 0 12px;}
+  /* 払って移ったときだけ、来た向きに合わせて滑り込ませる。
+     どちらへ移ったのかが分かると、払い間違いに気づける。 */
+  .list.slide-left{animation:slideFromLeft .2s cubic-bezier(.32,.72,0,1);}
+  .list.slide-right{animation:slideFromRight .2s cubic-bezier(.32,.72,0,1);}
+  @keyframes slideFromLeft{from{transform:translateX(-12%);opacity:.4;}to{transform:none;opacity:1;}}
+  @keyframes slideFromRight{from{transform:translateX(12%);opacity:.4;}to{transform:none;opacity:1;}}
+
   /* ---------------------------------------------------- 詳細画面 */
   .detail{position:fixed;inset:0;z-index:25;background:var(--bg);
     display:flex;flex-direction:column;transform:translateX(100%);
@@ -508,7 +534,9 @@
   </header>
 
   <div class="segment-wrap">
+    <!-- 並びは画面の位置と同じ。左から右へ払うと1つ左のタブへ移る。 -->
     <div class="segment">
+      <button id="tabSaved">保存 <span class="count" id="countSaved">0</span></button>
       <button class="active" id="tabBoard">ボード <span class="count" id="countBoard">0</span></button>
       <button id="tabDone">完了ずみ <span class="count" id="countDone">0</span></button>
     </div>
@@ -524,6 +552,8 @@
     <div id="banner"></div>
     <div class="list" id="boardList"></div>
     <div class="list" id="doneList" style="display:none;"></div>
+    <!-- あとで見る資料。カードが片付いても、ここに控えたものは残る。 -->
+    <div class="list saved-list" id="savedList" style="display:none;"></div>
   </main>
 
   <footer class="bottombar">
@@ -581,6 +611,13 @@
       <h4>■ 資料を読む</h4>
       <p>「📖 …(この画面で読む)」と出ているものは、この画面の中でそのまま読めます。見出しや表も整えて出すので、ドライブのアプリに移らずに読み終われます。左上の「戻る」で元の項目に返ります。<br>
       一度開いた資料は覚えておくので、二度目からはすぐ出ます。まだPCの同期が終わっていないときは「まだ届いていません」と出るので、少し待ってからもう一度押してください。</p>
+      <h4>■ あとで見るものを取っておく(保存)</h4>
+      <p>詳細画面の「見るもの・開くもの」には、行ごとに<b>☆</b>が付いています。押すと★になり、その資料が「保存」に控えられます。もう一度押せば外れます。<br>
+      控えるのは<b>「どこにあるか」だけ</b>です。資料そのものは動きませんし、消えません。</p>
+      <p>控えたものは、タブの左端の「<b>保存</b>」に集まります。<b>ボードの上で、画面を左から右へ払っても切り替わります</b>(逆に右から左へ払うとボードに戻ります)。タブを押しても同じところへ行けます。<br>
+      払うときは<b>画面のいちばん端ではなく、少し内側から</b>にしてください。縁から払うとiPhone自体の操作(アプリの切り替えなど)が働いてしまうためです。上下に送りたいだけのとき、指が少し滑っただけのときは切り替わりません。</p>
+      <p>保存の一覧には、資料の名前の下に「<b>元: T0188 …</b>」と、どのカードの資料だったかが出ます。<b>カードが片付いて一覧から消えても、ここに控えたものは残ります。</b>開き方はカードのときと同じで、📖はこの画面で読め、🔗とドライブのものはタップで開き、PCの中のファイルは点線のままで押せません。<br>
+      控えはこの端末が覚えています。ボードを閉じて開き直しても残ります。PCのタスクボードにも同じ「資料一覧」がありますが、そちらとは別の控えです。</p>
       <h4>■ やり直してもらう(差し戻す)</h4>
       <p>出来上がったものが駄目だったときは、詳細画面のいちばん下から差し戻せます。理由は必須です。書いた理由はそのままClaudeに渡り、それを読んでやり直します。<br>
       押したあとはカードに「差し戻し送信済み」と出ます。PCが受け取ると未着手に戻ります。</p>
@@ -654,6 +691,7 @@ const KEY_HIDDEN  = "taskboard_hidden_v1";   // 済にしてこの端末では�
 const KEY_FILTER  = "taskboard_filter_v1";   // 絞り込みの選択 {"担当":["中地"], ...}
 const KEY_OUTBOX  = "taskboard_outbox_v1";   // 裏で送っている最中のもの {操作番号:{ID, 中身, 書きかけ}}
 const KEY_DRAFT   = "taskboard_draft_v1";    // まだ送っていない書きかけ {ID:{opt, answer, note, sb, at}}
+const KEY_SAVED   = "taskboard_saved_v1";    // あとで見る資料の控え {version, items:[…]}
 
 // 台帳を取り直す間隔。画面を見ているあいだだけ動かす。
 const AUTO_RELOAD_MS = 30 * 1000;
@@ -1121,6 +1159,211 @@ function taskDocs(r){
     if(guessed && !/\.[0-9A-Za-z]+$/.test(file)) return null;
     return { label: String(d.label || "").trim() || file, file: file };
   }).filter(Boolean);
+}
+
+// ================================================================ あとで見る(保存した資料)
+//
+// PC版(gui.py の「資料一覧」)と同じ考え方。タスクは片付くと一覧から消えるが、
+// 資料は残しておきたい。ここは「どこにあるかを控えておく帳面」で、
+// 資料そのものは動かさない・消さない。外すのは控えの行だけ。
+//
+// 置き場所はこの端末の中(localStorage)。PC版の帳面 data\library.json も
+// そのPCの中だけに置いてあり、台帳(tasks.json)とは別物なので、
+// 「手元の道具がそれぞれ自分の控えを持つ」という点で作りをそろえてある。
+// 行の鍵名もPC版に合わせてあるので、あとで台帳と行き来させたくなったときに
+// そのまま渡せる。
+//
+// 行の形: {key, kind:"md"|"url"|"local", label, path, url, file, web,
+//          saved_at, task_id, task_title}
+// kind は「何で開くものか」。md=この画面で読む / url=ブラウザかドライブで開く /
+// local=PCの中(携帯では開けない)。詳細画面と同じ見分け方をそのまま持たせる。
+
+let savedDocs = normalizeSaved(readJson(KEY_SAVED, null));
+
+/** 帳面の行をそろえる。古い形や手で壊れた行が混じっても落ちないように。 */
+function normalizeSaved(raw){
+  const items = (raw && Array.isArray(raw.items)) ? raw.items : [];
+  return items.map(function(x){
+    if(!x || typeof x !== "object") return null;
+    const key = String(x.key || "").trim();
+    if(!key) return null;
+    return {
+      key: key,
+      kind: (x.kind === "md" || x.kind === "url") ? x.kind : "local",
+      label: String(x.label || "").trim() || key,
+      path: String(x.path || ""),
+      url: String(x.url || ""),
+      file: String(x.file || ""),
+      web: !!x.web,
+      saved_at: String(x.saved_at || ""),
+      task_id: String(x.task_id || ""),
+      task_title: String(x.task_title || "")
+    };
+  }).filter(Boolean);
+}
+
+function writeSaved(){
+  savedDocs = normalizeSaved({ items: savedDocs });
+  writeJson(KEY_SAVED, { version: 1, items: savedDocs });
+}
+
+/**
+ * 同じ資料かどうかの見分け方。そろえないと、同じものが二重に控えに載る。
+ *
+ * ・資料(md) … ファイル名だけ。大文字小文字はそろえる。
+ * ・ウェブのURL … そのまま。URLは大文字小文字も / の向きも意味を持つので触らない。
+ * ・PCやドライブの道 … PC版(core.library_key)と同じで、区切りを \ にそろえ、
+ *   末尾の \ を落とし、小文字にする(Windowsは大文字小文字を区別しない)。
+ */
+function savedKeyOf(it){
+  if(!it) return "";
+  if(it.kind === "md"){
+    const f = String(it.file || "").trim().toLowerCase();
+    return f ? "md:" + f : "";
+  }
+  const p = String(it.path || it.url || "").trim();
+  if(!p) return "";
+  if(isWebUrl(p)) return "u:" + p;
+  return "p:" + p.replace(/\//g, "\\").replace(/\\+$/, "").toLowerCase();
+}
+
+function savedHas(key){
+  return !!key && savedDocs.some(function(x){ return x.key === key; });
+}
+
+/** 控える・外すを1つのボタンで。返りは 控えたら true / 外したら false / 扱えないなら null */
+function savedToggle(item){
+  const key = savedKeyOf(item);
+  if(!key) return null;
+  if(savedHas(key)){
+    savedDocs = savedDocs.filter(function(x){ return x.key !== key; });
+    writeSaved();
+    return false;
+  }
+  savedDocs.unshift(Object.assign({}, item, { key: key, saved_at: new Date().toISOString() }));
+  writeSaved();
+  return true;
+}
+
+function savedDrop(key){
+  const before = savedDocs.length;
+  savedDocs = savedDocs.filter(function(x){ return x.key !== key; });
+  if(savedDocs.length !== before) writeSaved();
+}
+
+/** 新しく控えたものが上に来る並び */
+function savedRows(){
+  return savedDocs.slice().sort(function(a, b){
+    return String(b.saved_at).localeCompare(String(a.saved_at));
+  });
+}
+
+/** 詳細画面の資料(md)の行を、控える形に直す */
+function savedFromDoc(d, r){
+  return { kind:"md", file:String(d.file || ""), label:String(d.label || ""),
+           path:"", url:"", web:false,
+           task_id:String((r && r["ID"]) || ""), task_title:String((r && r["内容"]) || "") };
+}
+
+/** 詳細画面の添付の行を、控える形に直す。開けるかどうかも一緒に控えておく。 */
+function savedFromLink(a, r){
+  const ok = !!(a.url && safeUrl(a.url));
+  return { kind: ok ? "url" : "local", file:"", label:String(a.label || ""),
+           path:String(a.path || ""), url: ok ? String(a.url) : "", web: !!a.web,
+           task_id:String((r && r["ID"]) || ""), task_title:String((r && r["内容"]) || "") };
+}
+
+/**
+ * 控える星のボタン。
+ * 行の中身はJSONで持たせる。引用符で崩れないよう encodeURIComponent を通す。
+ */
+function saveBtnHtml(item){
+  const key = savedKeyOf(item);
+  if(!key) return "";
+  const on = savedHas(key);
+  return '<button class="save-btn' + (on ? " on" : "") + '"'
+    + ' data-save="' + encodeURIComponent(JSON.stringify(item)) + '"'
+    + ' aria-label="' + (on ? "保存をやめる" : "あとで見るに保存") + '">'
+    + (on ? "★" : "☆") + '</button>';
+}
+
+/** 詳細画面の☆。押した行だけを塗り替える(画面ごと作り直すと読んでいた位置が飛ぶ)。 */
+function bindSaves(scope){
+  scope.querySelectorAll("[data-save]").forEach(function(btn){
+    btn.addEventListener("click", function(ev){
+      ev.preventDefault();
+      ev.stopPropagation();
+      let item;
+      try{ item = JSON.parse(decodeURIComponent(btn.dataset.save)); }catch(e){ return; }
+      const added = savedToggle(item);
+      if(added === null) return;
+      btn.classList.toggle("on", added);
+      btn.textContent = added ? "★" : "☆";
+      btn.setAttribute("aria-label", added ? "保存をやめる" : "あとで見るに保存");
+      toast(added ? "保存しました(「保存」のタブに入ります)" : "保存をやめました");
+      renderSaved();
+    });
+  });
+}
+
+/** 保存一覧の1行。詳細画面と同じ形で出し、下に「どのカードの資料か」を添える。 */
+function savedRowHtml(x){
+  const from = x.task_id
+    ? "元: " + x.task_id + (x.task_title ? "　" + x.task_title : "")
+    : "元のカードは分かりません";
+  const fromHtml = '<span class="sub">' + escapeHtml(from) + '</span>';
+  let row;
+  if(x.kind === "md"){
+    row = '<button class="link-row" data-md="' + escapeHtml(x.file) + '">'
+        + '<span class="ico">📖</span>'
+        + '<span class="txt">' + escapeHtml(x.label)
+        + '<span class="sub">この画面で読む</span>' + fromHtml + '</span>'
+        + '<span class="go">›</span></button>';
+  }else if(x.kind === "url" && safeUrl(x.url)){
+    const sub = x.web ? "ブラウザで開く — " + shortUrl(x.url) : "ドライブで開く";
+    row = '<a class="link-row" href="' + escapeHtml(x.url) + '" target="_blank" rel="noopener">'
+        + '<span class="ico">' + (x.web ? "🔗" : "📄") + '</span>'
+        + '<span class="txt">' + escapeHtml(x.label)
+        + '<span class="sub">' + escapeHtml(sub) + '</span>' + fromHtml + '</span>'
+        + '<span class="go">›</span></a>';
+  }else{
+    row = '<div class="link-row off">'
+        + '<span class="ico">💻</span>'
+        + '<span class="txt">' + escapeHtml(x.label)
+        + '<span class="sub">PCで開くもの — ' + escapeHtml(x.path) + '</span>' + fromHtml + '</span></div>';
+  }
+  return '<div class="link-item">' + row
+       + '<button class="save-btn drop" data-drop="' + escapeHtml(x.key)
+       + '" aria-label="控えから外す">✕</button></div>';
+}
+
+function renderSaved(){
+  const el = document.getElementById("savedList");
+  if(!el) return;
+  const rows = savedRows();
+  const cnt = document.getElementById("countSaved");
+  if(cnt) cnt.textContent = rows.length;
+
+  if(!rows.length){
+    el.innerHTML = '<div class="empty-state"><div class="glyph">☆</div>'
+      + 'まだ何も保存していません。<br>'
+      + 'カードを開いて「見るもの・開くもの」の☆を押すと、ここに集まります。<br><br>'
+      + 'カードが片付いても、ここに控えたものは残ります。</div>';
+    return;
+  }
+  el.innerHTML = '<div class="saved-head">この端末に控えてあります。'
+    + '✕で外せますが、外れるのは控えの行だけで、資料そのものは消えません。</div>'
+    + rows.map(savedRowHtml).join("");
+
+  el.querySelectorAll("[data-drop]").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      savedDrop(btn.dataset.drop);
+      renderSaved();
+      renderDetail();      // 下でカードが開いていたら、その☆も戻す
+      toast("外しました(資料そのものは残っています)");
+    });
+  });
+  bindDocs(el);            // 📖 はこの画面の中で読む(詳細画面と同じ動き)
 }
 
 // ================================================================ mdを読める形にする
@@ -1635,6 +1878,7 @@ function render(){
   const emptyClear = document.getElementById("emptyClear");
   if(emptyClear) emptyClear.addEventListener("click", clearFilter);
   bindCards(boardEl);
+  renderSaved();
   renderDetail();
 }
 
@@ -1814,27 +2058,34 @@ function detailHtml(r){
       + '<div class="cp-head"><span class="label">見るもの・開くもの</span>'
       +   '<span class="prog">' + (links.length + docs.length) + '件</span></div>'
       // 資料(md)はこの画面の中で読める。外に出ないぶん先に並べる。
+      // 各行の右に☆を付け、あとで見るぶんを控えられるようにする。
       + docs.map(function(d){
-          return '<button class="link-row" data-md="' + escapeHtml(d.file) + '">'
+          return '<div class="link-item">'
+               + '<button class="link-row" data-md="' + escapeHtml(d.file) + '">'
                + '<span class="ico">📖</span>'
                + '<span class="txt">' + escapeHtml(d.label)
                + '<span class="sub">この画面で読む</span></span>'
-               + '<span class="go">›</span></button>';
+               + '<span class="go">›</span></button>'
+               + saveBtnHtml(savedFromDoc(d, r))
+               + '</div>';
         }).join("")
       + links.map(function(a){
           // 開けるのは、ウェブのURLとドライブから読み替えられたぶんだけ。
           // safeUrl を通していないものは、押せる形にしない(javascript: 等を踏ませない)。
+          let row;
           if(a.url && safeUrl(a.url)){
             const sub = a.web ? "ブラウザで開く — " + shortUrl(a.url) : "ドライブで開く";
-            return '<a class="link-row" href="' + escapeHtml(a.url) + '" target="_blank" rel="noopener">'
+            row = '<a class="link-row" href="' + escapeHtml(a.url) + '" target="_blank" rel="noopener">'
                  + '<span class="ico">' + (a.web ? "🔗" : "📄") + '</span>'
                  + '<span class="txt">' + escapeHtml(a.label) + '<span class="sub">' + escapeHtml(sub) + '</span></span>'
                  + '<span class="go">›</span></a>';
-          }
-          return '<div class="link-row off">'
+          }else{
+            row = '<div class="link-row off">'
                + '<span class="ico">💻</span>'
                + '<span class="txt">' + escapeHtml(a.label)
                + '<span class="sub">PCで開くもの — ' + escapeHtml(a.path) + '</span></span></div>';
+          }
+          return '<div class="link-item">' + row + saveBtnHtml(savedFromLink(a, r)) + '</div>';
         }).join("")
       + '</div>';
   }
@@ -1926,6 +2177,7 @@ function renderDetail(){
   bindActions(body, r["ID"]);
   bindCheckpoints(body, r);
   bindDocs(body);
+  bindSaves(body);
 }
 
 function openDetail(id){
@@ -2543,15 +2795,40 @@ document.getElementById("driveLink").href = DRIVE_FILE_URL;
 document.getElementById("detailBack").addEventListener("click", closeDetail);
 document.getElementById("docBack").addEventListener("click", closeDoc);
 
-document.getElementById("tabBoard").addEventListener("click", function(){ switchTab(true); });
-document.getElementById("tabDone").addEventListener("click", function(){ switchTab(false); });
-function switchTab(isBoard){
-  document.getElementById("tabBoard").classList.toggle("active", isBoard);
-  document.getElementById("tabDone").classList.toggle("active", !isBoard);
-  document.getElementById("boardList").style.display = isBoard ? "flex" : "none";
-  document.getElementById("doneList").style.display = isBoard ? "none" : "flex";
-  // 絞り込みはボードの列に対するもの。完了ずみは列が別物なので一緒に畳む。
+// 画面の並び。左から右へ払うと1つ左へ、右から左へ払うと1つ右へ移る。
+// タブの並びもこの順にしてあるので、払った向きと画面の位置が食い違わない。
+const TABS = ["saved", "board", "done"];
+const TAB_BTN  = { saved:"tabSaved",  board:"tabBoard",  done:"tabDone" };
+const TAB_LIST = { saved:"savedList", board:"boardList", done:"doneList" };
+let tab = "board";
+
+document.getElementById("tabSaved").addEventListener("click", function(){ switchTab("saved"); });
+document.getElementById("tabBoard").addEventListener("click", function(){ switchTab("board"); });
+document.getElementById("tabDone").addEventListener("click", function(){ switchTab("done"); });
+
+/**
+ * タブを移る。dir を渡すと、その向きから滑り込む動きを付ける
+ * (-1 = 左の画面へ移った / +1 = 右の画面へ移った)。
+ */
+function switchTab(which, dir){
+  tab = (TABS.indexOf(which) >= 0) ? which : "board";
+  TABS.forEach(function(k){
+    document.getElementById(TAB_BTN[k]).classList.toggle("active", k === tab);
+    const el = document.getElementById(TAB_LIST[k]);
+    el.style.display = (k === tab) ? "flex" : "none";
+    el.classList.remove("slide-left", "slide-right");
+  });
+  // 絞り込みはボードの列に対するもの。ほかのタブは列が別物なので一緒に畳む。
   render();
+  const shown = document.getElementById(TAB_LIST[tab]);
+  if(dir){
+    void shown.offsetWidth;    // 同じ向きに続けて払っても動きが出るように、一度描かせる
+    shown.classList.add(dir < 0 ? "slide-left" : "slide-right");
+  }
+  // 移った先は上から読む。前のタブで下まで送っていた位置を持ち込まない。
+  window.scrollTo(0, 0);
+  const main = document.querySelector("main");
+  if(main) main.scrollTop = 0;
 }
 
 document.getElementById("helpBtn").addEventListener("click", function(){ openSheet("helpSheet"); });
@@ -2698,6 +2975,95 @@ document.getElementById("refreshBtn").addEventListener("click", function(){ clea
 })();
 
 /**
+ * 横に払ってタブを移る(ボードで左から右へ払うと「保存」へ)。
+ *
+ * ■ 画面の端は使わない
+ * 中地さんはこのボードをホーム画面に追加して使っておられる。ホーム画面から
+ * 開いたものにはSafariの枠が付かず、左端から右へ払って前のページに戻る動きも
+ * 持たない。だから左から右への払いを、そのまま入口に使える。
+ * ただし画面のいちばん端は、iOSそのものが握っていることがある
+ * (縁から払うとアプリの切り替え・ホームに戻る)。加えて、ふつうのSafariで
+ * 開かれたときには「戻る」が生きている。どちらでも危なくないよう、
+ * **画面の左右の端(EDGE px)から始まった指は、こちらでは一切受けない**。
+ * 端は向こうに譲り、こちらは端より内側だけを受ける。こうしておけば、
+ * 「払ったのに保存一覧へ行かず、ボードから出てしまった」という食い違いが起きない。
+ *
+ * さらに次の4つがそろったときだけ移る。
+ *   ・横にNEED_X以上動いた(なでただけでは移らない)
+ *   ・横が縦のSLANT倍以上ある(斜めは受けない)
+ *   ・縦がMAX_Y以上混ざっていない(上下に送りたいだけの指を奪わない)
+ *   ・払う速さがある(MAX_MS以内。ゆっくり引いただけなら移らない。
+ *     ただしFAR以上はっきり動かしたときは、ゆっくりでも移る)
+ * 縦を先に見て切っているので、上の「引っ張って更新」(縦)と取り合わない。
+ *
+ * ■ 払うのは近道にとどめる
+ * 払う操作が効かない場面(端から始めた・ゆっくり動かした)でも困らないよう、
+ * タブの列「保存 / ボード / 完了ずみ」を押せば同じところへ行ける。
+ * 払うのを唯一の入口にはしていない。
+ */
+(function(){
+  const main = document.querySelector("main");
+  if(!main) return;
+
+  const EDGE   = 36;    // 左右のこの幅から始まった指は受けない(Safariの戻るに譲る)
+  const NEED_X = 44;    // 横にこれだけ動いたら払ったと見る
+  const MAX_Y  = 40;    // 縦がこれ以上混ざったら、送りたいだけだと見る
+  const SLANT  = 1.6;   // 横は縦のこの倍以上でないと受けない
+  const MAX_MS = 800;   // これより長くかかった動きは「払った」と見ない
+  const FAR    = 130;   // ここまで動かしたときは、ゆっくりでも受ける
+
+  let live = false, sx = 0, sy = 0, st = 0;
+
+  /** いま払いを受け取ってよい場面か(詳細・資料・設定が出ているあいだは触らない) */
+  function blocked(){
+    const d = document.getElementById("detailView");
+    const v = document.getElementById("docView");
+    const b = document.getElementById("backdrop");
+    return (d && d.classList.contains("open"))
+        || (v && v.classList.contains("open"))
+        || (b && b.classList.contains("open"));
+  }
+
+  main.addEventListener("touchstart", function(e){
+    live = false;
+    if(blocked() || e.touches.length !== 1) return;
+    const t = e.touches[0];
+    // 端はSafariのもの。ここから始まった指には手を出さない。
+    if(t.clientX <= EDGE || t.clientX >= (window.innerWidth - EDGE)) return;
+    // 文字を書いている欄や、横へ流す部品の上では受けない
+    if(e.target && e.target.closest
+       && e.target.closest("textarea, input, pre, .table-wrap")) return;
+    live = true;
+    sx = t.clientX; sy = t.clientY; st = Date.now();
+  }, { passive: true });
+
+  main.addEventListener("touchmove", function(e){
+    if(!live || e.touches.length !== 1) return;
+    // 縦が混ざったら、この指はもう受けない(上下に送りたいだけなので邪魔をしない)
+    if(Math.abs(e.touches[0].clientY - sy) > MAX_Y) live = false;
+  }, { passive: true });
+
+  main.addEventListener("touchend", function(e){
+    if(!live) return;
+    live = false;
+    const t = (e.changedTouches && e.changedTouches[0]) || null;
+    if(!t) return;
+    const dx = t.clientX - sx;
+    const dy = t.clientY - sy;
+    const ax = Math.abs(dx), ay = Math.abs(dy);
+    if(ay > MAX_Y) return;                       // 縦が混ざった
+    if(ax < NEED_X) return;                      // 動きが足りない
+    if(ax < ay * SLANT) return;                  // 斜めすぎる
+    if((Date.now() - st) > MAX_MS && ax < FAR) return;   // 遅くて、しかも短い
+    const to = TABS[TABS.indexOf(tab) + (dx > 0 ? -1 : 1)];
+    if(!to) return;                              // 端のタブ。これ以上は行き先がない。
+    switchTab(to, dx > 0 ? -1 : 1);
+  }, { passive: true });
+
+  main.addEventListener("touchcancel", function(){ live = false; }, { passive: true });
+})();
+
+/**
  * 画面そのものを読み込み直す。
  *
  * 右上の⟳は台帳を取り直すだけで、画面の作り(このHTML)は入れ替わらない。
@@ -2798,6 +3164,7 @@ document.addEventListener("visibilitychange", function(){
 window.addEventListener("pagehide", saveDraftNow);
 
 recoverOutbox();     // 前に開いたときの送り残しがあれば、カードごと戻す
+renderSaved();       // 控えは台帳を待たずに出せる。タブの件数を最初から合わせておく。
 startAutoReload();
 load(false);
 </script>
