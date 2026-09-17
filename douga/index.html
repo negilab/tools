@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>動画編集</title>
+<script src="https://cdn.jsdelivr.net/npm/lamejs@1.2.1/lame.min.js"></script>
+<style>
+:root{
+  --bg:#14161b; --panel:#1c1f26; --panel2:#232733; --line:#333947;
+  --tx:#e8eaf0; --tx2:#9aa3b5; --acc:#4ea1ff; --acc2:#ffb454;
+  --ok:#5ad19a; --ng:#ff6b6b;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--tx);font-family:"Yu Gothic UI","Meiryo",system-ui,sans-serif;font-size:14px;display:flex;flex-direction:column}
+button{font-family:inherit;font-size:13px;background:var(--panel2);color:var(--tx);border:1px solid var(--line);border-radius:6px;padding:7px 13px;cursor:pointer}
+button:hover:not(:disabled){background:#2c3140;border-color:#4a5468}
+button:disabled{opacity:.4;cursor:default}
+button.primary{background:var(--acc);border-color:var(--acc);color:#0b1220;font-weight:700}
+button.primary:hover:not(:disabled){background:#68b0ff}
+input[type=text]{font-family:inherit;background:#0f1116;color:var(--tx);border:1px solid var(--line);border-radius:6px;padding:7px 10px}
+
+header{display:flex;align-items:center;gap:14px;padding:10px 16px;background:var(--panel);border-bottom:1px solid var(--line);flex:none}
+header h1{font-size:15px;margin:0;font-weight:700;letter-spacing:.04em}
+header .sp{flex:1}
+header label{color:var(--tx2);font-size:12px}
+
+#main{flex:1;display:flex;min-height:0}
+#left{flex:1;display:flex;flex-direction:column;min-width:0}
+#right{width:380px;border-left:1px solid var(--line);background:var(--panel);display:flex;flex-direction:column;min-height:0}
+
+#drop{margin:14px 16px;border:2px dashed #3a4155;border-radius:10px;padding:26px;text-align:center;color:var(--tx2);cursor:pointer;flex:none}
+#drop:hover,#drop.over{border-color:var(--acc);color:var(--tx);background:#1a2130}
+#drop b{color:var(--tx)}
+
+#timelineWrap{flex:1;overflow:auto;padding:0 16px 16px;min-height:0}
+#timeline{position:relative;min-width:100%}
+#ruler{display:block;height:24px;background:var(--panel2);border-radius:4px}
+.track{margin-top:10px;background:var(--panel);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.thead{display:flex;align-items:center;gap:10px;padding:6px 10px;background:var(--panel2);border-bottom:1px solid var(--line);position:sticky;left:0}
+.thead .nm{font-weight:700;max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.thead .meta{color:var(--tx2);font-size:12px}
+.thead .sp{flex:1}
+.thead button{padding:4px 9px;font-size:12px}
+.thead button.on{background:var(--acc2);border-color:var(--acc2);color:#1a1205;font-weight:700}
+.thead input[type=range]{width:90px;vertical-align:middle}
+canvas.wave{display:block;cursor:grab}
+canvas.wave.drag{cursor:grabbing}
+#head{position:absolute;top:0;width:2px;background:var(--ng);pointer-events:none;box-shadow:0 0 6px rgba(255,107,107,.8)}
+
+#bar{display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--panel);border-top:1px solid var(--line);flex:none;flex-wrap:wrap}
+#time{font-variant-numeric:tabular-nums;font-size:15px;color:var(--tx2)}
+#time b{color:var(--tx);font-size:17px}
+
+#right h2{font-size:13px;margin:0;padding:11px 14px;border-bottom:1px solid var(--line);color:var(--tx2);font-weight:700;letter-spacing:.06em}
+#sttBar{padding:11px 14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+#sttList{flex:1;overflow:auto;padding:6px 0}
+.cue{display:flex;gap:9px;padding:7px 14px;cursor:pointer;border-left:3px solid transparent;line-height:1.55}
+.cue:hover{background:var(--panel2)}
+.cue.now{background:#20304a;border-left-color:var(--acc)}
+.cue .t{color:var(--acc);font-variant-numeric:tabular-nums;font-size:12px;flex:none;padding-top:2px}
+#sttFoot{padding:10px 14px;border-top:1px solid var(--line);display:flex;gap:8px}
+
+#msg{padding:8px 16px;font-size:13px;display:none;flex:none}
+#msg.show{display:block}
+#msg.err{background:#3a1e22;color:#ffb3b3}
+#msg.info{background:#1b2c3a;color:#bcdcff}
+#msg.ok{background:#1d3329;color:#b6f0d3}
+
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:50}
+.modal.show{display:flex}
+.modal .box{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:22px;width:560px;max-width:92vw}
+.modal h3{margin:0 0 12px}
+.modal p{color:var(--tx2);line-height:1.7;margin:0 0 14px}
+.modal input{width:100%;margin-bottom:14px}
+.modal .row{display:flex;gap:8px;justify-content:flex-end}
+.empty{color:var(--tx2);padding:26px 16px;text-align:center;line-height:1.8}
+
+@media (max-width:900px){
+  #main{flex-direction:column}
+  #right{width:auto;border-left:none;border-top:1px solid var(--line);max-height:46vh;flex:none}
+  #sttList{max-height:34vh}
+  header{flex-wrap:wrap}
+  #drop{padding:16px;margin:10px}
+  #timelineWrap{padding:0 10px 10px}
+  #bar{gap:7px}
+  .thead{flex-wrap:wrap}
+  .thead .nm{max-width:52vw}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>動画編集</h1>
+  <label>拡大 <input type="range" id="zoom" min="8" max="400" value="40" style="width:150px;vertical-align:middle"></label>
+  <span class="sp"></span>
+  <button id="btnKey">APIキー</button>
+</header>
+
+<div id="msg"></div>
+
+<div id="main">
+  <div id="left">
+    <div id="drop">
+      ここに<b>動画</b>か<b>音声</b>を放り込んでください　<span style="opacity:.7">（クリックで選択）</span><br>
+      <span style="font-size:12px">動画は音声だけ取り出します。2本まで重ねられます。</span>
+    </div>
+    <input type="file" id="file" accept="video/*,audio/*" multiple hidden>
+
+    <div id="timelineWrap">
+      <div id="timeline">
+        <canvas id="ruler"></canvas>
+        <div id="tracks"></div>
+        <div id="head" style="display:none"></div>
+      </div>
+    </div>
+
+    <div id="bar">
+      <button id="btnPlay" class="primary" disabled>▶ 再生</button>
+      <button id="btnTop" disabled>⏮ 先頭</button>
+      <span id="time"><b>0:00.0</b> / 0:00.0</span>
+      <span class="sp" style="flex:1"></span>
+      <button id="btnWav" disabled>WAVで書き出す</button>
+      <button id="btnMp3" disabled>MP3で書き出す</button>
+    </div>
+  </div>
+
+  <div id="right">
+    <h2>文字起こし</h2>
+    <div id="sttBar">
+      <button id="btnStt" class="primary" disabled>文字起こしする</button>
+      <span id="sttState" style="color:var(--tx2);font-size:12px"></span>
+    </div>
+    <div id="sttList"><div class="empty">まだありません。<br>音声を入れてボタンを押してください。</div></div>
+    <div id="sttFoot">
+      <button id="btnTxt" disabled>テキスト保存</button>
+      <button id="btnSrt" disabled>SRT保存</button>
+      <button id="btnCopy" disabled>コピー</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="keyModal">
+  <div class="box">
+    <h3>GeminiのAPIキー</h3>
+    <p>文字起こしに使います。このPCの中だけに保存されます。<br>
+       取り直すときは <span style="color:var(--acc)">aistudio.google.com/apikey</span> です。</p>
+    <input type="text" id="keyInput" placeholder="AQ... または AIza...">
+    <div class="row">
+      <button id="keyCancel">やめる</button>
+      <button id="keySave" class="primary">保存</button>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+/* ============ 設定 ============ */
+const DEFAULT_KEY = "";   // 埋め込まない。初回に画面で入れてもらい、そのブラウザの中だけに置く
+const MODEL = "gemini-3.6-flash";
+const CHUNK_SEC = 600;          // 文字起こしを分けて送る単位
+const STT_RATE = 16000;         // 文字起こし用の標本化周波数
+const TRACK_H = 92;
+const COLORS = ["#4ea1ff", "#ffb454"];
+
+function getKey(){ try{ return localStorage.getItem("gemkey") || DEFAULT_KEY; }catch(e){ return DEFAULT_KEY; } }
+function setKey(k){ try{ localStorage.setItem("gemkey", k); }catch(e){} }
+
+/* ============ 状態 ============ */
+const ac = new (window.AudioContext || window.webkitAudioContext)();
+const S = {
+  tracks: [],      // {id,name,buffer,trimStart,trimEnd,offset,gain,mute,solo,color,canvas,peaks,peaksPps}
+  pps: 40,         // 1秒あたりの画素数
+  cursor: 0,
+  playing: false,
+  t0: 0, c0: 0,
+  cues: [],
+  busy: false
+};
+let nextId = 1;
+
+/* ============ 部品 ============ */
+const $ = s => document.querySelector(s);
+const elDrop=$("#drop"), elFile=$("#file"), elTracks=$("#tracks"), elRuler=$("#ruler"),
+      elHead=$("#head"), elTime=$("#time"), elWrap=$("#timelineWrap"), elMsg=$("#msg"),
+      elSttList=$("#sttList"), elSttState=$("#sttState");
+
+function msg(text, kind){
+  elMsg.className = "show " + (kind || "info");
+  elMsg.textContent = text;
+}
+function clearMsg(){ elMsg.className = ""; }
+
+function fmt(sec, withMs){
+  if(!isFinite(sec) || sec < 0) sec = 0;
+  const m = Math.floor(sec / 60), s = sec - m * 60;
+  return withMs === false
+    ? m + ":" + String(Math.floor(s)).padStart(2, "0")
+    : m + ":" + String(Math.floor(s)).padStart(2, "0") + "." + String(Math.floor((s % 1) * 10));
+}
+function srtTime(sec){
+  const h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60),
+        s = Math.floor(sec % 60), ms = Math.round((sec % 1) * 1000);
+  return String(h).padStart(2,"0")+":"+String(m).padStart(2,"0")+":"+String(s).padStart(2,"0")+","+String(ms).padStart(3,"0");
+}
+function trackLen(t){ return t.trimEnd - t.trimStart; }
+function totalDur(){
+  let d = 0;
+  S.tracks.forEach(t => { d = Math.max(d, t.offset + trackLen(t)); });
+  return d;
+}
+function anySolo(){ return S.tracks.some(t => t.solo); }
+function audible(t){ return t.mute ? 0 : (anySolo() && !t.solo ? 0 : t.gain); }
+function download(blob, name){
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+}
+
+/* ============ 読み込み ============ */
+elDrop.addEventListener("click", () => elFile.click());
+elFile.addEventListener("change", e => { addFiles([...e.target.files]); elFile.value = ""; });
+["dragenter","dragover"].forEach(ev => document.addEventListener(ev, e => {
+  e.preventDefault(); elDrop.classList.add("over");
+}));
+["dragleave","drop"].forEach(ev => document.addEventListener(ev, e => {
+  e.preventDefault(); if(ev === "drop" || e.target === elDrop) elDrop.classList.remove("over");
+}));
+document.addEventListener("drop", e => {
+  e.preventDefault();
+  elDrop.classList.remove("over");
+  if(e.dataTransfer.files.length) addFiles([...e.dataTransfer.files]);
+});
+
+async function addFiles(files){
+  for(const f of files){
+    if(S.tracks.length >= 2){ msg("トラックは2本までです。要らないほうを消してから入れてください。", "err"); break; }
+    try{
+      msg("「" + f.name + "」から音声を取り出しています…", "info");
+      const buf = await decode(f);
+      addTrack(f.name, buf);
+      clearMsg();
+    }catch(err){
+      console.error(err);
+      msg("「" + f.name + "」の音声を取り出せませんでした。" + (err && err.message ? "（" + err.message + "）" : ""), "err");
+    }
+  }
+  redrawAll();
+  updateButtons();
+}
+
+async function decode(file){
+  const ab = await file.arrayBuffer();
+  try{
+    return await ac.decodeAudioData(ab.slice(0));
+  }catch(e){
+    // ブラウザが直に解せない形式は、実時間で再生して拾う
+    return await captureRealtime(file);
+  }
+}
+
+// 再生しながら生の波形を集める（1倍速。最後の手段）
+function captureRealtime(file){
+  return new Promise((resolve, reject) => {
+    const isV = (file.type || "").startsWith("video") || /\.(mp4|mov|mkv|avi|webm|m4v|wmv|flv|ts)$/i.test(file.name);
+    const el = document.createElement(isV ? "video" : "audio");
+    el.src = URL.createObjectURL(file);
+    el.muted = false;
+    el.addEventListener("error", () => reject(new Error("この形式は読めません")));
+    el.addEventListener("loadedmetadata", async () => {
+      try{
+        await ac.resume();
+        const src = ac.createMediaElementSource(el);
+        const sp = ac.createScriptProcessor(4096, 2, 2);
+        const L = [], R = [];
+        sp.onaudioprocess = ev => {
+          L.push(new Float32Array(ev.inputBuffer.getChannelData(0)));
+          R.push(new Float32Array(ev.inputBuffer.getChannelData(1)));
+          const p = el.duration ? Math.floor(el.currentTime / el.duration * 100) : 0;
+          msg("「" + file.name + "」を実時間で読み取っています… " + p + "%（この形式は早送りできません）", "info");
+        };
+        const mute = ac.createGain(); mute.gain.value = 0;
+        src.connect(sp); sp.connect(mute); mute.connect(ac.destination);
+        el.addEventListener("ended", () => {
+          sp.disconnect(); src.disconnect(); mute.disconnect();
+          const n = L.reduce((a, b) => a + b.length, 0);
+          if(!n) return reject(new Error("音声が入っていません"));
+          const buf = ac.createBuffer(2, n, ac.sampleRate);
+          let o = 0;
+          for(let i = 0; i < L.length; i++){
+            buf.copyToChannel(L[i], 0, o);
+            buf.copyToChannel(R[i], 1, o);
+            o += L[i].length;
+          }
+          URL.revokeObjectURL(el.src);
+          resolve(buf);
+        });
+        el.play();
+      }catch(err){ reject(err); }
+    });
+  });
+}
+
+function addTrack(name, buffer){
+  const t = {
+    id: nextId++, name, buffer,
+    trimStart: 0, trimEnd: buffer.duration,
+    offset: 0, gain: 1, mute: false, solo: false,
+    color: COLORS[S.tracks.length % COLORS.length],
+    peaks: null, peaksPps: 0
+  };
+  S.tracks.push(t);
+  buildTrackDom(t);
+}
+
+/* ============ 画面を組む ============ */
+function buildTrackDom(t){
+  const box = document.createElement("div");
+  box.className = "track";
+  box.dataset.id = t.id;
+  box.innerHTML =
+    '<div class="thead">' +
+      '<span class="nm"></span>' +
+      '<span class="meta"></span>' +
+      '<span class="sp"></span>' +
+      '<label style="color:var(--tx2);font-size:12px">音量 <input type="range" class="vol" min="0" max="150" value="100"></label>' +
+      '<button class="mute">ミュート</button>' +
+      '<button class="solo">ソロ</button>' +
+      '<button class="reset">トリム解除</button>' +
+      '<button class="del">削除</button>' +
+    '</div>' +
+    '<canvas class="wave"></canvas>';
+  elTracks.appendChild(box);
+  t.dom = box;
+  t.canvas = box.querySelector("canvas");
+
+  box.querySelector(".nm").textContent = t.name;
+  box.querySelector(".vol").addEventListener("input", e => {
+    t.gain = e.target.value / 100;
+    if(S.playing && t._g) t._g.gain.value = audible(t);
+  });
+  box.querySelector(".mute").addEventListener("click", e => {
+    t.mute = !t.mute; e.target.classList.toggle("on", t.mute); refreshGains();
+  });
+  box.querySelector(".solo").addEventListener("click", e => {
+    t.solo = !t.solo; e.target.classList.toggle("on", t.solo); refreshGains();
+  });
+  box.querySelector(".reset").addEventListener("click", () => {
+    t.trimStart = 0; t.trimEnd = t.buffer.duration; redrawAll();
+  });
+  box.querySelector(".del").addEventListener("click", () => {
+    stop();
+    S.tracks = S.tracks.filter(x => x.id !== t.id);
+    box.remove();
+    redrawAll(); updateButtons();
+  });
+  bindDrag(t);
+}
+
+function refreshGains(){
+  S.tracks.forEach(t => { if(t._g) t._g.gain.value = audible(t); });
+}
+
+function updateButtons(){
+  const has = S.tracks.length > 0;
+  $("#btnPlay").disabled = !has || S.busy;
+  $("#btnTop").disabled = !has;
+  $("#btnWav").disabled = !has || S.busy;
+  $("#btnMp3").disabled = !has || S.busy || !window.lamejs;
+  $("#btnStt").disabled = !has || S.busy;
+  const hc = S.cues.length > 0;
+  $("#btnTxt").disabled = !hc; $("#btnSrt").disabled = !hc; $("#btnCopy").disabled = !hc;
+  if(!window.lamejs) $("#btnMp3").title = "MP3の部品が読めませんでした（通信できないときに起こります）";
+}
+
+/* ============ 波形を描く ============ */
+function calcPeaks(t, width){
+  const ch = t.buffer.numberOfChannels, len = t.buffer.length;
+  const data = [];
+  for(let c = 0; c < ch; c++) data.push(t.buffer.getChannelData(c));
+  const peaks = new Float32Array(width * 2);
+  const step = len / width;
+  for(let i = 0; i < width; i++){
+    const a = Math.floor(i * step), b = Math.min(len, Math.floor((i + 1) * step));
+    let mn = 0, mx = 0;
+    for(let j = a; j < b; j++){
+      for(let c = 0; c < ch; c++){
+        const v = data[c][j];
+        if(v < mn) mn = v;
+        if(v > mx) mx = v;
+      }
+    }
+    peaks[i * 2] = mn; peaks[i * 2 + 1] = mx;
+  }
+  t.peaks = peaks; t.peaksW = width;
+}
+
+function totalWidth(){
+  return Math.max(Math.ceil(Math.max(totalDur(), 10) * S.pps) + 40, elWrap.clientWidth - 32);
+}
+
+function drawTrack(t, W){
+  const cv = t.canvas, dpr = window.devicePixelRatio || 1;
+  cv.width = W * dpr; cv.height = TRACK_H * dpr;
+  cv.style.width = W + "px"; cv.style.height = TRACK_H + "px";
+  const g = cv.getContext("2d");
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  g.clearRect(0, 0, W, TRACK_H);
+
+  const bufW = Math.max(2, Math.ceil(t.buffer.duration * S.pps));
+  if(t.peaksW !== bufW) calcPeaks(t, bufW);
+
+  // 全体の位置（トリム前の頭がどこに来るか）
+  const originX = (t.offset - t.trimStart) * S.pps;
+  const x0 = t.offset * S.pps;                    // 聞こえ始める位置
+  const x1 = (t.offset + trackLen(t)) * S.pps;    // 聞こえ終わる位置
+  const mid = TRACK_H / 2, amp = TRACK_H / 2 - 7;
+
+  // 外側（捨てる部分）
+  g.globalAlpha = .25;
+  drawWave(g, t, originX, 0, bufW, mid, amp, "#6b7488");
+  g.globalAlpha = 1;
+
+  // 中側（残す部分）
+  g.save();
+  g.beginPath(); g.rect(x0, 0, x1 - x0, TRACK_H); g.clip();
+  g.fillStyle = "#1a2030"; g.fillRect(x0, 0, x1 - x0, TRACK_H);
+  drawWave(g, t, originX, 0, bufW, mid, amp, t.color);
+  g.restore();
+
+  // 中央線
+  g.strokeStyle = "#39415a"; g.lineWidth = 1;
+  g.beginPath(); g.moveTo(0, mid + .5); g.lineTo(W, mid + .5); g.stroke();
+
+  // 端のつまみ
+  g.fillStyle = t.color;
+  g.fillRect(x0, 0, 4, TRACK_H);
+  g.fillRect(x1 - 4, 0, 4, TRACK_H);
+  g.fillStyle = "rgba(0,0,0,.45)";
+  for(let i = 0; i < 3; i++){
+    g.fillRect(x0 + 1, mid - 9 + i * 7, 2, 4);
+    g.fillRect(x1 - 3, mid - 9 + i * 7, 2, 4);
+  }
+
+  const meta = t.dom.querySelector(".meta");
+  meta.textContent = "長さ " + fmt(trackLen(t)) + "／位置 " + fmt(t.offset) + "／元 " + fmt(t.buffer.duration);
+}
+
+function drawWave(g, t, originX, from, to, mid, amp, color){
+  g.strokeStyle = color; g.lineWidth = 1;
+  g.beginPath();
+  const p = t.peaks;
+  for(let i = from; i < to; i++){
+    const x = Math.round(originX + i) + .5;
+    if(x < -2 || x > g.canvas.width) continue;
+    g.moveTo(x, mid - p[i * 2 + 1] * amp);
+    g.lineTo(x, mid - p[i * 2] * amp);
+  }
+  g.stroke();
+}
+
+function drawRuler(W){
+  const dpr = window.devicePixelRatio || 1;
+  elRuler.width = W * dpr; elRuler.height = 24 * dpr;
+  elRuler.style.width = W + "px";
+  const g = elRuler.getContext("2d");
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  g.clearRect(0, 0, W, 24);
+  const steps = [0.1,0.25,0.5,1,2,5,10,15,30,60,120,300,600];
+  let step = steps.find(s => s * S.pps >= 60) || 600;
+  g.font = "11px system-ui"; g.textBaseline = "middle";
+  for(let s = 0; s * S.pps <= W; s += step){
+    const x = Math.round(s * S.pps) + .5;
+    g.strokeStyle = "#465065";
+    g.beginPath(); g.moveTo(x, 14); g.lineTo(x, 24); g.stroke();
+    g.fillStyle = "#9aa3b5";
+    g.fillText(fmt(s, step < 1), x + 4, 8);
+  }
+}
+
+function redrawAll(){
+  const W = totalWidth();
+  $("#timeline").style.width = W + "px";
+  drawRuler(W);
+  S.tracks.forEach(t => drawTrack(t, W));
+  elHead.style.height = (24 + S.tracks.length * (TRACK_H + 10 + 33)) + "px";
+  moveHead();
+  elTime.innerHTML = "<b>" + fmt(S.cursor) + "</b> / " + fmt(totalDur());
+}
+
+function moveHead(){
+  if(!S.tracks.length){ elHead.style.display = "none"; return; }
+  elHead.style.display = "block";
+  elHead.style.left = (S.cursor * S.pps) + "px";
+}
+
+window.addEventListener("resize", () => redrawAll());
+$("#zoom").addEventListener("input", e => { S.pps = +e.target.value; redrawAll(); });
+
+/* ============ つまむ・ずらす ============ */
+function bindDrag(t){
+  const cv = t.canvas;
+  let mode = null, sx = 0, base = 0, base2 = 0;
+
+  cv.addEventListener("mousedown", e => {
+    const x = e.offsetX;
+    const x0 = t.offset * S.pps, x1 = (t.offset + trackLen(t)) * S.pps;
+    mode = Math.abs(x - x0) <= 7 ? "L" : Math.abs(x - x1) <= 7 ? "R" : "M";
+    sx = e.clientX; base = t.offset; base2 = t.trimStart;
+    if(mode === "R") base2 = t.trimEnd;
+    cv.classList.add("drag");
+    e.preventDefault();
+  });
+
+  window.addEventListener("mousemove", e => {
+    if(mode === null || !cv.classList.contains("drag")) return;
+    const d = (e.clientX - sx) / S.pps;
+    if(mode === "M"){
+      t.offset = Math.max(0, base + d);
+    }else if(mode === "L"){
+      const ns = Math.min(Math.max(0, base2 + d), t.trimEnd - 0.05);
+      t.offset = Math.max(0, base + (ns - base2));
+      t.trimStart = ns;
+    }else{
+      t.trimEnd = Math.max(t.trimStart + 0.05, Math.min(t.buffer.duration, base2 + d));
+    }
+    redrawAll();
+  });
+
+  window.addEventListener("mouseup", () => {
+    if(mode !== null){ mode = null; cv.classList.remove("drag"); }
+  });
+
+  cv.addEventListener("dblclick", e => seek(e.offsetX / S.pps));
+}
+
+elRuler.addEventListener("mousedown", e => seek(e.offsetX / S.pps));
+
+function seek(sec){
+  const was = S.playing;
+  if(was) stop();
+  S.cursor = Math.max(0, Math.min(sec, totalDur()));
+  redrawAll();
+  if(was) play();
+}
+
+/* ============ 再生 ============ */
+function play(){
+  if(!S.tracks.length) return;
+  ac.resume();
+  const now = ac.currentTime + 0.05;
+  S.tracks.forEach(t => {
+    const s = t.offset, e = t.offset + trackLen(t);
+    if(S.cursor >= e) return;
+    const src = ac.createBufferSource(); src.buffer = t.buffer;
+    const g = ac.createGain(); g.gain.value = audible(t);
+    src.connect(g); g.connect(ac.destination);
+    if(S.cursor <= s) src.start(now + (s - S.cursor), t.trimStart, trackLen(t));
+    else src.start(now, t.trimStart + (S.cursor - s), e - S.cursor);
+    t._src = src; t._g = g;
+  });
+  S.t0 = now; S.c0 = S.cursor; S.playing = true;
+  $("#btnPlay").textContent = "■ 停止";
+  requestAnimationFrame(tick);
+}
+
+function stop(){
+  S.tracks.forEach(t => {
+    if(t._src){ try{ t._src.stop(); }catch(e){} t._src = null; t._g = null; }
+  });
+  S.playing = false;
+  $("#btnPlay").textContent = "▶ 再生";
+}
+
+function tick(){
+  if(!S.playing) return;
+  S.cursor = S.c0 + Math.max(0, ac.currentTime - S.t0);
+  const total = totalDur();
+  if(S.cursor >= total){ S.cursor = total; stop(); }
+  moveHead();
+  elTime.innerHTML = "<b>" + fmt(S.cursor) + "</b> / " + fmt(total);
+  highlightCue();
+  // 画面の外に出たら追いかける
+  const x = S.cursor * S.pps;
+  if(x > elWrap.scrollLeft + elWrap.clientWidth - 60 || x < elWrap.scrollLeft)
+    elWrap.scrollLeft = x - 80;
+  if(S.playing) requestAnimationFrame(tick);
+}
+
+$("#btnPlay").addEventListener("click", () => S.playing ? stop() : play());
+$("#btnTop").addEventListener("click", () => seek(0));
+document.addEventListener("keydown", e => {
+  if(e.target.tagName === "INPUT") return;
+  if(e.code === "Space"){ e.preventDefault(); S.playing ? stop() : play(); }
+  if(e.code === "Home"){ seek(0); }
+});
+
+/* ============ 書き出し ============ */
+async function renderMix(rate, channels){
+  const total = totalDur();
+  if(total <= 0) throw new Error("中身がありません");
+  const oc = new OfflineAudioContext(channels, Math.ceil(total * rate), rate);
+  S.tracks.forEach(t => {
+    const v = audible(t);
+    if(v <= 0) return;
+    const src = oc.createBufferSource(); src.buffer = t.buffer;
+    const g = oc.createGain(); g.gain.value = v;
+    src.connect(g); g.connect(oc.destination);
+    src.start(t.offset, t.trimStart, trackLen(t));
+  });
+  return await oc.startRendering();
+}
+
+function wavBlob(buf){
+  const ch = buf.numberOfChannels, len = buf.length, rate = buf.sampleRate;
+  const out = new DataView(new ArrayBuffer(44 + len * ch * 2));
+  const wr = (o, s) => { for(let i = 0; i < s.length; i++) out.setUint8(o + i, s.charCodeAt(i)); };
+  wr(0, "RIFF"); out.setUint32(4, 36 + len * ch * 2, true); wr(8, "WAVEfmt ");
+  out.setUint32(16, 16, true); out.setUint16(20, 1, true); out.setUint16(22, ch, true);
+  out.setUint32(24, rate, true); out.setUint32(28, rate * ch * 2, true);
+  out.setUint16(32, ch * 2, true); out.setUint16(34, 16, true);
+  wr(36, "data"); out.setUint32(40, len * ch * 2, true);
+  const data = [];
+  for(let c = 0; c < ch; c++) data.push(buf.getChannelData(c));
+  let o = 44;
+  for(let i = 0; i < len; i++){
+    for(let c = 0; c < ch; c++){
+      let v = Math.max(-1, Math.min(1, data[c][i]));
+      out.setInt16(o, v < 0 ? v * 0x8000 : v * 0x7fff, true);
+      o += 2;
+    }
+  }
+  return new Blob([out.buffer], { type: "audio/wav" });
+}
+
+function toInt16(f32){
+  const a = new Int16Array(f32.length);
+  for(let i = 0; i < f32.length; i++){
+    const v = Math.max(-1, Math.min(1, f32[i]));
+    a[i] = v < 0 ? v * 0x8000 : v * 0x7fff;
+  }
+  return a;
+}
+
+function mp3Blob(buf, kbps){
+  if(!window.lamejs) throw new Error("MP3の部品が読めていません");
+  const ch = Math.min(2, buf.numberOfChannels);
+  const enc = new lamejs.Mp3Encoder(ch, buf.sampleRate, kbps || 192);
+  const L = toInt16(buf.getChannelData(0));
+  const R = ch > 1 ? toInt16(buf.getChannelData(1)) : null;
+  const blocks = [], N = 1152;
+  for(let i = 0; i < L.length; i += N){
+    const l = L.subarray(i, i + N);
+    const b = ch > 1 ? enc.encodeBuffer(l, R.subarray(i, i + N)) : enc.encodeBuffer(l);
+    if(b.length) blocks.push(new Int8Array(b));
+  }
+  const last = enc.flush();
+  if(last.length) blocks.push(new Int8Array(last));
+  return new Blob(blocks, { type: "audio/mpeg" });
+}
+
+function baseName(){
+  const n = S.tracks.length ? S.tracks[0].name.replace(/\.[^.]+$/, "") : "音声";
+  return n;
+}
+
+async function withBusy(label, fn){
+  S.busy = true; updateButtons(); msg(label, "info");
+  try{
+    await fn();
+  }catch(err){
+    console.error(err);
+    msg("うまくいきませんでした。" + (err && err.message ? "（" + err.message + "）" : ""), "err");
+  }finally{
+    S.busy = false; updateButtons();
+  }
+}
+
+$("#btnWav").addEventListener("click", () => withBusy("WAVを作っています…", async () => {
+  const buf = await renderMix(48000, 2);
+  download(wavBlob(buf), baseName() + ".wav");
+  msg("WAVを保存しました。", "ok");
+}));
+
+$("#btnMp3").addEventListener("click", () => withBusy("MP3を作っています…", async () => {
+  const buf = await renderMix(44100, 2);
+  download(mp3Blob(buf, 192), baseName() + ".mp3");
+  msg("MP3を保存しました。", "ok");
+}));
+
+/* ============ 文字起こし ============ */
+function sliceBuffer(buf, from, to){
+  const rate = buf.sampleRate;
+  const a = Math.floor(from * rate), b = Math.min(buf.length, Math.floor(to * rate));
+  const out = ac.createBuffer(1, Math.max(1, b - a), rate);
+  out.copyToChannel(buf.getChannelData(0).subarray(a, b), 0);
+  return out;
+}
+
+function toBase64(blob){
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(String(r.result).split(",")[1]);
+    r.onerror = rej;
+    r.readAsDataURL(blob);
+  });
+}
+
+const PROMPT =
+  "この音声を日本語で文字起こししてください。" +
+  "文の切れ目や話者が変わるところで短く区切り、各区切りに開始秒と終了秒を付けてください。" +
+  "秒は音声の先頭を0とした実数です。" +
+  "聞き取れないところは [不明瞭] と書いてください。" +
+  "相づちや言いよどみも、会話の流れに要るものは残してください。" +
+  "音声に何も入っていなければ空の配列を返してください。";
+
+const SCHEMA = {
+  type: "ARRAY",
+  items: {
+    type: "OBJECT",
+    properties: { start: { type: "NUMBER" }, end: { type: "NUMBER" }, text: { type: "STRING" } },
+    required: ["start", "end", "text"]
+  }
+};
+
+async function askGemini(blob, mime, label){
+  const b64 = await toBase64(blob);
+  const body = JSON.stringify({
+    contents: [{ parts: [{ text: PROMPT }, { inlineData: { mimeType: mime, data: b64 } }] }],
+    generationConfig: { responseMimeType: "application/json", responseSchema: SCHEMA, temperature: 0 }
+  });
+  let last = null;
+  for(let i = 0; i < 5; i++){
+    if(i){
+      const wait = 3 * Math.pow(2, i - 1);
+      msg("Geminiが混み合っています。" + wait + "秒待って送り直します（" + i + "回目）" + (label || ""), "info");
+      await new Promise(r => setTimeout(r, wait * 1000));
+    }
+    let res;
+    try{
+      res = await fetch(
+        "https://generativelanguage.googleapis.com/v1beta/models/" + MODEL + ":generateContent",
+        { method: "POST", headers: { "x-goog-api-key": getKey(), "Content-Type": "application/json" }, body }
+      );
+    }catch(e){
+      last = new Error("通信できませんでした。ネットにつながっているか確かめてください。");
+      continue;
+    }
+    if(res.ok){
+      const j = await res.json();
+      const c = j.candidates && j.candidates[0];
+      const txt = c && c.content && c.content.parts ? c.content.parts.map(p => p.text || "").join("") : "";
+      if(!txt){
+        last = new Error("空の返事が来ました" + (c && c.finishReason ? "（" + c.finishReason + "）" : ""));
+        continue;
+      }
+      return JSON.parse(txt);
+    }
+    let d = "";
+    try{ d = (await res.json()).error.message; }catch(e){ d = res.statusText; }
+    last = new Error("Gemini " + res.status + "：" + d);
+    if([429, 500, 502, 503, 504].indexOf(res.status) < 0) throw last;   // 直らない類はすぐ諦める
+  }
+  throw last;
+}
+
+$("#btnStt").addEventListener("click", () => {
+  if(!getKey()){
+    msg("先にAPIキーを入れてください。文字起こしはGeminiに送っています。", "err");
+    $("#keyInput").value = "";
+    $("#keyModal").classList.add("show");
+    $("#keyInput").focus();
+    return;
+  }
+  runStt();
+});
+
+function runStt(){ return withBusy("音声を整えています…", async () => {
+  S.cues = [];
+  renderCues();
+  const mono = await renderMix(STT_RATE, 1);
+  const total = mono.duration;
+  const n = Math.max(1, Math.ceil(total / CHUNK_SEC));
+  const useMp3 = !!window.lamejs;
+  const all = [];
+  for(let i = 0; i < n; i++){
+    const from = i * CHUNK_SEC, to = Math.min(total, (i + 1) * CHUNK_SEC);
+    elSttState.textContent = n > 1 ? (i + 1) + " / " + n + " を送っています…" : "送っています…";
+    msg("文字起こし中です（" + (i + 1) + "/" + n + "）。1分ほどかかります。", "info");
+    const part = sliceBuffer(mono, from, to);
+    const blob = useMp3 ? mp3Blob(part, 64) : wavBlob(part);
+    const cues = await askGemini(blob, useMp3 ? "audio/mpeg" : "audio/wav", n > 1 ? "／" + (i + 1) + "本目" : "");
+    cues.forEach(c => all.push({ start: (+c.start || 0) + from, end: (+c.end || 0) + from, text: String(c.text || "").trim() }));
+    S.cues = all.slice().sort((a, b) => a.start - b.start);
+    renderCues();
+  }
+  elSttState.textContent = S.cues.length + " 行";
+  msg("文字起こしが終わりました。", "ok");
+  updateButtons();
+}); }
+
+function renderCues(){
+  if(!S.cues.length){
+    elSttList.innerHTML = '<div class="empty">まだありません。<br>音声を入れてボタンを押してください。</div>';
+    return;
+  }
+  elSttList.innerHTML = "";
+  S.cues.forEach((c, i) => {
+    const d = document.createElement("div");
+    d.className = "cue"; d.dataset.i = i;
+    d.innerHTML = '<span class="t"></span><span class="x"></span>';
+    d.querySelector(".t").textContent = fmt(c.start, false);
+    d.querySelector(".x").textContent = c.text;
+    d.addEventListener("click", () => seek(c.start));
+    elSttList.appendChild(d);
+  });
+}
+
+let lastCue = -1;
+function highlightCue(){
+  if(!S.cues.length) return;
+  let idx = -1;
+  for(let i = 0; i < S.cues.length; i++){
+    if(S.cursor >= S.cues[i].start - 0.2) idx = i; else break;
+  }
+  if(idx === lastCue) return;
+  lastCue = idx;
+  [...elSttList.children].forEach((el, i) => el.classList && el.classList.toggle("now", i === idx));
+  const el = elSttList.children[idx];
+  if(el && el.scrollIntoView) el.scrollIntoView({ block: "nearest" });
+}
+
+function asText(){ return S.cues.map(c => fmt(c.start, false) + "  " + c.text).join("\r\n"); }
+function asSrt(){
+  return S.cues.map((c, i) =>
+    (i + 1) + "\r\n" + srtTime(c.start) + " --> " + srtTime(c.end > c.start ? c.end : c.start + 2) + "\r\n" + c.text + "\r\n"
+  ).join("\r\n");
+}
+$("#btnTxt").addEventListener("click", () => download(new Blob(["﻿" + asText()], { type: "text/plain" }), baseName() + ".txt"));
+$("#btnSrt").addEventListener("click", () => download(new Blob(["﻿" + asSrt()], { type: "text/plain" }), baseName() + ".srt"));
+$("#btnCopy").addEventListener("click", async () => {
+  try{ await navigator.clipboard.writeText(asText()); msg("コピーしました。", "ok"); }
+  catch(e){ msg("コピーできませんでした。テキスト保存をお使いください。", "err"); }
+});
+
+/* ============ APIキー ============ */
+$("#btnKey").addEventListener("click", () => {
+  $("#keyInput").value = getKey();
+  $("#keyModal").classList.add("show");
+});
+$("#keyCancel").addEventListener("click", () => $("#keyModal").classList.remove("show"));
+$("#keySave").addEventListener("click", () => {
+  const k = $("#keyInput").value.trim();
+  setKey(k);
+  $("#keyModal").classList.remove("show");
+  if(k && S.tracks.length && !S.busy){ runStt(); }
+  else msg("APIキーを保存しました。", "ok");
+});
+$("#keyInput").addEventListener("keydown", e => { if(e.key === "Enter") $("#keySave").click(); });
+
+/* ============ 起動 ============ */
+window.addEventListener("load", () => {
+  updateButtons();
+  redrawAll();
+});
+</script>
+</body>
+</html>
