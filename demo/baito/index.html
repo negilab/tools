@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<title>バイトの手配（体験版）</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23345466'/%3E%3Ctext x='16' y='22' font-size='14' font-family='sans-serif' font-weight='700' fill='%23fff' text-anchor='middle'%3E人%3C/text%3E%3C/svg%3E">
+<style>
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;overflow:hidden}
+  body{display:flex;flex-direction:column;background:#f5f7f8;
+    font:13px/1.5 -apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic",Meiryo,sans-serif}
+  .bar{flex:0 0 auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+    background:#1f2937;color:#e5e7eb;padding:6px 12px;font-size:12px}
+  .bar b{color:#fff;font-weight:700}
+  .bar .sp{flex:1}
+  .bar a.home{color:#9db9e8;text-decoration:none}
+  .bar .key{color:#fcd34d}
+  .bar button.rst{font:inherit;font-size:12px;color:#e5e7eb;background:transparent;border:1px solid #4b5563;
+    border-radius:6px;padding:3px 10px;cursor:pointer}
+  iframe{flex:1 1 auto;width:100%;border:0;background:#fff}
+</style>
+</head>
+<body>
+<div class="bar">
+  <b>体験版</b><span>データは架空で、閉じると消えます</span>
+  <span class="key">合言葉は demo</span>
+  <span class="sp"></span>
+  <button class="rst" id="rst">はじめに戻す</button>
+  <a class="home" href="../../">tools</a>
+</div>
+<iframe id="app" src="app.html" title="バイトの手配"></iframe>
+<script>
+  try { new Image().src = 'https://script.google.com/macros/s/AKfycbx60H_bXkfaEXrwhLvp4MOIH6wmtw414pembss8iu5VVb5_UAE3AmOnyIRk5Y4ak02Ouw/exec?app=AP002&k=demo'; } catch (e) {}
+  var f = document.getElementById('app');
+  document.getElementById('rst').onclick = function () {
+    try { localStorage.removeItem('demo_baito_v1'); } catch (e) {}
+    try {
+      var ls = f.contentWindow.localStorage;
+      for (var i = ls.length - 1; i >= 0; i--) { var k = ls.key(i); if (k && (k.indexOf('demo_baito') === 0 || k.indexOf('pass') >= 0)) ls.removeItem(k); }
+    } catch (e2) {}
+    f.src = f.src;
+  };
+</script>
+</body>
+</html>

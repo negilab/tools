@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<title>出店の申し込み（体験版）</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232a8761'/%3E%3Ctext x='16' y='22' font-size='14' font-family='sans-serif' font-weight='700' fill='%23fff' text-anchor='middle'%3E出%3C/text%3E%3C/svg%3E">
+<style>
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;overflow:hidden}
+  body{display:flex;flex-direction:column;background:#f5f7f8;
+    font:13px/1.5 -apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic",Meiryo,sans-serif}
+  .bar{flex:0 0 auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+    background:#1f2937;color:#e5e7eb;padding:6px 12px;font-size:12px}
+  .bar b{color:#fff;font-weight:700}
+  .bar .sp{flex:1}
+  .bar a.home{color:#9db9e8;text-decoration:none}
+  .tabs{display:flex;gap:6px}
+  .tabs button{font:inherit;font-size:12px;color:#e5e7eb;background:#374151;border:1px solid #4b5563;
+    border-radius:6px;padding:3px 12px;cursor:pointer}
+  .tabs button.on{background:#2a8761;border-color:#2a8761;color:#fff}
+  .bar .key{color:#fcd34d}
+  .bar button.rst{font:inherit;font-size:12px;color:#e5e7eb;background:transparent;border:1px solid #4b5563;
+    border-radius:6px;padding:3px 10px;cursor:pointer}
+  iframe{flex:1 1 auto;width:100%;border:0;background:#fff}
+</style>
+</head>
+<body>
+<div class="bar">
+  <b>体験版</b><span>データは架空で、閉じると消えます</span>
+  <div class="tabs">
+    <button id="tF" class="on">出店者の画面</button>
+    <button id="tA">管理の画面</button>
+  </div>
+  <span class="key" id="hint">出店者が申し込む画面です</span>
+  <span class="sp"></span>
+  <button class="rst" id="rst">はじめに戻す</button>
+  <a class="home" href="../../">tools</a>
+</div>
+<iframe id="app" src="form.html" title="出店の申し込み"></iframe>
+<script>
+  try { new Image().src = 'https://script.google.com/macros/s/AKfycbx60H_bXkfaEXrwhLvp4MOIH6wmtw414pembss8iu5VVb5_UAE3AmOnyIRk5Y4ak02Ouw/exec?app=AP001&k=demo'; } catch (e) {}
+  var f = document.getElementById('app');
+  function go(which) {
+    document.getElementById('tF').className = which === 'form' ? 'on' : '';
+    document.getElementById('tA').className = which === 'admin' ? 'on' : '';
+    document.getElementById('hint').textContent = which === 'admin' ? '合言葉は demo' : '出店者が申し込む画面です';
+    f.src = which === 'admin' ? 'admin.html' : 'form.html';
+  }
+  document.getElementById('tF').onclick = function () { go('form'); };
+  document.getElementById('tA').onclick = function () { go('admin'); };
+  document.getElementById('rst').onclick = function () {
+    try { localStorage.removeItem('demo_shutten_v1'); localStorage.removeItem('shuten_pass'); } catch (e) {}
+    try { f.contentWindow.localStorage.removeItem('demo_shutten_v1'); f.contentWindow.localStorage.removeItem('shuten_pass'); } catch (e2) {}
+    f.src = f.src;
+  };
+</script>
+</body>
+</html>

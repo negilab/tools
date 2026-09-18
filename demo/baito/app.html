@@ -1,0 +1,2125 @@
+
+<!DOCTYPE html>
+<meta charset="utf-8">
+<script src="fake.js"></script>
+<style>
+  :root{
+    --navy:#345466; --green:#2a8761; --ink:#1c2b33; --sub:#6b7c86;
+    --line:#e2e8ec; --bg:#f5f7f8; --paid:#fff8d8; --off:#f2f3f4; --red:#c0392b;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%; overflow:hidden; overscroll-behavior:none}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:"Hiragino Kaku Gothic ProN","Yu Gothic","Meiryo",system-ui,sans-serif;
+    font-size:13px; line-height:1.6; -webkit-text-size-adjust:100%;
+  }
+  .wrap{height:100%; display:flex; flex-direction:column; overflow:hidden}
+
+  /* 上の帯 */
+  .top{
+    order:0; flex:0 0 auto; background:var(--navy); color:#fff; padding:11px 16px;
+    display:flex; align-items:baseline; gap:12px; flex-wrap:wrap;
+    position:relative; z-index:5;
+  }
+  .top .brand{font-size:15px; font-weight:700}
+  .top .ver{font-size:11px; color:#9fb8c6; letter-spacing:.04em; margin-left:-6px}
+  /* 数の入力枠の右に出る上下ボタンは出さない（押し間違いのもと） */
+  input[type=number]::-webkit-outer-spin-button, input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none; margin:0}
+  input[type=number]{-moz-appearance:textfield; appearance:textfield}
+  .top .sheet{display:none; font-size:12px; color:#c6d7e0; text-decoration:none; border:1px solid #6f8ea0; border-radius:6px; padding:2px 9px; white-space:nowrap}
+  .top .sheet:hover{color:#fff; border-color:#fff}
+  .top .help{font-size:12px; color:#c6d7e0; text-decoration:none; border:1px solid #6f8ea0; border-radius:6px; padding:2px 9px; white-space:nowrap}
+  .top .help:hover{color:#fff; border-color:#fff}
+  @media (min-width:860px){ .top .sheet{display:inline-block} }   /* PCだけ。スマホは枠が狭いので出さない */
+  .top .stat{margin-left:auto; font-size:12px; color:#c6d7e0; display:none; white-space:nowrap}
+  .top .stat.on{display:inline-block}
+  .top .stat.busy::before{
+    content:""; display:inline-block; width:8px; height:8px; border-radius:50%;
+    background:#8fd8b0; margin-right:6px; vertical-align:middle; animation:statblink 1s infinite;
+  }
+  .top .stat.ok{color:#a9e8c4}
+  .top .stat.ng{color:#ffb4a8; font-weight:700}
+  .top .undo{
+    display:none; margin-left:8px; font-size:12px; padding:3px 10px; border-radius:6px;
+    border:1px solid #9fb8c6; background:transparent; color:#fff; font:inherit; cursor:pointer;
+  }
+  .top .undo.on{display:inline-block}
+  @keyframes statblink{0%,100%{opacity:.25} 50%{opacity:1}}
+
+  /* 下のナビ（広い画面では上のタブになる） */
+  .nav{
+    order:2; flex:0 0 auto; position:relative; z-index:6;
+    display:flex; background:#fff; border-top:1px solid var(--line);
+  }
+  .nav button{
+    flex:1 1 0; border:none; background:none; font:inherit; color:var(--sub);
+    padding:7px 0 8px; cursor:pointer; border-radius:0; line-height:1.35;
+  }
+  .nav button .ic{display:block; font-size:15px}
+  .nav button .tx{display:block; font-size:11px}
+  .nav button.on{color:var(--green); font-weight:700; box-shadow:inset 0 2px 0 var(--green)}
+
+  .body{
+    order:1; flex:1 1 auto; min-height:0; padding:12px 13px 16px;
+    overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch;
+    overscroll-behavior:contain;
+  }
+  .view{display:none}
+  .view.on{display:block}
+
+  @media (min-width:860px){
+    .nav{order:1; border-top:none; border-bottom:1px solid var(--line); padding:0 14px}
+    .nav button{flex:0 0 auto; padding:8px 20px 9px}
+    .nav button .ic{display:inline; font-size:13px; margin-right:5px}
+    .nav button .tx{display:inline; font-size:13px}
+    .body{order:2; padding:16px 20px 28px}
+  }
+
+  /* 部品 */
+  h2{font-size:12px; color:var(--sub); letter-spacing:.08em; margin:0 0 8px; font-weight:700}
+  .card{background:#fff; border:1px solid var(--line); border-radius:8px; padding:12px 14px}
+  .f{display:flex; flex-direction:column; gap:3px; margin-bottom:9px}
+  .f:last-child{margin-bottom:0}
+  .row2{display:grid; grid-template-columns:1fr 1fr; gap:9px 12px}
+  label{font-size:11px; color:var(--sub)}
+  input,select,textarea{
+    font:inherit; color:inherit; padding:6px 8px; border:1px solid #cfd8dd;
+    border-radius:5px; background:#fff; width:100%; min-width:0;
+  }
+  input:focus,select:focus,textarea:focus{
+    outline:none; border-color:var(--green); box-shadow:0 0 0 2px rgba(42,135,97,.15);
+  }
+  input[type=checkbox]{width:auto}
+  button{font:inherit; cursor:pointer; border-radius:6px}
+  .btn{background:#fff; color:var(--navy); border:1px solid #b9c9d2; padding:7px 13px; font-weight:700}
+  .btn:hover{background:#eef3f6}
+  .btn.mini{padding:3px 9px; font-size:12px; font-weight:400}
+  a.btn{display:inline-block; text-decoration:none}
+  .go{background:var(--green); color:#fff; border:none; padding:9px 20px; font-weight:700}
+  .go:hover{background:#22704f}
+  .go:disabled{background:#a9c6b7; cursor:default}
+  .plain{background:#fff; color:var(--sub); border:1px solid #cfd8dd; padding:9px 16px}
+  .plain:hover{background:#f2f5f7}
+  .bar{display:flex; gap:9px; align-items:flex-end; flex-wrap:wrap; margin-bottom:11px}
+  .bar .f{margin:0}
+  .bar .f.sm{width:140px}
+  .bar .f.wide{flex:1 1 150px; min-width:0}
+  .bad{border-color:#d1495b !important; box-shadow:0 0 0 2px rgba(209,73,91,.15) !important}
+  .none{color:var(--sub); padding:18px 4px; text-align:center}
+  .note{font-size:11px; color:var(--sub); margin:6px 3px 0; line-height:1.5}
+
+  /* 月のまとめ帯 */
+  .band{
+    background:var(--navy); color:#fff; border-radius:7px; padding:7px 13px; margin-bottom:10px;
+    display:flex; gap:16px; flex-wrap:wrap; font-size:12px; font-weight:700;
+  }
+
+  /* 案件のカード */
+  .jcard{
+    background:#fff; border:1px solid var(--line); border-radius:9px;
+    padding:10px 12px; margin-bottom:9px; cursor:pointer;
+  }
+  .jcard:hover{border-color:#8fa3b0; background:#fbfdfe}
+  .jcard .t1{display:flex; align-items:baseline; gap:9px; flex-wrap:wrap}
+  .jcard .venue{font-size:14px; font-weight:700}
+  .jcard .when{font-size:12px; color:var(--sub)}
+  .jcard .jid{margin-left:auto; font-size:11px; color:#9fb0b9; letter-spacing:.06em}
+  .jcard .nums{display:flex; gap:15px; flex-wrap:wrap; margin-top:3px; font-size:12px; color:#41535d}
+  .jcard .nums em{font-style:normal; color:var(--sub)}
+  .chips{margin-top:6px; display:flex; flex-wrap:wrap; gap:4px}
+  .chip{font-size:11px; padding:1px 7px; border-radius:10px; background:#eef2f4; color:#4c5c66}
+  .chip.paid{background:#fff2a8; color:#6f5c1c}   /* シートの案件管理と同じ黄色 */
+  .chip.off{background:var(--off); color:#9aa2a8}
+  .tag{font-size:11px; padding:1px 8px; border-radius:10px; background:#dbe5ec; color:var(--navy); font-weight:700}
+  .tag.ng{background:#fbe3e3; color:var(--red)}
+
+  /* 案件編集 */
+  .cols{display:block}
+  .cols .left{margin-bottom:12px}
+  .cols .right{min-width:0}
+  @media (min-width:860px){
+    .cols{display:flex; gap:18px; align-items:flex-start}
+    .cols .left{width:330px; flex:0 0 330px; margin-bottom:0}
+    .cols .right{flex:1 1 auto}
+  }
+  .maker{background:#fff; border:1px solid var(--line); border-radius:8px; padding:11px 13px; margin-bottom:12px}
+  .maker .line{display:flex; align-items:flex-end; gap:8px; flex-wrap:wrap}
+  .maker .f{margin:0}
+  .maker .f.sm{width:132px}
+  .maker .f.md{width:136px}
+  /* 狭い画面では2列にそろえる。
+     日付の枠は中身の都合で幅が縮まらず、横に並べると隙間が潰れて
+     線がくっついて見えるので、グリッドの桁に収めて隙間を持たせる。
+
+     桁は minmax(0,1fr) にする。ただの 1fr だと「中身より狭くならない」決まりが働き、
+     日付の枠が広い端末では桁のほうが押し広げられて、すきまが潰れる。
+     日付の枠じたいも、端末まかせの幅をやめて桁いっぱいに合わせる。 */
+  @media (max-width:859px){
+    .maker .line{
+      display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+      gap:10px; align-items:end;
+    }
+    .maker .f, .maker .f.sm, .maker .f.md{width:auto; min-width:0}
+    .maker .line input, .maker .line select{min-width:0; max-width:100%; width:100%}
+    .maker .line > button{width:100%; min-width:0}
+    /* 日付の枠。端末が持っている見た目と最小幅をいったん外して、
+       こちらの幅に従わせる（押すと出るカレンダーはそのまま使えます）。
+       iPhoneは外すと高さまで潰れるので、高さをこちらで明示する */
+    input[type=date]{
+      -webkit-appearance:none; appearance:none;
+      min-width:0; max-width:100%; width:100%; text-align:left;
+      min-height:29px; line-height:21px; background:#fff;
+    }
+    input[type=date]::-webkit-date-and-time-value{
+      text-align:left; min-height:21px; line-height:21px;
+    }
+  }
+
+  .day{background:#fff; border:1px solid var(--line); border-radius:8px; margin-bottom:9px; overflow:hidden}
+  .day .top2{
+    display:flex; align-items:center; gap:7px; padding:8px 10px;
+    background:#f7fafb; border-bottom:1px solid var(--line); flex-wrap:wrap;
+  }
+  .day .top2 > *{flex:0 0 auto}
+
+  /* 折り返す場所。狭い画面だけ効きます（広い画面では消します）。
+     日カードと人タブの行で使っています */
+  .br{flex:1 1 100%; height:0; margin:0; padding:0; border:none}
+
+  /* 日を開く操作。矢印だと分かりにくいので、下線つきの文字リンクにする。
+     人数はこのボタンの中に入れて、リンクの並びに寄せる */
+  .day .tog{
+    border:none; background:none; color:var(--navy); font-size:12px; font-weight:700;
+    padding:6px 2px; white-space:nowrap; cursor:pointer;
+    display:inline-flex; align-items:baseline; gap:4px;
+  }
+  .day .tog .tgl{text-decoration:underline}
+  .day .cnt{font-size:12px; color:var(--sub); font-weight:400; white-space:nowrap}
+  .day .del{
+    border:none; background:none; color:#b9c4ca; font-size:18px;
+    padding:0 4px; width:32px; margin-left:auto;
+  }
+  .day .del:hover{color:#d1495b}
+
+  /* 狭い画面。日付と時間、必要人数とメモ、で行を分ける */
+  .day .date{flex:1 1 128px; width:auto; min-width:0}
+  .day .t{flex:1 1 62px; width:auto; min-width:0}
+  .day .n{flex:0 0 84px; width:auto; min-width:0}
+  .day .amt{flex:1 1 110px; width:auto; min-width:0}
+  .day .memo{flex:1 1 130px; min-width:110px}
+  .day .bodyx{padding:8px 10px; display:none}
+  .day.open .bodyx{display:block}
+
+  .dayhead{display:none}
+  @media (min-width:860px){
+    .day .top2{flex-wrap:nowrap}
+    .br{display:none}
+    .day .del{order:9; margin-left:0}
+    .day .tog{order:-1; flex:0 0 132px}
+    .day .date{flex:0 0 150px}
+    .day .t{flex:0 0 76px}
+    .day .n{flex:0 0 70px}
+    .day .amt{flex:0 0 120px}
+    .day .memo{flex:1 1 160px}
+    .dayhead{display:flex; gap:7px; padding:2px 10px 5px; font-size:11px; color:var(--sub); flex-wrap:nowrap}
+    .dayhead > *{flex:0 0 auto}
+    .dayhead .date{width:150px}
+    .dayhead .t{width:76px}
+    .dayhead .n{width:70px}
+    .dayhead .amt{width:120px}
+    .dayhead .memo{flex:1 1 160px}
+    .dayhead .sp{width:132px}
+    .dayhead .sp2{width:32px}
+  }
+
+  .tw{overflow-x:auto; -webkit-overflow-scrolling:touch}
+  table{width:100%; border-collapse:separate; border-spacing:0; min-width:700px}
+  th{font-size:11px; color:var(--sub); font-weight:700; text-align:left; padding:4px 5px; white-space:nowrap}
+  td{padding:3px 5px; vertical-align:middle}
+  tr.paid td{background:var(--paid)}
+  tr.off td{background:var(--off); color:#8a9299}
+  td.mid{text-align:center}
+
+  .foot{
+    position:sticky; bottom:8px; z-index:4; margin-top:12px;
+    background:#fff; border:1px solid var(--line); border-radius:9px;
+    padding:9px 12px; display:flex; align-items:center; gap:9px; flex-wrap:wrap;
+    box-shadow:0 -2px 10px rgba(28,43,51,.06);
+  }
+  @media (min-width:860px){ .foot{bottom:8px} }
+  .msg{font-size:12px; color:var(--sub); flex:1 1 160px}
+  .msg:empty{display:none}   /* 言づてが無いときは、場所を取らない */
+  /* 狭い画面では、2つのボタンを1行に並べて、枠を低くする */
+  @media (max-width:859px){
+    .foot{padding:8px; gap:8px}
+    .foot .msg{flex:1 1 100%; order:-1}
+    .foot .plain, .foot .go{flex:1 1 0; min-width:0; padding:10px 6px; text-align:center}
+  }
+  .msg.ng{color:var(--red)}
+  .msg.ok{color:var(--green)}
+
+  /* 未払い */
+  .pgroup{background:#fff; border:1px solid var(--line); border-radius:9px; margin-bottom:9px; overflow:hidden}
+  .pgroup .ph{
+    background:#dbe5ec; padding:7px 12px; display:flex; align-items:center;
+    gap:10px; flex-wrap:wrap; font-weight:700;
+  }
+  .pgroup .ph .sum{margin-left:auto}
+  .prow{
+    display:flex; gap:10px; align-items:center; padding:5px 12px;
+    border-top:1px solid var(--line); font-size:12px; flex-wrap:wrap;
+  }
+  .prow .d{width:82px; color:var(--sub); flex:0 0 auto}
+  .prow .p{flex:1 1 120px; min-width:0}
+  .prow .m{width:90px; text-align:right; flex:0 0 auto}
+
+  /* 明細 */
+  .stp{margin-bottom:16px}
+  .stp .n{
+    font-weight:700; display:flex; gap:10px; align-items:baseline; flex-wrap:wrap;
+    border-bottom:1px solid var(--line); padding-bottom:3px; margin-bottom:4px;
+  }
+  .stl{display:flex; gap:10px; font-size:12px; padding:1px 0; flex-wrap:wrap}
+  .stl .d{width:82px; color:var(--sub); flex:0 0 auto}
+  .stl .p{flex:1 1 130px; min-width:0}
+  .stl .e{flex:1 1 180px; color:#41535d; min-width:0}
+  .stl .m{width:90px; text-align:right; flex:0 0 auto}
+  .stl.tot{font-weight:700; border-top:1px solid var(--line); margin-top:3px; padding-top:3px}
+  .grand{
+    background:var(--navy); color:#fff; border-radius:7px; padding:9px 13px;
+    display:flex; gap:16px; flex-wrap:wrap; font-weight:700; margin-bottom:12px;
+  }
+
+  /* メモの入力枠 */
+  .pop{
+    position:fixed; inset:0; background:rgba(28,43,51,.35); display:none;
+    align-items:center; justify-content:center; z-index:20; padding:14px;
+  }
+  .pop.on{display:flex}
+  .popbox{background:#fff; border-radius:10px; width:min(560px,100%); box-shadow:0 10px 40px rgba(0,0,0,.25); overflow:hidden}
+  .popbox .t2{background:var(--navy); color:#fff; padding:10px 16px; font-weight:700; font-size:14px}
+  .popbox textarea{display:block; border:none; padding:12px 16px; min-height:150px; resize:vertical; border-radius:0}
+  .popbox .f2{display:flex; gap:9px; justify-content:flex-end; padding:10px 16px; border-top:1px solid var(--line)}
+  .popbox .askt{padding:18px 18px 14px; font-size:14px; line-height:1.7; white-space:pre-line}
+
+  /* 読み込み中 */
+  .veil{
+    position:fixed; inset:0; background:rgba(245,247,248,.62); display:none;
+    align-items:center; justify-content:center; z-index:30;
+  }
+  .veil.on{display:flex}
+  .spin{
+    width:34px; height:34px; border-radius:50%;
+    border:3px solid #cfdae1; border-top-color:var(--green); animation:sp .8s linear infinite;
+  }
+  @keyframes sp{to{transform:rotate(360deg)}}
+
+  /* 言づて */
+  .say{
+    position:fixed; left:12px; right:12px; bottom:58px; z-index:25;
+    background:#1c2b33; color:#fff; padding:9px 14px; border-radius:7px;
+    font-size:12px; display:none; box-shadow:0 6px 20px rgba(0,0,0,.25);
+  }
+  .say.on{display:block}
+  .say.ok{background:var(--green)}
+  .say.ng{background:var(--red)}
+  @media (min-width:860px){ .say{left:auto; right:20px; bottom:20px; max-width:460px} }
+
+  /* 勝手な拡大はviewportの maximum-scale=1 で止めているので、入力欄は小さいまま。
+     狭い画面では余白も締めて、枠の縦幅を抑える */
+  @media (max-width:859px){
+    input, select, textarea{font-size:13px; padding:3px 6px}
+    /* 枠が低くなったぶん、まわりの余白も一段詰める */
+    .body{padding:10px 11px 14px}
+    .card{padding:10px 11px}
+    .maker{padding:9px 11px; margin-bottom:10px}
+    .f{margin-bottom:8px}
+    .f > label{line-height:1.35}
+    .day{margin-bottom:8px}
+    .day .top2{padding:7px 9px; gap:6px}
+    .day .bodyx{padding:7px 9px}
+    .jcard{padding:9px 11px; margin-bottom:8px}
+    .band{padding:6px 11px; margin-bottom:9px}
+    .bar{gap:8px; margin-bottom:10px}
+    .qrow{padding:6px 10px; margin-bottom:6px}
+    /* 名簿に入れる欄。横に並べると見出しが2行に折り返して不揃いになるので、縦に積む */
+    #vPeople .bar .f.wide{flex:1 1 100%}
+    #vPeople .bar > button{width:100%}
+    .gatebox .in{padding:12px 14px}
+  }
+
+  /* 人（名簿）*/
+  .qrow{
+    background:#fff; border:1px solid var(--line); border-radius:8px;
+    padding:7px 11px; margin-bottom:7px; display:flex; gap:9px; align-items:center; flex-wrap:wrap;
+  }
+  .qrow .qn{font-weight:700; flex:1 1 120px; min-width:0}
+  .qrow .qf{flex:1 1 150px; min-width:0}
+  .qrow.hid{background:#f6f7f8; color:var(--sub)}
+  .qhid{margin-top:14px}
+  .qhid summary{cursor:pointer; color:var(--sub); font-size:12px; padding:6px 0}
+  .qrow .qc{font-size:12px; color:var(--sub); flex:0 0 auto; white-space:nowrap}
+  .qrow .qa{flex:1 1 100%; font-size:11px; color:var(--sub)}
+  @media (min-width:860px){
+    /* 広い画面は1行のまま。件数は右端に寄せる */
+    .qrow .qn{flex:0 1 160px}
+    .qrow .qc{order:9; width:56px; text-align:right}
+  }
+
+  /* 合言葉の関門 */
+  .gate{
+    position:fixed; inset:0; z-index:40; background:var(--bg);
+    display:flex; align-items:center; justify-content:center; padding:18px;
+  }
+  .gate.off{display:none}
+  .gatebox{
+    background:#fff; border:1px solid var(--line); border-radius:10px;
+    width:min(360px,100%); overflow:hidden; box-shadow:0 8px 30px rgba(28,43,51,.10);
+  }
+  .gatebox .gt{background:var(--navy); color:#fff; padding:12px 16px; font-size:15px; font-weight:700}
+  .gatebox .in{padding:14px 16px}
+  .gatebox .gm{margin:0 0 11px; font-size:12px; color:var(--sub); line-height:1.6}
+  .gatebox .go{width:100%; margin-top:11px}
+  .gng{margin-top:9px; font-size:12px; color:var(--red); min-height:1.2em}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <span class="brand">バイト管理</span>
+    <span class="ver">体験版</span>
+    <a class="sheet" id="sheetLink" href="#" target="_blank" rel="noopener">スプレッドシート ↗</a>
+    <a class="help" id="helpLink" href="#" target="_blank" rel="noopener">使い方</a>
+    <span class="stat" id="stat"></span>
+    <button class="undo" id="statUndo" type="button">戻す</button>
+  </header>
+
+  <nav class="nav">
+    <button data-go="jobs" id="nJobs"><span class="ic">▤</span><span class="tx">案件</span></button>
+    <button data-go="new"  id="nNew"><span class="ic">＋</span><span class="tx">新規</span></button>
+    <button data-go="unpaid" id="nUnpaid"><span class="ic">◆</span><span class="tx">給与</span></button>
+    <button data-go="pay" id="nPay"><span class="ic">▦</span><span class="tx">明細</span></button>
+    <button data-go="people" id="nPeople"><span class="ic">▩</span><span class="tx">人</span></button>
+  </nav>
+
+  <div class="body" id="appBody">
+
+    <!-- ① 案件一覧 -->
+    <section class="view" id="vJobs">
+      <div class="bar">
+        <div class="f sm"><label>開始月でしぼる</label><select id="jMonth"></select></div>
+        <button class="btn" id="jReload">読み直す</button>
+        <button class="go" id="jNew">＋ 新しい案件</button>
+      </div>
+      <div id="jBand"></div>
+      <p class="note" id="jAt"></p>
+      <div id="jList"></div>
+    </section>
+
+    <!-- ② 案件編集 -->
+    <section class="view" id="vEdit">
+      <div class="card" style="margin-bottom:12px">
+        <div style="display:flex; align-items:baseline; gap:10px; flex-wrap:wrap">
+          <span id="hVenue" style="font-size:15px; font-weight:700"></span>
+          <span id="hWhen" style="font-size:12px; color:#6b7c86"></span>
+          <span id="hId" style="margin-left:auto; font-size:11px; color:#9fb0b9; letter-spacing:.06em"></span>
+        </div>
+      </div>
+
+      <div class="cols">
+        <div class="left">
+          <h2>案件詳細</h2>
+          <div class="card">
+            <div class="f"><label>会場</label><input id="venue" list="venueList"><datalist id="venueList"></datalist></div>
+            <div class="f"><label>案件名</label><input id="name" list="jobNameList"><datalist id="jobNameList"></datalist></div>
+            <div class="row2">
+              <div class="f" style="display:none"><label>もらい方（請求）</label>
+                <select id="billing"><option value=""></option><option>時給</option><option>日給</option><option>一式</option></select></div>
+              <div class="f" id="fAmount"><label id="amountLabel">請求額</label><input id="amount" type="number"></div>
+            </div>
+            <div class="row2">
+              <div class="f"><label>払い方</label><select id="jPay"><option>時給</option><option>日給</option></select></div>
+              <div class="f"><label id="wageLabel">時給</label><input id="wage" type="number"></div>
+            </div>
+            <div class="row2">
+              <div class="f"><label>交通費</label><input id="trans" type="number"></div>
+            </div>
+            <div class="f"><label>必要人数</label><input id="need" type="number"></div>
+            <div class="row2">
+              <div class="f"><label>開始</label><input id="jStart" placeholder="9:00"></div>
+              <div class="f"><label>終了</label><input id="jEnd" placeholder="17:00"></div>
+            </div>
+            <div class="f"><label>案件メモ</label><input id="memo"></div>
+          </div>
+        </div>
+
+        <div class="right">
+          <h2>日毎の管理</h2>
+          <div class="maker">
+            <div class="line">
+              <div class="f sm"><label>いつから</label><input type="date" id="mFrom"></div>
+              <div class="f sm"><label>いつまで</label><input type="date" id="mTo"></div>
+              <div class="f md"><label>どの曜日</label>
+                <select id="mWeek">
+                  <option value="all">ぜんぶ</option>
+                  <option value="weekday">平日だけ</option>
+                  <option value="weekend">土日だけ</option>
+                </select></div>
+              <div class="f"><label style="white-space:nowrap">祝日を抜く</label><input type="checkbox" id="mHoliday"></div>
+              <button class="btn" id="mMake">日をつくる</button>
+              <button class="btn" id="mAdd">＋ 1日足す</button>
+            </div>
+          </div>
+
+          <div class="dayhead">
+            <span class="sp"></span>
+            <span class="date">日付</span>
+            <span class="t">開始</span>
+            <span class="t">終了</span>
+            <span class="n">必要人数</span>
+            <span class="amt" id="hAmt">この日の請求額</span>
+            <span class="memo">この日のメモ</span>
+            <span class="sp2"></span>
+          </div>
+          <div id="days"></div>
+          <datalist id="nameList"></datalist>
+        </div>
+      </div>
+
+      <div class="foot">
+        <span class="msg" id="msg"></span>
+        <button class="plain" id="close">一覧へもどる</button>
+        <button class="go" id="save">更新する</button>
+      </div>
+      <p class="note">
+        同じ案件を2人で直すと、あとから保存したほうが残ります（先に直されていれば保存のときに知らせます）。
+      </p>
+    </section>
+
+    <!-- ③ 未払い -->
+    <section class="view" id="vUnpaid">
+      <div class="bar">
+        <div class="f sm"><label>月でしぼる</label><select id="uMonth"></select></div>
+        <div class="f sm"><label>まとめ方</label><select id="uGroup"><option value="person">人ごと</option><option value="job">案件ごと</option></select></div>
+        <button class="btn" id="uReload">読み直す</button>
+      </div>
+      <div id="uSum"></div>
+      <div id="uList"></div>
+    </section>
+
+    <!-- ④ 支払い明細 -->
+    <section class="view" id="vPay">
+      <div class="bar">
+        <div class="f sm"><label>年月</label><select id="pMonth"></select></div>
+        <button class="btn" id="pMake">明細を出す</button>
+      </div>
+      <div class="bar">
+        <button class="btn" id="pDown">PDFをダウンロード</button>
+        <div class="f" style="flex:1 1 220px"><label>PDFの送り先</label><input id="pMail" type="email" placeholder="taro@example.com"></div>
+        <button class="btn" id="pSend">PDFをメールで送る</button>
+      </div>
+      <p class="note">
+        PDFを作ると、支払い明細シートもその年月に組み直されます。紙の見た目はシートが正本です。
+      </p>
+      <div id="pLink" style="margin:10px 0"></div>
+      <div id="pOut"></div>
+    </section>
+
+    <!-- ⑤ 人（名簿）-->
+    <section class="view" id="vPeople">
+      <div class="card" style="margin-bottom:11px">
+        <h2>名簿に入れる</h2>
+        <div class="bar" style="margin-bottom:0">
+          <div class="f wide"><label>表示名（出面DBに書く名前）</label><input id="qName"></div>
+          <div class="f wide"><label>正式名（明細に出す名前）</label><input id="qFormal"></div>
+          <button class="go" id="qAdd">入れる</button>
+        </div>
+      </div>
+      <p class="note">
+        表示名を変えると、過去の出面に書かれた名前もまとめて書き替わります（記録はその人につながったままです）。
+        名簿から人を消すことはできません。使わなくなった人は［非表示］にすると、一覧と入力候補から消えます。
+      </p>
+      <div id="qSum"></div>
+      <div id="qList"></div>
+      <details class="qhid">
+        <summary id="qHiddenSum">非表示の人</summary>
+        <div id="qHidden"></div>
+      </details>
+    </section>
+
+  </div>
+</div>
+
+<div class="pop" id="pop">
+  <div class="popbox">
+    <div class="t2" id="popTitle">メモ</div>
+    <textarea id="popText" placeholder="長い文も書けます"></textarea>
+    <div class="f2">
+      <button class="plain" id="popCancel">やめる</button>
+      <button class="go" id="popOk">入れる</button>
+    </div>
+  </div>
+</div>
+
+<div class="pop" id="ask">
+  <div class="popbox">
+    <div class="askt" id="askText"></div>
+    <div class="f2">
+      <button class="plain" id="askNo">やめる</button>
+      <button class="go" id="askOk">はい</button>
+    </div>
+  </div>
+</div>
+
+<div class="veil" id="veil"><div class="spin"></div></div>
+<div class="say" id="say"></div>
+
+<div class="gate off" id="gate">
+  <div class="gatebox">
+    <div class="gt">ここに合言葉を入れると爆発します</div>
+    <div class="in">
+      <p class="gm">合言葉を入れてください。一度入れると、この端末では次から聞きません。なぜなら爆発しますから。</p>
+      <div class="f"><label>合言葉</label><input id="gPass" type="password" autocomplete="current-password"></div>
+      <button class="go" id="gGo">入る</button>
+      <div class="gng" id="gNg"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  var $ = function (id) { return document.getElementById(id); };
+
+  window.onerror = function (m, src, line) {
+    say('画面の中でつまずきました（' + line + '行目）: ' + m, 'ng');
+    busy(false);
+    return false;
+  };
+
+  /* ---------- 小道具 ---------- */
+  var JOBKEYS = ['venue', 'name', 'billing', 'amount', 'wage', 'trans', 'need', 'memo'];
+  var STATUS = ['未払い', '支払済', '対象外'];
+
+  function esc(s) {
+    return String(s === null || s === undefined ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+  function opt(v) { return '<option value="' + esc(v) + '">'; }
+  function yen(v) { return '¥' + (Number(v) || 0).toLocaleString('ja-JP'); }
+  function wd(iso) {
+    if (!iso) return '';
+    var d = new Date(iso + 'T00:00:00');
+    return '日月火水木金土'.charAt(d.getDay());
+  }
+  function md(iso) {
+    if (!iso) return '';
+    var p = String(iso).split('-');
+    return Number(p[1]) + '/' + Number(p[2]) + '(' + wd(iso) + ')';
+  }
+  function ymLabel(s) {
+    var p = String(s || '').split('-');
+    return p.length > 1 ? Number(p[0]) + '年' + Number(p[1]) + '月' : String(s || '');
+  }
+  function oneLine(s) {
+    return String(s || '').replace(/\s*\n\s*/g, ' ');
+  }
+
+  var sayTimer = null;
+  function say(text, kind) {
+    var el = $('say');
+    el.textContent = text;
+    el.className = 'say on' + (kind ? ' ' + kind : '');
+    if (sayTimer) clearTimeout(sayTimer);
+    sayTimer = setTimeout(function () { el.className = 'say'; }, kind === 'ng' ? 12000 : 5000);
+  }
+  /* 上の帯の右はしの状態。処理のあいだは「更新中…」、終わると「更新しました」が少しのあいだ出る。
+     幕（クルクル）は出さない。画面はすぐ触れる。幕を出すのはPDFを作る・送るときだけ（veilOn） */
+  var statTimer = null;
+  var lastBusy = '';
+  function stat(text, kind) {
+    var el = $('stat');
+    if (kind === 'busy' && text && PEND > 0) text = PEND + '件' + text;   // 例「3件更新中…」（送っている分＋待っている分）
+    el.textContent = text || '';
+    el.className = 'stat' + (text ? ' on' : '') + (kind ? ' ' + kind : '');
+  }
+  function statFlash(text, kind) {
+    stat(text, kind);
+    if (statTimer) clearTimeout(statTimer);
+    statTimer = setTimeout(function () { if (busyN === 0) stat(''); }, kind === 'ng' ? 8000 : 3500);
+  }
+  /* ---------- 直前の1手を戻す ----------
+     この端末で最後にやった操作だけ、3分のあいだ帯の「戻す」で戻せる。次の操作をすると入れ替わる */
+  var UNDO = null, undoTimer = null;
+  function setUndo(run) {
+    UNDO = run;
+    $('statUndo').className = 'undo on';
+    if (undoTimer) clearTimeout(undoTimer);
+    undoTimer = setTimeout(clearUndo, 180000);
+  }
+  function clearUndo() {
+    UNDO = null;
+    $('statUndo').className = 'undo';
+    if (undoTimer) { clearTimeout(undoTimer); undoTimer = null; }
+  }
+  $('statUndo').onclick = function () { var f = UNDO; clearUndo(); if (f) f(); };
+  /** 戻したあと。覚えをぜんぶ捨て、いま見ている画面をサーバーから取り直す（戻す前の中身を残さない） */
+  function refreshAll() {
+    forget('jobs'); forget('unpaid'); forget('people'); forget('months');
+    if (view === 'jobs') loadJobs($('jMonth').value, true);
+    else if (view === 'unpaid') loadUnpaid(true);
+    else if (view === 'people') loadPeople(true);
+    else if (view === 'pay') { loadMonths(true); $('pOut').innerHTML = ''; }
+  }
+
+  var busyN = 0;
+  /** busy(true, '更新中…') で始め、busy(false, '更新しました') で終える。終わりの字は省ける */
+  function busy(on, label) {
+    busyN = on ? busyN + 1 : Math.max(0, busyN - 1);
+    if (on) { lastBusy = label || '読み込み中…'; stat(lastBusy, 'busy'); return; }
+    if (busyN > 0) { if (label) lastBusy = '更新中…'; qStat(); return; }   // まだ続きがある → 帯は「更新中…」のまま
+    if (label) statFlash(label, 'ok');
+    else if ($('stat').className.indexOf('busy') >= 0) stat('');   // 「更新中…」だけ消す（出したばかりの「更新しました」は消さない）
+  }
+  function veilOn(on) { $('veil').className = on ? 'veil on' : 'veil'; }
+  /* 読み込み（一覧・案件を開く・未払い・人・明細）は幕（クルクル）も出す。帯だけだと動いていないように見えるため。
+     書く操作（登録・更新・支払済・名簿の手入れ）は帯だけ（busy） */
+  var READN = 0;
+  function reading(on, label) {
+    READN = on ? READN + 1 : Math.max(0, READN - 1);
+    veilOn(READN > 0);
+    if (on) { if (busyN === 0) stat(label || '読み込み中…', 'busy'); return; }
+    if (READN === 0 && busyN === 0 && $('stat').className.indexOf('busy') >= 0) stat('');
+  }
+  /** 描き直しの入り口で呼ぶ。読み込みの幕を畳むだけで、書く操作の数（busyN）には触れない */
+  function readingDone() {
+    READN = 0;
+    veilOn(false);
+    if (busyN === 0 && $('stat').className.indexOf('busy') >= 0) stat('');
+  }
+  function fail(e) {
+    reading(false);
+    statFlash('できませんでした', 'ng');
+    say((e && e.message) ? e.message : String(e), 'ng');
+  }
+
+  /* ---------- 合言葉 ----------
+     合言葉はこの端末の localStorage にだけ置きます。ページには埋め込みません。
+     localStorage が使えない端末では、ひとりでに「毎回きく」形になります。 */
+  var PASS = '';
+  var PASS_NG = '合言葉が違います。';
+  var PKEY = 'aokiya_pass';
+  var SILENT = false;   // 開いた直後の「だまって1回試す」の最中か
+
+  function loadPass() { try { return localStorage.getItem(PKEY) || ''; } catch (e) { return ''; } }
+  function savePass(p) { try { localStorage.setItem(PKEY, p); } catch (e) {} }
+  function forgetPass() { try { localStorage.removeItem(PKEY); } catch (e) {} }
+
+  function showGate(why) {
+    $('gate').className = 'gate';
+    $('gNg').textContent = why || '';
+    $('gPass').value = '';
+    $('gGo').disabled = false;
+    try { $('gPass').focus(); } catch (e) {}
+  }
+  function hideGate() { $('gate').className = 'gate off'; }
+
+  /** 合言葉が通らなかったとき。覚えているものを捨てて、聞き直す。
+      開いた直後のだまって試す1回（SILENT）なら、わけは出さずに関門だけ出す */
+  function lockOut() {
+    var quiet = SILENT;
+    SILENT = false;
+    PASS = '';
+    forgetPass();
+    forgetSnap();
+    busyN = 0; READN = 0;
+    stat('');
+    $('veil').className = 'veil';
+    showGate(quiet ? '' : '合言葉が通りませんでした。もう一度入れてください。');
+  }
+
+  /* ---------- サーバーの呼び出し ----------
+     合言葉を付けるのも、合言葉ちがいを拾うのも、ここだけです。
+     呼ぶ側の書き方は google.script.run と同じで、合言葉は書きません。 */
+  var API_NAMES = ['apiConfig', 'apiRoster', 'apiJobList', 'apiJob', 'apiSaveJob', 'apiUnpaid',
+    'apiMarkPaid', 'apiMonths', 'apiStatement', 'apiPdfBlob', 'apiSendPdf',
+    'apiPeople', 'apiAddPerson', 'apiRenamePerson', 'apiBoot',
+    'apiJobDetails', 'apiRenameDisplay', 'apiHidePerson', 'apiMarkPaidMany', 'apiUnmarkPaid', 'apiDeleteJob'];
+
+  var srv = (function () {
+    var succ = null, failh = null;
+    var box = {
+      withSuccessHandler: function (f) { succ = f; return box; },
+      withFailureHandler: function (f) { failh = f; return box; },
+    };
+    // 書く api は順番待ちの列（Q）に入れ、押した順に1つずつ送る。
+    // 同時に送るとサーバーでは1つずつ処理されるものの順番が入れ替わり、返事の前後で一覧が古いほうに戻ることがあるため
+    var WRITE_APIS = { apiSaveJob: 1, apiMarkPaid: 1, apiRenameDisplay: 1, apiRenamePerson: 1, apiHidePerson: 1, apiAddPerson: 1,
+      apiUnmarkPaid: 1, apiDeleteJob: 1 };
+    API_NAMES.forEach(function (name) {
+      box[name] = function () {
+        var args = [].slice.call(arguments);
+        var s = succ, f = failh;
+        succ = null; failh = null;
+        var fire = function (done) {
+          google.script.run
+            .withSuccessHandler(function (r) { if (done) done(); if (s) s(r); })
+            .withFailureHandler(function (e) {
+              if (done) done();
+              var m = (e && e.message) ? String(e.message) : String(e);
+              if (m.indexOf(PASS_NG) >= 0) { lockOut(); return; }
+              if (f) f(e); else fail(e);
+            })[name].apply(null, [PASS].concat(args));
+        };
+        if (WRITE_APIS[name]) {
+          PEND += 1;
+          Q.push(function (done) { fire(function () { PEND = Math.max(0, PEND - 1); done(); }); });
+          qStat(); qNext();
+        }
+        else fire(null);
+      };
+    });
+    return box;
+  })();
+
+  /* ---------- 書く操作の順番待ち ---------- */
+  var Q = [], QRUN = false;
+  var PEND = 0;   // 送っている最中＋待っている書く操作の数（支払済は1行を1つと数える）
+  function qNext() {
+    if (QRUN || !Q.length) return;
+    QRUN = true;
+    var job = Q.shift();
+    job(function () { QRUN = false; qStat(); qNext(); });
+  }
+  /** 帯の「更新中…」に、待っている件数を添える */
+  function qStat() { if (busyN > 0) stat(lastBusy, 'busy'); }
+
+  /** 合言葉をためす。通れば覚えて、中に入る。ちがえば srv が関門に戻す。
+      silent は開いた直後の「だまって1回試す」。合言葉を覚えていなくても、
+      一度通ったGoogleアカウントならサーバーが通す（スマホで毎回聞かれないように） */
+  function tryPass(p, silent) {
+    if (!p && !silent) { showGate('合言葉を入れてください。'); return; }
+    PASS = p || '';
+    SILENT = !!silent;
+    $('gGo').disabled = true;
+    if (!silent || !SNAPPED) reading(true, '読み込み中…');   // 前回の中身を出せているときは、幕を出さず裏で待つ
+    srv.withSuccessHandler(function (c) {
+      reading(false);
+      SILENT = false;
+      if (PASS) savePass(PASS);
+      hideGate();
+      startApp(c, Date.now(), false);
+    }).withFailureHandler(function (e) {
+      // 合言葉ちがいは srv が拾うので、ここに来るのはそれ以外のつまずき
+      reading(false);
+      SILENT = false;
+      showGate((e && e.message) ? String(e.message) : '入れませんでした。');
+    }).apiBoot('FROM_NOW');
+  }
+
+  /* ---------- 人（だれ）----------
+     人を指す値はサーバーが決めます（{ key, label } の形で来ます）。
+     画面では名前の文字をつなぎ合わせたり見くらべたりしません。
+     入力の候補に出す名前も、名簿API（apiConfig の中の apiRoster）の返りだけを使います。 */
+  var ROSTER = { entries: [], people: [] };
+
+  /* 起動のまとめ読みで届く、入力の候補と既定値。新規はこれだけで開く（サーバーへ行かない） */
+  var CFG = { venues: [], names: [], holidays: [], wage: '', trans: '' };
+  var BOOTED = false;   // まとめ読みが届く前に新規を押されたら、サーバーで開く（既定値が空にならないように）
+
+  // 保存で使った名前を候補の先頭に入れる（次の新規で、読み直さなくても出る）
+  function addCand(list, v) {
+    v = String(v || '').trim();
+    if (!v) return;
+    var i = list.indexOf(v);
+    if (i >= 0) list.splice(i, 1);
+    list.unshift(v);
+  }
+
+  // 画面に出す名前。人の呼び名を決めるのは、画面ではここだけ
+  function personLabel(p) { return (p && p.label) ? String(p.label) : ''; }
+
+  // 名前の入力候補。名簿APIの返り以外は使わない
+  function rosterOptions() {
+    return ROSTER.entries.map(function (e) { return opt(e.name); }).join('');
+  }
+
+  /* ---------- 画面の切り替え ---------- */
+  var VIEWS = { jobs: 'vJobs', edit: 'vEdit', unpaid: 'vUnpaid', pay: 'vPay', people: 'vPeople' };
+  var NAVOF = { jobs: 'nJobs', edit: 'nNew', unpaid: 'nUnpaid', pay: 'nPay', people: 'nPeople' };
+  var view = 'jobs';
+
+  /* 画面の行き来を履歴に積む。スマホの「前のページ」のフリックやブラウザの戻るで、
+     ブラウザの前のページではなく、アプリの前の画面に戻る（Googleのアプリ画面の履歴の仕組みを使う） */
+  var HIST_OK = !!(window.google && google.script && google.script.history);
+  var HIST_LAST = '';
+  function histPush(name) {
+    if (!HIST_OK) return;
+    try {
+      if (!HIST_LAST) google.script.history.replace({ view: name }, {}, name);
+      else google.script.history.push({ view: name }, {}, name);
+    } catch (e) {}
+  }
+  function go(name, fromHist) {
+    view = name;
+    for (var k in VIEWS) $(VIEWS[k]).className = 'view' + (k === name ? ' on' : '');
+    for (var n in NAVOF) $(NAVOF[n]).className = (n === name ? 'on' : '');
+    var bd = $('appBody');
+    if (bd) bd.scrollTop = 0;
+    if (!fromHist && name !== HIST_LAST) histPush(name);
+    HIST_LAST = name;
+  }
+  function showView(name) {
+    go(name, true);
+    if (name === 'unpaid') loadUnpaid();
+    if (name === 'pay') loadMonths();
+    if (name === 'people') loadPeople();
+  }
+  if (HIST_OK) {
+    google.script.history.setChangeHandler(function (e) {
+      var v = (e && e.state && e.state.view) || 'jobs';
+      if (!VIEWS[v]) v = 'jobs';
+      if (v === 'edit' && !D) v = 'jobs';                 // 戻る先の編集はもう無い
+      if (view === 'edit' && v !== 'edit') {              // 編集から戻る → 書きかけなら聞く
+        leaveEdit(function () { showView(v); }, function () { histPush('edit'); });
+        return;
+      }
+      showView(v);
+    });
+  }
+  [].forEach.call(document.querySelectorAll('.nav button'), function (b) {
+    b.onclick = function () {
+      var t = b.getAttribute('data-go');
+      if (t === 'new') { openJob(''); return; }
+      var move = function () {
+        go(t);
+        if (t === 'unpaid') loadUnpaid();
+        if (t === 'pay') loadMonths();
+        if (t === 'people') loadPeople();
+      };
+      if (view === 'edit') { leaveEdit(move); return; }   // 書きかけを捨ててよいか
+      move();
+    };
+  });
+
+  /* ---------- 覚えておく ----------
+     一度読んだものはここに置き、タブの行き来では描くだけにします（待ちなし）。
+     3人で使うので、ほかの人の直しはひとりでには入りません。
+     ［読み直す］と、自分で直したあと（保存・支払済・名簿の手入れ）は捨てて取り直します。 */
+  var CACHE = { jobs: {}, unpaid: null, people: null, months: null };
+  var GOT = { jobs: {}, unpaid: 0, people: 0, months: 0 };   // 最後に取った時刻
+  var SHOWN = { jobs: null, unpaid: null, people: null };    // いま画面に描いてある中身（同じなら描き直さない＝入れかけの字を消さない）
+  var JOBS = {};        // 案件の中身の先読み（id → apiJob と同じ形）
+  var STALE = false;    // 前回の中身（端末の覚え）を出している最中か
+
+  function forget(what) {
+    if (what === 'jobs') { CACHE.jobs = {}; GOT.jobs = {}; JOBS = {}; }
+    else { CACHE[what] = null; GOT[what] = 0; }
+  }
+
+  /* 前回の中身を端末に覚えておき、次に開いたとき まずそれを出す（サーバーの返事を待たない）。
+     端末の記憶が効かないスマホでは、ただ効かないだけで、いままでどおり動く */
+  var BKEY = 'aokiya_boot';
+  var SNAPPED = false;
+  function loadSnap() { try { var s = localStorage.getItem(BKEY); return s ? JSON.parse(s) : null; } catch (e) { return null; } }
+  function saveSnap(b, at) { try { localStorage.setItem(BKEY, JSON.stringify({ at: at, boot: b })); } catch (e) {} }
+  function forgetSnap() { try { localStorage.removeItem(BKEY); } catch (e) {} }
+  function hhmm(t) {
+    if (!t) return '';
+    var d = new Date(t);
+    return d.getHours() + ':' + ('0' + d.getMinutes()).slice(-2);
+  }
+
+  /* ================= ① 案件一覧 ================= */
+  function loadJobs(month, force) {
+    var key = (month === undefined || month === null) ? $('jMonth').value : String(month);
+    if (!force && CACHE.jobs[key]) { onJobs(CACHE.jobs[key], GOT.jobs[key]); return; }
+    reading(true, '読み込み中…');
+    srv.withSuccessHandler(function (r) {
+      reading(false);
+      CACHE.jobs[key] = r;
+      GOT.jobs[key] = Date.now();
+      onJobs(r, GOT.jobs[key]);
+    }).withFailureHandler(fail).apiJobList(key);
+  }
+  function onJobs(r, at) {
+    readingDone();
+    if (r && r.details) { for (var did in r.details) JOBS[did] = r.details[did]; }   // 同梱された中身を覚える（開くとき待ちなし）
+    $('jAt').textContent = at
+      ? hhmm(at) + ' 時点の中身です。' + (STALE ? '（前回の中身。いま読み直しています…）' : 'ほかの人が直した分は［読み直す］で入ります。')
+      : '';
+    if (SHOWN.jobs === r) { prefetchJobs(r); return; }   // 同じ中身なら描き直さない
+    SHOWN.jobs = r;
+
+    var sel = $('jMonth');
+    var want = r.month || '';
+    var html = '<option value="FROM_NOW">今月から先</option>'
+      + '<option value="">ぜんぶの月</option>';
+    for (var i = 0; i < r.months.length; i++) {
+      html += '<option value="' + esc(r.months[i]) + '">' + esc(ymLabel(r.months[i])) + '</option>';
+    }
+    sel.innerHTML = html;
+    sel.value = want;
+
+    var s = r.sum;
+    $('jBand').innerHTML = r.jobs.length
+      ? '<div class="band">' +
+          '<span>案件 ' + s.count + '件</span>' +
+          '<span>売上 ' + yen(s.sales) + '</span>' +
+          '<span>人件費 ' + yen(s.cost) + '</span>' +
+          '<span>粗利 ' + yen(s.profit) + '</span>' +
+        '</div>'
+      : '';
+    if (!r.jobs.length) {
+      $('jList').innerHTML = '<div class="none">'
+        + (r.month === 'FROM_NOW' ? '今月から先の案件はありません。' : 'この月の案件はありません。')
+        + '</div>';
+      return;
+    }
+
+    var out = '';
+    for (var j = 0; j < r.jobs.length; j++) {
+      var g = r.jobs[j];
+      var many = g.end && g.end !== g.date;
+      var when = md(g.date) + (many ? ' 〜 ' + md(g.end) : '') +
+        (g.dayCount === '' ? '' : '　' + g.dayCount + '日');
+      var nums = '';
+      nums += '<span><em>' + (many ? 'のべ' : '出る人') + '</em> ' + (g.people === '' ? '-' : g.people) + '人</span>';
+      if (g.sales) nums += '<span><em>売上</em> ' + yen(g.sales) + '</span>';
+      nums += '<span><em>人件費</em> ' + yen(g.cost) + '</span>';
+      if (g.profit !== '' && g.profit !== 0) nums += '<span><em>粗利</em> ' + yen(g.profit) + '</span>';
+
+      var chips = '';
+      for (var m = 0; m < g.members.length; m++) {
+        var st = g.members[m].status;
+        chips += '<span class="chip' + (st === '支払済' ? ' paid' : st === '対象外' ? ' off' : '') + '">' +
+          esc(personLabel(g.members[m].person)) + '</span>';
+      }
+
+      out += '<div class="jcard" data-id="' + esc(g.id) + '">' +
+        '<div class="t1">' +
+          '<span class="venue">【' + esc(g.venue) + '】' + esc(g.name || '') + '</span>' +
+          (g.badge ? '<span class="tag' + (g.badgeNg ? ' ng' : '') + '">' + esc(g.badge) + '</span>' : '') +
+          '<span class="jid">' + esc(g.id) + '</span>' +
+        '</div>' +
+        '<div class="when">' + esc(when) + '</div>' +
+        '<div class="nums">' + nums + '</div>' +
+        (chips ? '<div class="chips">' + chips + '</div>' : '') +
+      '</div>';
+    }
+    $('jList').innerHTML = out;
+    [].forEach.call($('jList').children, function (el) {
+      el.onclick = function () { openJob(el.getAttribute('data-id')); };
+    });
+    prefetchJobs(r);
+  }
+
+  /** 一覧に出ている案件の中身を、裏で先に読んでおく（開いたとき待たせない）。幕は出さない */
+  var PREFETCHING = false;
+  function prefetchJobs(r) {
+    if (STALE || PREFETCHING || !r || !r.jobs) return;
+    var ids = [];
+    for (var i = 0; i < r.jobs.length && ids.length < 60; i++) if (!JOBS[r.jobs[i].id]) ids.push(r.jobs[i].id);
+    if (!ids.length) return;
+    PREFETCHING = true;
+    srv.withSuccessHandler(function (m) {
+      PREFETCHING = false;
+      for (var id in m) JOBS[id] = m[id];
+    }).withFailureHandler(function (e) {
+      PREFETCHING = false;
+      say('案件の先読みができませんでした: ' + ((e && e.message) ? e.message : e), 'ng');   // 先読みは無くても動く。理由だけ出す
+    }).apiJobDetails(ids);
+  }
+
+  $('jMonth').onchange = function () { loadJobs($('jMonth').value); };
+  $('jReload').onclick = function () { JOBS = {}; loadJobs($('jMonth').value, true); };
+  $('jNew').onclick = function () { openJob(''); };
+
+  /* ================= ② 案件編集 ================= */
+  var D = null;
+  var days = [];
+  var HOLI = {};
+  var FORCE = false;   // ほかの人と競ったあと、それでも上書きするか
+
+  function openJob(id) {
+    leaveEdit(function () { openJobNow(id); });   // 書きかけがあれば、捨ててよいか聞く
+  }
+  function openJobNow(id) {
+    if (!id && BOOTED) { onJob(newJobHere()); return; }   // 新規は覚えたものだけで開く（待ちなし）
+    if (id && JOBS[id]) { onJob(JSON.parse(JSON.stringify(JOBS[id]))); return; }   // 先読みずみ（待ちなし）
+    reading(true, '開いています…');
+    srv.withSuccessHandler(onJob).withFailureHandler(fail).apiJob(id || '');
+  }
+
+  /** まっさらな案件。サーバーの newJobData_ と同じ形を、手元の覚え（CFG）から作る */
+  function newJobHere() {
+    var t = new Date();
+    var d = t.getFullYear() + '-' + ('0' + (t.getMonth() + 1)).slice(-2) + '-' + ('0' + t.getDate()).slice(-2);
+    return {
+      id: '', isNew: true,
+      venues: CFG.venues, names: CFG.names, holidays: CFG.holidays,
+      job: {
+        date: d, end_date: d, venue: '', name: '',
+        start: '', end: '', need: '', billing: '一式', amount: '', pay: '時給',
+        wage: CFG.wage, trans: CFG.trans, memo: '',
+      },
+      days: [], members: [],
+    };
+  }
+  var ORIG = null;   // いま開いている案件の、開いたときの中身（更新を戻すため）
+  function onJob(d) {
+    readingDone();
+    D = d;
+    ORIG = JSON.parse(JSON.stringify(d));
+    FORCE = false;
+    // 先読みの中身には候補と祝日が入っていないので、起動の覚え（CFG）で補う
+    if (!D.venues) D.venues = CFG.venues;
+    if (!D.names) D.names = CFG.names;
+    if (!D.holidays) D.holidays = CFG.holidays;
+    HOLI = {};
+    (D.holidays || []).forEach(function (h) { HOLI[h] = true; });
+
+    days = (D.days || []).map(function (x) {
+      return { id: x.id, date: x.date, start: x.start, end: x.end,
+        need: x.need, amount: x.amount, memo: x.memo, members: [] };
+    });
+    (D.members || []).forEach(function (m) {
+      var g = dayOf(m.date);
+      if (!g) { g = { id: '', date: m.date, start: '', end: '', need: '', amount: '', memo: '', members: [] }; days.push(g); }
+      g.members.push(m);
+    });
+    days.sort(function (a, b) { return a.date < b.date ? -1 : 1; });
+
+    fillJob();
+    render();
+    $('mFrom').value = days.length ? days[0].date : '';
+    $('mTo').value = days.length ? days[days.length - 1].date : '';
+    $('save').disabled = false;
+    sayEdit('');
+    go('edit');
+    EDIT_BASE = editSnap();   // ここからの変わりを「書きかけ」として見る
+  }
+
+  /* ---------- 書きかけの見張り ----------
+     案件の編集から別の画面へ移るとき、変えたところがあれば「破棄しますか」と聞きます。
+     ほかの画面（未払い・明細・人）は、移っても入れた中身をそのまま残します（描き直さない）。 */
+  var EDIT_BASE = null;
+  function editSnap() {
+    try { return JSON.stringify(collect()); } catch (e) { return null; }
+  }
+  function editDirty() {
+    return !!D && EDIT_BASE !== null && editSnap() !== EDIT_BASE;
+  }
+  /** 編集から離れてよいか。書きかけがあれば聞き、捨てるなら編集を空にしてから then を呼ぶ */
+  function leaveEdit(then, onNo) {
+    if (!editDirty()) { then(); return; }
+    ask('書きかけの変更を破棄しますか？', function () {
+      D = null; EDIT_BASE = null; FORCE = false;
+      then();
+    }, onNo);
+  }
+  window.onbeforeunload = function () {
+    if (PEND > 0) return 'まだ送っている最中です。';
+    if (editDirty()) return '書きかけの変更があります。';
+  };
+
+  function dayOf(date) {
+    for (var i = 0; i < days.length; i++) if (days[i].date === date) return days[i];
+    return null;
+  }
+
+  function fillJob() {
+    $('hVenue').textContent = D.isNew ? '新しい案件' : (D.job.venue || '（会場なし）');
+    $('hId').textContent = D.id || '';
+    JOBKEYS.forEach(function (k) {
+      $(k).value = (D.job[k] === null || D.job[k] === undefined) ? '' : D.job[k];
+    });
+    $('venueList').innerHTML = (D.venues || []).map(opt).join('');
+    $('jobNameList').innerHTML = (D.names || []).map(opt).join('');
+    $('nameList').innerHTML = rosterOptions();   // 名前の候補は名簿APIの返りだけ
+    $('save').textContent = D.isNew ? '登録する' : '更新する';
+    $('memo').value = oneLine(D.job.memo);
+    // 開始・終了の既定。案件の日に入っている時間から出す（表の列は増やしていない）
+    var ds0 = (D.days || []).filter(function (x) { return x.start || x.end; })[0];
+    $('jStart').value = D.job.start || (ds0 ? ds0.start : '');
+    $('jEnd').value = D.job.end || (ds0 ? ds0.end : '');
+    $('jStart').setAttribute('data-prev', $('jStart').value);
+    $('jEnd').setAttribute('data-prev', $('jEnd').value);
+    $('jPay').value = D.job.pay || '時給';
+    syncPay();
+    syncBilling();
+  }
+  function syncBilling() {
+    var v = $('billing').value;
+    $('fAmount').style.display = (v === '日給') ? 'none' : '';
+    $('amountLabel').textContent =
+      v === '時給' ? '請求額（1人1時間）' : '請求額';
+    $('hAmt').style.display = (v === '日給') ? '' : 'none';
+    syncFromDom();
+    render();
+  }
+  function syncHead() {
+    var ds = days.map(function (d) { return d.date; }).filter(Boolean).sort();
+    $('hWhen').textContent = ds.length
+      ? (ds[0] === ds[ds.length - 1] ? md(ds[0]) : md(ds[0]) + ' 〜 ' + md(ds[ds.length - 1])) + '　' + ds.length + '日'
+      : '日がまだありません';
+  }
+
+  /** 日カードと人の行に入っている字を days に写す。描き直す前に呼ぶ（描き直しで消えないように） */
+  function syncFromDom() {
+    var els = $('days').children;
+    if (els.length !== days.length) return;
+    [].forEach.call(els, function (el, i) {
+      var d = days[i];
+      if (!el.querySelector) return;
+      ['date', 'start', 'end', 'need', 'amount'].forEach(function (k) {
+        var e = el.querySelector('.d-' + k);
+        if (e && e.value !== undefined) d[k] = e.value;
+      });
+      var rows = el.querySelectorAll('.rows tr');
+      if (!rows || !rows.length) { if (rows) d.members = []; return; }
+      var mem = [];
+      [].forEach.call(rows, function (tr) {
+        var v = function (c) { var e = tr.querySelector(c); return e ? e.value : ''; };
+        var tc = tr.querySelector('.c-trans');
+        mem.push({ name: String(v('.c-name')).trim(), start: v('.c-start'), end: v('.c-end'), pay: v('.c-pay'),
+          price: v('.c-price'), trans: !!(tc && tc.checked), park: v('.c-park'), status: v('.c-status'), note: v('.c-note') });
+      });
+      d.members = mem;
+    });
+  }
+
+  /* 案件詳細の開始・終了（既定）を変えたら、同じ値か空だった日カードに写す */
+  ['jStart', 'jEnd'].forEach(function (id) {
+    var key = (id === 'jStart') ? 'start' : 'end';
+    $(id).onchange = function () {
+      var prev = $(id).getAttribute('data-prev') || '', v = $(id).value;
+      syncFromDom();
+      days.forEach(function (d) { if (d[key] === prev || d[key] === '') d[key] = v; });
+      $(id).setAttribute('data-prev', v);
+      render();
+    };
+  });
+
+  /* 払い方（既定）に合わせて、額の見出しを変える */
+  function syncPay() {
+    $('wageLabel').textContent = ($('jPay').value === '日給') ? '日給' : '時給';
+  }
+  $('jPay').onchange = syncPay;
+
+  /* ---------- 日をつくる ---------- */
+  $('mMake').onclick = function () {
+    var from = $('mFrom').value, to = $('mTo').value;
+    if (!from) return bad('mFrom', '「いつから」を入れると、日がつくれます。');
+    if (!to) { to = from; $('mTo').value = from; }
+    if (to < from) return bad('mTo', '「いつまで」が「いつから」より前です。');
+    okMark();
+    syncFromDom();
+    var week = $('mWeek').value, skipH = $('mHoliday').checked;
+    var cur = new Date(from + 'T00:00:00'), stop = new Date(to + 'T00:00:00'), added = 0, looked = 0;
+    while (cur <= stop) {
+      var iso = cur.getFullYear() + '-' + ('0' + (cur.getMonth() + 1)).slice(-2) + '-' + ('0' + cur.getDate()).slice(-2);
+      var dow = cur.getDay(), holiday = !!HOLI[iso];
+      var weekend = (dow === 0 || dow === 6);
+      var take = week === 'all' || (week === 'weekday' && !weekend) || (week === 'weekend' && weekend);
+      if (take && skipH && holiday) take = false;
+      if (take) looked++;
+      if (take && !dayOf(iso)) {
+        days.push({ id: '', date: iso, start: $('jStart').value, end: $('jEnd').value, need: '', amount: '', memo: '', members: [] });
+        added++;
+      }
+      cur.setDate(cur.getDate() + 1);
+    }
+    days.sort(function (a, b) { return a.date < b.date ? -1 : 1; });
+    render();
+    if (added) { sayEdit(added + '日 足しました。いまぜんぶで ' + days.length + '日です。', 'ok'); return; }
+    sayEdit(looked === 0
+      ? 'その曜日にあてはまる日がありませんでした。'
+      : 'その日はもうぜんぶ入っています（いま ' + days.length + '日）。');
+  };
+  $('mAdd').onclick = function () {
+    syncFromDom();
+    var base = $('mFrom').value || (days.length ? days[days.length - 1].date : '');
+    days.push({ id: '', date: base, start: $('jStart').value, end: $('jEnd').value, need: '', amount: '', memo: '', members: [] });
+    render();
+  };
+
+  /* ---------- 日カード ---------- */
+  function render() {
+    var wrap = $('days');
+    var openState = {};
+    [].forEach.call(wrap.children, function (el, i) { openState[i] = el.classList.contains('open'); });
+    wrap.innerHTML = '';
+    var isDaily = $('billing').value === '日給';
+
+    days.forEach(function (d, i) {
+      var el = document.createElement('div');
+      el.className = 'day' + (openState[i] ? ' open' : '');
+      var head = d.members.filter(function (m) { return m.name; }).length;
+      el.innerHTML =
+        // 並びは意味のまとまり順。br が、狭い画面での折り返す場所です
+        //   1行目 日付と開始終了と ×／2行目 必要人数とメモ／3行目 メンバー表示（◯人）
+        // 広い画面では br を消し、メンバー表示を先頭・× を末尾へ回して、いままでどおり1行に並べます
+        '<div class="top2">' +
+          '<input class="d-date date" type="date" value="' + esc(d.date) + '">' +
+          '<input class="d-start t" placeholder="開始" value="' + esc(d.start) + '">' +
+          '<input class="d-end t" placeholder="終了" value="' + esc(d.end) + '">' +
+          '<button class="del" title="この日を消す">×</button>' +
+          '<i class="br"></i>' +
+          '<input class="d-need n" type="number" placeholder="必要人数" value="' + esc(d.need) + '">' +
+          (isDaily ? '<input class="d-amount amt" type="number" placeholder="この日の請求額" value="' + esc(d.amount) + '">' : '') +
+          '<input class="d-memo memo" placeholder="メモを開く" readonly value="' + esc(oneLine(d.memo)) + '">' +
+          '<i class="br"></i>' +
+          '<button class="tog"><span class="tgl">' +
+            (openState[i] ? 'メンバーを隠す' : 'メンバー表示') +
+            '</span><span class="cnt">（' + head + '人）</span></button>' +
+        '</div>' +
+        '<div class="bodyx">' +
+          '<div class="tw"><table><thead><tr>' +
+            '<th style="width:18%">氏名</th><th style="width:8%">開始</th><th style="width:8%">終了</th>' +
+            '<th style="width:8%">払い方</th><th style="width:10%">時給・日給</th>' +
+            '<th style="width:6%">交通費</th><th style="width:9%">駐車場代</th>' +
+            '<th style="width:10%">支払状況</th><th>備考</th><th style="width:24px"></th>' +
+          '</tr></thead><tbody class="rows"></tbody></table></div>' +
+          '<div style="margin-top:6px; display:flex; gap:7px; flex-wrap:wrap">' +
+            '<button class="btn mini m-add">＋ 人を足す</button>' +
+            '<button class="btn mini m-copy">前の日と同じ人にする</button>' +
+          '</div>' +
+        '</div>';
+
+      el.querySelector('.tog').onclick = function () {
+        el.classList.toggle('open');
+        // 文字だけ入れ替える。人数は別の欄なので、開け閉めしても残る
+        el.querySelector('.tgl').textContent =
+          el.classList.contains('open') ? 'メンバーを隠す' : 'メンバー表示';
+      };
+      el.querySelector('.del').onclick = function () {
+        var drop = function () { syncFromDom(); days.splice(i, 1); render(); };
+        if (d.members.filter(function (m) { return m.name; }).length) {
+          ask(md(d.date) + ' には人が入っています。消しますか。', drop);
+          return;
+        }
+        drop();
+      };
+      ['date', 'start', 'end', 'need', 'amount'].forEach(function (k) {
+        var inp = el.querySelector('.d-' + k);
+        if (!inp) return;
+        inp.onchange = function () {
+          d[k] = inp.value;
+          if (k === 'date') { syncFromDom(); days.sort(function (a, b) { return a.date < b.date ? -1 : 1; }); render(); }
+          syncHead();
+        };
+      });
+      var memoInp = el.querySelector('.d-memo');
+      memoInp.onclick = function () {
+        openMemo(md(d.date) + ' のメモ', d.memo, function (v) { d.memo = v; memoInp.value = oneLine(v); });
+      };
+      var tb = el.querySelector('.rows');
+      d.members.forEach(function (m) { addRow(tb, d, m); });
+      el.querySelector('.m-add').onclick = function () {
+        var m = blankMember(el);   // その日カードの開始・終了を既定に
+        addRow(tb, d, m); d.members.push(m);
+      };
+      el.querySelector('.m-copy').onclick = function () {
+        var prev = null;
+        for (var q = 0; q < days.length; q++) if (days[q] !== d && days[q].members.length) prev = days[q];
+        for (var q2 = 0; q2 < days.length; q2++) { if (days[q2] === d) break; if (days[q2].members.length) prev = days[q2]; }
+        if (!prev) { sayEdit('元になる日がありません。', 'ng'); return; }
+        syncFromDom();
+        d.members = prev.members.map(function (m) {
+          return { name: m.name, start: m.start, end: m.end, pay: m.pay, price: m.price,
+            trans: m.trans, park: m.park, status: '未払い', note: '' };
+        });
+        el.classList.add('open'); render();
+      };
+      wrap.appendChild(el);
+    });
+    syncHead();
+  }
+
+  /** 足したばかりの人の行。開始・終了はその日カードの値、時給と交通費は案件詳細の値を既定にする */
+  function blankMember(dayEl) {
+    var g = function (c) { var e = dayEl ? dayEl.querySelector(c) : null; return e ? e.value : ''; };
+    return {
+      name: '', start: g('.d-start'), end: g('.d-end'), pay: $('jPay').value || '時給',
+      price: $('wage').value === '' ? '' : Number($('wage').value),
+      trans: Number($('trans').value) > 0, park: '', status: '未払い', note: '',
+    };
+  }
+
+  function addRow(tb, day, m) {
+    var tr = document.createElement('tr');
+    tr.innerHTML =
+      '<td><input class="c-name" list="nameList" value="' + esc(m.name) + '"></td>' +
+      '<td><input class="c-start" value="' + esc(m.start) + '"></td>' +
+      '<td><input class="c-end" value="' + esc(m.end) + '"></td>' +
+      '<td><select class="c-pay"><option>時給</option><option>日給</option></select></td>' +
+      '<td><input class="c-price" type="number" value="' + esc(m.price) + '"></td>' +
+      '<td class="mid"><input class="c-trans" type="checkbox"' + (m.trans ? ' checked' : '') + '></td>' +
+      '<td><input class="c-park" type="number" value="' + esc(m.park) + '"></td>' +
+      '<td><select class="c-status">' + STATUS.map(function (s) {
+        return '<option' + (String(m.status || '未払い') === s ? ' selected' : '') + '>' + s + '</option>';
+      }).join('') + '</select></td>' +
+      '<td><input class="c-note" value="' + esc(m.note) + '"></td>' +
+      '<td class="mid"><button class="del" title="この行を消す">×</button></td>';
+    tr.querySelector('.c-pay').value = m.pay || '時給';
+    tr.querySelector('.del').onclick = function () { tr.remove(); };
+    tr.querySelector('.c-status').onchange = function () { paint(tr); };
+    tb.appendChild(tr);
+    paint(tr);
+  }
+  function paint(tr) {
+    var v = tr.querySelector('.c-status').value;
+    tr.className = (v === '支払済') ? 'paid' : (v === '対象外' ? 'off' : '');
+  }
+
+  /* ---------- 集める ---------- */
+  function collect() {
+    var job = {};
+    JOBKEYS.forEach(function (k) { job[k] = $(k).value; });
+    job.memo = D.job.memo || '';
+    var out = [];
+    [].forEach.call($('days').children, function (el) {
+      var g = function (c) { var e = el.querySelector(c); return e ? e.value : ''; };
+      var date = g('.d-date');
+      if (!date) return;
+      var mem = [];
+      [].forEach.call(el.querySelectorAll('.rows tr'), function (tr) {
+        var v = function (c) { return tr.querySelector(c).value; };
+        if (!v('.c-name').trim()) return;
+        mem.push({
+          name: v('.c-name').trim(), start: v('.c-start'), end: v('.c-end'),
+          pay: v('.c-pay'), price: v('.c-price'),
+          trans: tr.querySelector('.c-trans').checked, park: v('.c-park'),
+          status: v('.c-status'), note: v('.c-note'),
+        });
+      });
+      out.push({ date: date, start: g('.d-start'), end: g('.d-end'),
+        need: g('.d-need'), amount: g('.d-amount'), memo: memoOf(date), members: mem });
+    });
+    return { id: D.id, job: job, days: out, stamp: D.stamp || '', force: FORCE };
+  }
+  function memoOf(date) {
+    for (var i = 0; i < days.length; i++) if (days[i].date === date) return days[i].memo || '';
+    return '';
+  }
+
+  function sayEdit(text, kind) {
+    var el = $('msg');
+    el.textContent = text;
+    el.className = 'msg' + (kind ? ' ' + kind : '');
+  }
+  function bad(id, text) {
+    [].forEach.call(document.querySelectorAll('.bad'), function (e) { e.classList.remove('bad'); });
+    if (id) { var e = $(id); if (e) { e.classList.add('bad'); e.focus(); } }
+    sayEdit(text, 'ng');
+    return false;
+  }
+  function okMark() {
+    [].forEach.call(document.querySelectorAll('.bad'), function (e) { e.classList.remove('bad'); });
+    return true;
+  }
+
+  /* ---------- メモの入力枠 ---------- */
+  var popDone = null;
+  function openMemo(title, value, done) {
+    $('popTitle').textContent = title;
+    $('popText').value = value || '';
+    popDone = done;
+    $('pop').classList.add('on');
+    $('popText').focus();
+  }
+  $('popOk').onclick = function () {
+    if (popDone) popDone($('popText').value);
+    $('pop').classList.remove('on'); popDone = null;
+  };
+  $('popCancel').onclick = function () { $('pop').classList.remove('on'); popDone = null; };
+  $('pop').onclick = function (e) { if (e.target === $('pop')) $('popCancel').onclick(); };
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && $('pop').classList.contains('on')) $('popCancel').onclick();
+  });
+
+  /* ---------- 確認の窓 ----------
+     標準の confirm() は使わない。Googleの枠の中だと「…に埋め込まれているページの内容」という前置きが付くため。
+     ask(文, はいのとき, やめるのとき) */
+  var askYes = null, askNot = null;
+  function ask(text, onYes, onNo) {
+    $('askText').textContent = text;
+    askYes = onYes || null; askNot = onNo || null;
+    $('ask').classList.add('on');
+    try { $('askOk').focus(); } catch (e) {}
+  }
+  function askDone(yes) {
+    $('ask').classList.remove('on');
+    var f = yes ? askYes : askNot;
+    askYes = null; askNot = null;
+    if (f) f();
+  }
+  $('askOk').onclick = function () { askDone(true); };
+  $('askNo').onclick = function () { askDone(false); };
+  $('ask').onclick = function (e) { if (e.target === $('ask')) askDone(false); };
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && $('ask').classList.contains('on')) askDone(false);
+  });
+
+  $('memo').readOnly = true;
+  $('memo').onclick = function () {
+    openMemo('案件メモ', D.job.memo, function (v) { D.job.memo = v; $('memo').value = oneLine(v); });
+  };
+  $('billing').onchange = syncBilling;
+
+  // Webアプリには google.script.host がないので、閉じる＝一覧へもどる
+  $('close').onclick = function () { leaveEdit(function () { go('jobs'); }); };
+
+  $('save').onclick = function () {
+    var p = collect();
+    if (!p.job.venue) { bad('venue', '会場を入れてください。案件詳細のいちばん上です。'); return; }
+    if (!p.days.length) { bad('mFrom', '日が1つもありません。日をつくってください。'); return; }
+    var people = 0;
+    p.days.forEach(function (d) { people += d.members.length; });
+    if (!people) {
+      bad('', '出る人が1人も入っていません。日の「メンバー表示」を押して、氏名を入れてください。');
+      var first = $('days').firstChild;
+      if (first) { first.classList.add('open'); first.querySelector('.tog').textContent = 'メンバーを隠す'; }
+      return;
+    }
+    okMark();
+    p.month = $('jMonth').value;   // 返事に、このしぼりの一覧を乗せてもらう
+    var isNew = !!D.isNew;
+    // 画面はすぐ一覧へ戻す。保存は裏で続け、上の帯に「更新中…」と出す。
+    // つまずいたとき（ほかの人と競った・届かなかった）は編集へ戻して、入れた中身を失わせない
+    var kept = { D: D, days: days };
+    var orig = ORIG;
+    D = null; EDIT_BASE = null;
+    sayEdit('');
+    go('jobs');
+    loadJobs($('jMonth').value);
+    busy(true, isNew ? '登録中…' : '更新中…');
+    var backToEdit = function (text) {
+      if (D) return false;                 // もう別の案件を開いている → 戻せない（帯と下の知らせだけ）
+      D = kept.D; days = kept.days;
+      EDIT_BASE = 'x';                     // 入れた中身があるので「書きかけ」として守る
+      $('save').disabled = false;
+      sayEdit(text, 'ng');
+      go('edit');
+      return true;
+    };
+    srv
+      .withSuccessHandler(function (r) {
+        if (r && r.conflict) {
+          busy(false);
+          statFlash('上書きできませんでした', 'ng');
+          say(r.text, 'ng');
+          if (backToEdit(r.text)) { FORCE = true; $('save').textContent = 'それでも上書きする'; }
+          return;
+        }
+        FORCE = false;
+        busy(false, isNew ? '登録しました' : '更新しました');
+        say(r.text, 'ok');
+        var savedId = String(r.id || p.id || '');
+        var det = (r.boot && r.boot.jobs && r.boot.jobs.details) ? r.boot.jobs.details[savedId] : null;
+        setUndo(function () { undoSave(isNew, savedId, orig, det ? det.stamp : ''); });
+        // いま使った会場・案件名を候補の先頭へ（次の新規で、読み直さなくても出る）
+        addCand(CFG.venues, p.job.venue);
+        addCand(CFG.names, p.job.name);
+        // 案件・未払い・名簿の件数が変わるので、覚えたものを捨てる。返事に新しい中身が乗っていればそれを覚える
+        forget('jobs'); forget('unpaid'); forget('people');
+        if (r.boot) takeBoot(r.boot, Date.now());
+        if (view === 'jobs') loadJobs($('jMonth').value);
+      })
+      .withFailureHandler(function (e) {
+        busy(false);
+        statFlash('保存できませんでした', 'ng');
+        say(e.message, 'ng');
+        backToEdit(e.message);
+      })
+      .apiSaveJob(p);
+  };
+
+  /** 保存を戻す。新規なら消す。更新なら開いたときの中身（orig）をもう一度書く */
+  function undoSave(isNew, id, orig, stamp) {
+    var month = $('jMonth').value;
+    var after = function (r, doneText) {
+      if (r && r.conflict) { busy(false); statFlash('戻せませんでした', 'ng'); say(r.text, 'ng'); return; }
+      busy(false, doneText);
+      say(r.text, 'ok');
+      if (r.boot) takeBoot(r.boot, Date.now());
+      refreshAll();   // 戻した状態で画面を取り直す
+    };
+    var oops = function (e) { busy(false); statFlash('戻せませんでした', 'ng'); say(e.message, 'ng'); };
+    if (isNew) {
+      busy(true, '取り消し中…');
+      srv.withSuccessHandler(function (r) { after(r, '取り消しました'); }).withFailureHandler(oops)
+        .apiDeleteJob({ id: id, stamp: stamp, month: month });
+      return;
+    }
+    if (!orig || !orig.job) { say('戻せる中身がありません。', 'ng'); return; }
+    var p = { id: id, job: {}, days: [], stamp: stamp, force: false, month: month };
+    JOBKEYS.forEach(function (k) { p.job[k] = (orig.job[k] === null || orig.job[k] === undefined) ? '' : orig.job[k]; });
+    var byDate = {};
+    (orig.days || []).forEach(function (d) {
+      var dd = { date: d.date, start: d.start, end: d.end, need: d.need, amount: d.amount, memo: d.memo || '', members: [] };
+      byDate[d.date] = dd; p.days.push(dd);
+    });
+    (orig.members || []).forEach(function (m) {
+      var dd = byDate[m.date];
+      if (!dd) { dd = { date: m.date, start: '', end: '', need: '', amount: '', memo: '', members: [] }; byDate[m.date] = dd; p.days.push(dd); }
+      dd.members.push({ name: m.name, start: m.start, end: m.end, pay: m.pay, price: m.price,
+        trans: !!m.trans, park: m.park, status: m.status, note: m.note });
+    });
+    busy(true, '戻しています…');
+    srv.withSuccessHandler(function (r) { after(r, '戻しました'); }).withFailureHandler(oops).apiSaveJob(p);
+  }
+
+  /* ================= ③ 未払い ================= */
+  var UNPAID = { people: [] };
+
+  function loadUnpaid(force) {
+    if (!force && CACHE.unpaid) { onUnpaid(CACHE.unpaid); return; }
+    reading(true, '読み込み中…');
+    srv.withSuccessHandler(function (r) {
+      reading(false);
+      CACHE.unpaid = r;
+      GOT.unpaid = Date.now();
+      onUnpaid(r);
+    }).withFailureHandler(fail).apiUnpaid();
+  }
+  /* ---------- 給与（未払い）の見せ方 ----------
+     行（1人の1日）を土台に、月でしぼり、人ごと／案件ごとにまとめる。
+     まとめの「まとめて支払済」は、しぼって見えている分だけを支払済にする */
+  var UROWS = [];            // いま持っている未払いの行（しぼる前）
+  var UMONTH = null, UGROUP = null;
+  function uPref(k) { try { return localStorage.getItem('aokiya_' + k) || ''; } catch (e) { return ''; } }
+  function uKeep(k, v) { try { localStorage.setItem('aokiya_' + k, v); } catch (e) {} }
+  function unpaidRows(r) {
+    if (r.rows) return r.rows.slice();
+    var out = [];   // 古い形（人ごとだけ）から起こす
+    (r.people || []).forEach(function (g) {
+      (g.rows || []).forEach(function (x) {
+        out.push({ rec: x.rec, date: x.date, ym: String(x.date || '').slice(0, 7), jobId: '', venue: x.place, jobName: '',
+          place: x.place, wrote: x.wrote, person: x.person, money: x.money });
+      });
+    });
+    return out;
+  }
+  function onUnpaid(r, force) {
+    readingDone();
+    if (!force && SHOWN.unpaid === r) return;   // 同じ中身なら描き直さない
+    SHOWN.unpaid = r;
+    UNPAID = r;
+    // 押してまだ返事が来ていない行は、サーバーの一覧に「未払い」で残っていても出さない
+    UROWS = unpaidRows(r).filter(function (x) { return !PENDING_RECS[x.rec]; });
+    drawUnpaid();
+  }
+  function drawUnpaid() {
+    if (UMONTH === null) UMONTH = uPref('uMonth');
+    if (UGROUP === null) UGROUP = uPref('uGroup') || 'person';
+    // 月のプルダウン（行にある月・新しい順）。選んでいた月は残す
+    var months = [], seen = {};
+    UROWS.forEach(function (x) { if (x.ym && !seen[x.ym]) { seen[x.ym] = true; months.push(x.ym); } });
+    months.sort(); months.reverse();
+    var sel = $('uMonth');
+    var html = '<option value="">ぜんぶの月</option>';
+    months.forEach(function (m) { html += '<option value="' + esc(m) + '">' + esc(ymLabel(m)) + '</option>'; });
+    sel.innerHTML = html;
+    var month = (months.indexOf(UMONTH) >= 0) ? UMONTH : '';
+    sel.value = month;
+    $('uGroup').value = UGROUP;
+    var byJob = UGROUP === 'job';
+
+    var rows = UROWS.filter(function (x) { return !month || x.ym === month; });
+    var groups = {}, order = [], total = 0;
+    rows.forEach(function (x) {
+      var key = byJob ? (x.jobId || '?') : x.person.key;
+      if (!groups[key]) {
+        groups[key] = {
+          key: key, rows: [], sum: 0, first: x.date,
+          title: byJob
+            ? md(x.date) + ' ' + (x.venue || '') + (x.jobName ? ' ' + x.jobName : '') + (x.jobId ? '　' + x.jobId : '')
+            : personLabel(x.person),
+        };
+        order.push(key);
+      }
+      groups[key].rows.push(x);
+      groups[key].sum += x.money;
+      total += x.money;
+    });
+    var list = order.map(function (k) { return groups[k]; });
+    if (byJob) list.sort(function (a, b) { return a.first < b.first ? 1 : a.first > b.first ? -1 : 0; });   // 新しい案件が上
+    else list.sort(function (a, b) { return b.sum - a.sum; });
+
+    $('uSum').innerHTML = rows.length
+      ? '<div class="band"><span>未払い ' + yen(total) + '</span>' +
+        '<span>' + list.length + (byJob ? '案件' : '人') + '・' + rows.length + '件</span>' +
+        (UNPAID.noMoney ? '<span>金額が入っていない未払い ' + UNPAID.noMoney + '件</span>' : '') + '</div>'
+      : '';
+    if (!rows.length) {
+      $('uList').innerHTML = '<div class="none">' + (month ? ymLabel(month) + ' の未払いはありません。' : '未払いはありません。') + '</div>';
+      return;
+    }
+
+    var out = '';
+    list.forEach(function (g, i) {
+      out += '<div class="pgroup">' +
+        '<div class="ph">' +
+          '<span>◆ ' + esc(g.title) + '（' + g.rows.length + '件）</span>' +
+          '<span class="sum">' + yen(g.sum) + '</span>' +
+          '<button class="btn mini" data-gi="' + i + '">まとめて支払済</button>' +
+        '</div>';
+      g.rows.forEach(function (x, k) {
+        var who = personLabel(x.person) + (x.wrote && x.wrote !== personLabel(x.person) ? '（' + x.wrote + '）' : '');
+        out += '<div class="prow">' +
+          '<span class="d">' + esc(md(x.date)) + '</span>' +
+          '<span class="p">' + esc(byJob ? who : x.place + '　' + who) + '</span>' +
+          '<span class="m">' + yen(x.money) + '</span>' +
+          '<button class="btn mini" data-gi="' + i + '" data-ri="' + k + '">支払済</button>' +
+        '</div>';
+      });
+      out += '</div>';
+    });
+    $('uList').innerHTML = out;
+
+    [].forEach.call($('uList').querySelectorAll('button[data-gi]'), function (b) {
+      b.onclick = function () {
+        var g = list[Number(b.getAttribute('data-gi'))];
+        var ri = b.getAttribute('data-ri');
+        var picked = (ri === null) ? g.rows : [g.rows[Number(ri)]];
+        var q = (ri === null)
+          ? g.title + ' の' + (month ? ymLabel(month) + 'の' : '') + '未払い ' + picked.length + '件（' + yen(g.sum) + '）を支払済にします。よろしいですか。'
+          : md(picked[0].date) + ' ' + picked[0].place + ' ' + personLabel(picked[0].person) + ' の1件（' + yen(picked[0].money) + '）を支払済にします。よろしいですか。';
+        ask(q, function () { queueMarkRecs(picked.map(function (x) { return x.rec; })); });
+      };
+    });
+  }
+  $('uMonth').onchange = function () { UMONTH = $('uMonth').value; uKeep('uMonth', UMONTH); drawUnpaid(); };
+  $('uGroup').onchange = function () { UGROUP = $('uGroup').value; uKeep('uGroup', UGROUP); drawUnpaid(); };
+  $('uReload').onclick = function () { loadUnpaid(true); };
+
+  /* 支払済は続けて何件も押されるので、押した分をためて1回で送る（1件ずつ送ると10件で30秒以上かかる）。
+     押した行はその場で一覧から消し、続けて押せるようにする。返事が来たらサーバーの中身で描き直す */
+  var MARKS = [], SENT = {}, PENDING_RECS = {};   // PENDING_RECS: 押してから返事が来るまでの行
+  function queueMarkRecs(recs) {
+    var set = {};
+    recs.forEach(function (rc) { set[rc] = true; MARKS.push({ rec: rc }); PENDING_RECS[rc] = true; });
+    PEND += recs.length;
+    var removed = UROWS.filter(function (x) { return set[x.rec]; });
+    UROWS = UROWS.filter(function (x) { return !set[x.rec]; });
+    drawUnpaid();
+    qStat();
+    setUndo(function () { undoMarks(recs, removed); });
+    Q.push(function (done) {
+      if (!MARKS.length) { done(); return; }   // 前の便でまとめて送った
+      var batch = MARKS; MARKS = [];
+      batch.forEach(function (w) { SENT[w.rec] = true; });
+      busy(true, '更新中…');
+      srv.withSuccessHandler(function (res) {
+        PEND = Math.max(0, PEND - batch.length);
+        batch.forEach(function (w) { delete PENDING_RECS[w.rec]; });
+        done();
+        busy(false, '支払済にしました');
+        say(res.text, 'ok');
+        forget('unpaid'); forget('jobs');
+        if (res.boot) takeBoot(res.boot, Date.now());   // 案件一覧のぶんも一緒に届く
+        if (view === 'unpaid') loadUnpaid();
+        $('pOut').innerHTML = '';
+      }).withFailureHandler(function (e) {
+        PEND = Math.max(0, PEND - batch.length);
+        batch.forEach(function (w) { delete PENDING_RECS[w.rec]; });
+        done();
+        fail(e);
+        forget('unpaid');
+        if (view === 'unpaid') loadUnpaid(true);   // 消した行を、サーバーの中身で戻す
+      }).apiMarkPaidMany(batch, $('jMonth').value);
+    });
+    qStat(); qNext();
+  }
+
+  /** 直前に押した支払済を戻す。まだ送っていない分は列から外すだけ。送った分はサーバーで未払いに戻す */
+  function undoMarks(recs, removed) {
+    var sent = [], notSent = {};
+    recs.forEach(function (rc) { if (SENT[rc]) sent.push(rc); else notSent[rc] = true; });
+    var n0 = MARKS.length;
+    MARKS = MARKS.filter(function (w) { return !notSent[w.rec]; });
+    for (var rc0 in notSent) delete PENDING_RECS[rc0];
+    PEND = Math.max(0, PEND - (n0 - MARKS.length));
+    removed.forEach(function (x) { if (notSent[x.rec]) UROWS.push(x); });
+    UROWS.sort(function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : 0; });
+    drawUnpaid();
+    qStat();
+    if (!sent.length) { statFlash('戻しました', 'ok'); return; }
+    busy(true, '戻しています…');
+    srv.withSuccessHandler(function (res) {
+      busy(false, '未払いに戻しました');
+      say(res.text, 'ok');
+      if (res.boot) takeBoot(res.boot, Date.now());
+      refreshAll();   // 戻した状態で画面を取り直す
+    }).withFailureHandler(fail).apiUnmarkPaid(sent, $('jMonth').value);
+  }
+
+  /* ================= ⑤ 人（名簿）================= */
+  var PEOPLE = { people: [] };
+
+  function loadPeople(force) {
+    if (!force && CACHE.people) { showPeople(CACHE.people); return; }
+    reading(true, '読み込み中…');
+    srv.withSuccessHandler(function (r) {
+      reading(false);
+      CACHE.people = r;
+      GOT.people = Date.now();
+      showPeople(r);
+    }).withFailureHandler(fail).apiPeople();
+  }
+
+  /** 名簿を手入れしたあと。返ってきた中身で覚え直す */
+  function tookPeople(r) {
+    if (r.boot) { takeBoot(r.boot, Date.now()); r.boot = undefined; }
+    else forget('jobs');   // 名前が変わると、案件一覧のチップの名前も変わるため
+    JOBS = {};             // 先読みした案件の中身にも名前が入っている
+    CACHE.people = r;
+    GOT.people = Date.now();
+    showPeople(r, true);
+  }
+
+  /** 名簿を出す。名簿が変わったら、名前の入力候補もその場で入れ替える。
+      同じ中身なら描き直さない（入れかけの字を消さないため）。force なら描き直す */
+  function showPeople(r, force) {
+    readingDone();
+    if (!force && SHOWN.people === r) return;
+    // 描き直す前に、入れかけの字（まだ「直す」を押していない行）を控えて、あとで戻す
+    var typed = {};
+    [].forEach.call(document.querySelectorAll('#qList .qrow, #qHidden .qrow'), function (el) {
+      var p0 = PEOPLE.people[Number(el.getAttribute('data-i'))];
+      var qn = el.querySelector('.qn'), qf = el.querySelector('.qf');
+      if (!p0 || !qn || !qf) return;
+      if (qn.value !== String(p0.name) || qf.value !== String(p0.formal || '')) typed[p0.name] = { n: qn.value, f: qf.value };
+    });
+    SHOWN.people = r;
+    PEOPLE = r;
+    if (r.roster) ROSTER = r.roster;
+    $('nameList').innerHTML = rosterOptions();
+
+    var shown = [], hidden = [];
+    for (var i = 0; i < r.people.length; i++) (r.people[i].hidden ? hidden : shown).push(i);
+
+    $('qSum').innerHTML = '<div class="band"><span>名簿 ' + shown.length + '人</span>' +
+      (hidden.length ? '<span>非表示 ' + hidden.length + '人</span>' : '') + '</div>';
+    $('qList').innerHTML = shown.map(personRow).join('') || '<div class="none">名簿がありません。</div>';
+    $('qHiddenSum').textContent = hidden.length ? '非表示の人（' + hidden.length + '人）' : '非表示の人はいません。';
+    $('qHidden').innerHTML = hidden.map(personRow).join('');
+    wirePeople($('qList'));
+    wirePeople($('qHidden'));
+    [].forEach.call(document.querySelectorAll('#qList .qrow, #qHidden .qrow'), function (el) {
+      var p1 = PEOPLE.people[Number(el.getAttribute('data-i'))];
+      var t = p1 && typed[p1.name];
+      if (!t) return;
+      if (t.n !== String(p1.name)) el.querySelector('.qn').value = t.n;
+      if (t.f !== String(p1.formal || '')) el.querySelector('.qf').value = t.f;
+    });
+  }
+
+  /** 名簿の1行。表示名も正式名も書き替えられる */
+  function personRow(i) {
+    var p = PEOPLE.people[i];
+    return '<div class="qrow' + (p.hidden ? ' hid' : '') + '" data-i="' + i + '">' +
+      // 1行目 表示名と件数／2行目 正式名と［直す］［非表示］（狭い画面。広い画面は1行）
+      '<input class="qn" value="' + esc(p.name) + '" placeholder="表示名">' +
+      '<span class="qc">' + p.count + '件</span>' +
+      '<i class="br qrow-br"></i>' +
+      '<input class="qf" value="' + esc(p.formal) + '" placeholder="正式名（空なら表示名のまま）">' +
+      '<button class="btn mini q-fix">直す</button>' +
+      '<button class="btn mini q-hide">' + (p.hidden ? '表示に戻す' : '非表示') + '</button>' +
+      (p.also.length
+        ? '<span class="qa">' + esc(p.also.join('・')) + ' と同じ人として数えています</span>'
+        : '') +
+    '</div>';
+  }
+
+  /** 行のボタンをつなぐ。人を指す値は、読み込んだ中身からそのまま渡す */
+  function wirePeople(wrap) {
+    [].forEach.call(wrap.children, function (el) {
+      var fix = el.querySelector('.q-fix'), hide = el.querySelector('.q-hide');
+      if (!fix || !hide) return;
+      var p2 = PEOPLE.people[Number(el.getAttribute('data-i'))];
+      fix.onclick = function () {
+        var nv = el.querySelector('.qn').value.trim();
+        var fv = el.querySelector('.qf').value.trim();
+        var nameChanged = nv !== String(p2.name), formalChanged = fv !== String(p2.formal || '');
+        if (!nameChanged && !formalChanged) { say('何も変わっていません。', 'ng'); return; }
+        if (!nv) { say('表示名を空にはできません。', 'ng'); return; }
+        var run = function () {
+        busy(true, '更新中…');
+        var month = $('jMonth').value;
+        var undo = function () { setUndo(function () { undoPerson(nv, p2.name, formalChanged ? String(p2.formal || '') : null); }); };
+        var afterName = function () {
+          if (!formalChanged) { busy(false, '更新しました'); undo(); return; }
+          srv.withSuccessHandler(function (res) {
+            busy(false, '更新しました');
+            say(res.text, 'ok');
+            tookPeople(res);
+            undo();
+          }).withFailureHandler(fail).apiRenamePerson({ name: nv, formal: fv, month: month });
+        };
+        if (nameChanged) {
+          srv.withSuccessHandler(function (res) {
+            say(res.text, 'ok');
+            tookPeople(res);
+            afterName();
+          }).withFailureHandler(function (e) {
+            var m = (e && e.message) ? String(e.message) : '';
+            if (m.indexOf('もう名簿にあります') < 0) { fail(e); return; }
+            // 同じ名前がある → 2人を1人にまとめるか聞く
+            busy(false);
+            ask('「' + nv + '」はもう名簿にあります。「' + p2.name + '」を「' + nv + '」にまとめますか？\n'
+              + p2.name + ' の出面はぜんぶ ' + nv + ' になり、' + p2.name + ' の行は名簿から消えます。'
+              + (formalChanged ? '正式名の直しは反映されず、' + nv + ' の正式名がそのまま残ります。' : '')
+              + '（この操作は「戻す」で戻せません）', function () {
+              busy(true, '更新中…');
+              srv.withSuccessHandler(function (res) {
+                busy(false, '更新しました');
+                say(res.text, 'ok');
+                tookPeople(res);
+                clearUndo();
+              }).withFailureHandler(fail).apiRenameDisplay({ name: p2.name, newName: nv, month: month, merge: true });
+            });
+          }).apiRenameDisplay({ name: p2.name, newName: nv, month: month });
+        } else {
+          afterName();
+        }
+        };
+        if (nameChanged) {
+          ask('表示名を「' + p2.name + '」から「' + nv + '」に変えます。\n'
+            + '過去の出面に書かれた名前も、まとめて書き替わります。よろしいですか。', run);
+        } else {
+          run();
+        }
+      };
+      hide.onclick = function () {
+        busy(true, '更新中…');
+        srv.withSuccessHandler(function (res) {
+          busy(false, '更新しました');
+          say(res.text, 'ok');
+          tookPeople(res);
+          setUndo(function () {
+            busy(true, '戻しています…');
+            srv.withSuccessHandler(function (r2) { busy(false, '戻しました'); say(r2.text, 'ok'); tookPeople(r2); refreshAll(); })
+              .withFailureHandler(fail).apiHidePerson({ name: p2.name, hidden: !!p2.hidden });
+          });
+        }).withFailureHandler(fail).apiHidePerson({ name: p2.name, hidden: !p2.hidden });
+      };
+    });
+  }
+
+  /** 名簿の直しを戻す。表示名を元へ、正式名を元へ（変えた分だけ） */
+  function undoPerson(curName, oldName, oldFormal) {
+    var month = $('jMonth').value;
+    busy(true, '戻しています…');
+    var fin = function (res) { busy(false, '戻しました'); say(res.text, 'ok'); tookPeople(res); refreshAll(); };
+    var step2 = function () {
+      if (oldFormal === null) { busy(false, '戻しました'); refreshAll(); return; }
+      srv.withSuccessHandler(fin).withFailureHandler(fail).apiRenamePerson({ name: oldName, formal: oldFormal, month: month });
+    };
+    if (curName !== oldName) {
+      srv.withSuccessHandler(function (res) { say(res.text, 'ok'); tookPeople(res); step2(); }).withFailureHandler(fail)
+        .apiRenameDisplay({ name: curName, newName: oldName, month: month });
+    } else {
+      step2();
+    }
+  }
+
+  $('qAdd').onclick = function () {
+    var name = $('qName').value.trim(), formal = $('qFormal').value.trim();
+    if (!name) { say('表示名を入れてください。', 'ng'); return; }
+    busy(true, '登録中…');
+    $('qAdd').disabled = true;
+    srv.withSuccessHandler(function (res) {
+      busy(false, '登録しました');
+      $('qAdd').disabled = false;
+      $('qName').value = '';
+      $('qFormal').value = '';
+      say(res.text, 'ok');
+      tookPeople(res);
+    }).withFailureHandler(function (e) {
+      busy(false);
+      $('qAdd').disabled = false;
+      fail(e);
+    }).apiAddPerson({ name: name, formal: formal });
+  };
+
+  /* ================= ④ 支払い明細 ================= */
+  function loadMonths(force) {
+    if (!force && CACHE.months) { showMonths(CACHE.months); return; }
+    reading(true, '読み込み中…');
+    srv.withSuccessHandler(function (ms) {
+      reading(false);
+      CACHE.months = ms;
+      GOT.months = Date.now();
+      showMonths(ms);
+    }).withFailureHandler(fail).apiMonths();
+  }
+  function showMonths(ms) {
+    var keep = $('pMonth').value;
+    var html = '';
+    for (var i = 0; i < ms.length; i++) {
+      html += '<option value="' + esc(ms[i]) + '">' + esc(ymLabel(ms[i])) + '</option>';
+    }
+    $('pMonth').innerHTML = html || '<option value="">（ありません）</option>';
+    if (keep) $('pMonth').value = keep;
+  }
+
+  $('pMake').onclick = function () {
+    var t = $('pMonth').value;
+    if (!t) { say('年月を選んでください。', 'ng'); return; }
+    reading(true, '明細を作っています…');
+    srv.withSuccessHandler(onStatement).withFailureHandler(fail).apiStatement(t);
+  };
+  function onStatement(r) {
+    readingDone();
+    if (!r.people.length) {
+      $('pOut').innerHTML = '<div class="none">' + esc(ymLabel(r.ym)) + ' の分が見あたりません。</div>';
+      return;
+    }
+    var out = '<div class="grand">' +
+      '<span>' + esc(r.month) + '分　' + r.people.length + '人</span>' +
+      '<span>合計 ' + yen(r.total) + '</span>' +
+      '<span>うち未払い ' + yen(r.totalUnpaid) + '</span>' +
+    '</div>';
+    if (r.skipped) {
+      out += '<div class="card" style="margin-bottom:11px; color:#c0392b">' +
+        '※ 働いた時間が入っていない人が ' + r.skipped + '件あります。出面DBの「実働h」を埋めると出ます。</div>';
+    }
+    out += '<div class="card">';
+    for (var i = 0; i < r.people.length; i++) {
+      var p = r.people[i];
+      out += '<div class="stp">' +
+        '<div class="n"><span>' + esc(personLabel(p.person)) + ' さま</span>' +
+          '<span class="tag' + (p.unpaid > 0 ? ' ng' : '') + '">' + (p.unpaid > 0 ? '未払い' : '支払済') + '</span></div>';
+      for (var k = 0; k < p.lines.length; k++) {
+        var l = p.lines[k];
+        out += '<div class="stl">' +
+          '<span class="d">' + esc(md(l.date)) + '</span>' +
+          '<span class="p">' + esc(l.place) + '</span>' +
+          '<span class="e">' + esc(l.detail) + '</span>' +
+          '<span class="m">' + yen(l.money) + '</span>' +
+        '</div>';
+      }
+      out += '<div class="stl"><span class="d"></span><span class="p"></span>' +
+        '<span class="e">駐車場代</span><span class="m">' + yen(p.park) + '</span></div>';
+      out += '<div class="stl tot"><span class="d">合計</span><span class="p"></span>' +
+        '<span class="e"></span><span class="m">' + yen(p.sum) + '</span></div>';
+      out += '</div>';
+    }
+    out += '</div>';
+    $('pOut').innerHTML = out;
+  }
+
+  /* PDFをダウンロード。中身はbase64で受け取り、data: のリンクにして押させる。
+     枠の決まりで自動の押下が止められることがあるので、押せるリンクも残す。 */
+  $('pDown').onclick = function () {
+    var t = $('pMonth').value;
+    if (!t) { say('年月を選んでください。', 'ng'); return; }
+    veilOn(true);
+    busy(true, 'PDFを作っています…');
+    $('pDown').disabled = true;
+    srv
+      .withSuccessHandler(function (r) {
+        veilOn(false);
+        busy(false, 'PDFができました');
+        $('pDown').disabled = false;
+        var href = 'data:application/pdf;base64,' + r.base64;
+
+        var a = document.createElement('a');
+        a.href = href;
+        a.download = r.name;
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        try { a.click(); } catch (e) {}
+        document.body.removeChild(a);
+
+        var keep = document.createElement('a');
+        keep.href = href;
+        keep.download = r.name;
+        keep.className = 'btn';
+        keep.textContent = '↓ ' + r.name;
+        $('pLink').innerHTML = '';
+        $('pLink').appendChild(keep);
+
+        say(r.text + ' 落ちてこないときは、下の ↓ を押してください。', 'ok');
+      })
+      .withFailureHandler(function (e) { veilOn(false); $('pDown').disabled = false; fail(e); })
+      .apiPdfBlob(t);
+  };
+
+  $('pSend').onclick = function () {
+    var t = $('pMonth').value, to = $('pMail').value.trim();
+    if (!t) { say('年月を選んでください。', 'ng'); return; }
+    if (!to) { say('送り先のメールアドレスを入れてください。', 'ng'); return; }
+    ask(ymLabel(t) + ' の明細を ' + to + ' に送ります。よろしいですか。', function () {
+      veilOn(true);
+      busy(true, '送っています…');
+      $('pSend').disabled = true;
+      srv
+        .withSuccessHandler(function (r) { veilOn(false); busy(false, '送りました'); $('pSend').disabled = false; say(r.text, 'ok'); })
+        .withFailureHandler(function (e) { veilOn(false); $('pSend').disabled = false; fail(e); })
+        .apiSendPdf(t, to);
+    });
+  };
+
+  /* ================= はじめ ================= */
+  /** サーバーから届いたまとめ読みを、ぜんぶ覚える（描きはしない） */
+  function takeBoot(b, at) {
+    b = b || {};
+    var c = b.config;
+    if (c) {
+      if (c.roster) ROSTER = c.roster;
+      if (c.mailTo && !$('pMail').value) $('pMail').value = c.mailTo;   // 入れかけの宛先は消さない
+      if (c.sheetUrl) $('sheetLink').href = c.sheetUrl;                  // PC版の帯から、シートへ行ける
+      if (c.helpUrl) $('helpLink').href = c.helpUrl;                     // 帯の「使い方」→ 取扱説明書
+      CFG = {
+        venues: c.venues || [], names: c.names || [], holidays: c.holidays || [],
+        wage: c.wage === undefined ? '' : c.wage,
+        trans: c.trans === undefined ? '' : c.trans,
+      };
+      BOOTED = true;
+    }
+    if (b.jobs) { var mk = String(b.jobs.month || ''); CACHE.jobs[mk] = b.jobs; GOT.jobs[mk] = at; }
+    if (b.unpaid) { CACHE.unpaid = b.unpaid; GOT.unpaid = at; }
+    if (b.people) { CACHE.people = b.people; GOT.people = at; }
+    if (b.months) { CACHE.months = b.months; GOT.months = at; }
+    if (b.took !== undefined) { try { console.log('apiBoot ' + b.took + 'ms' + (b.cached ? ' (覚えから)' : '')); } catch (e) {} }
+  }
+
+  /** 合言葉が通ったあと（stale＝前回の中身をとりあえず出すとき）。ぜんぶ覚えてから、いま見ている画面を描く */
+  function startApp(b, at, stale) {
+    STALE = !!stale;
+    takeBoot(b, at);
+    if (stale) { SNAPPED = true; }
+    else { SNAPPED = false; saveSnap(b, at); }
+    if (stale || view === 'jobs') {
+      var mk = (stale || !CACHE.jobs[$('jMonth').value]) ? 'FROM_NOW' : $('jMonth').value;
+      loadJobs(mk);
+    }
+    else if (view === 'unpaid') loadUnpaid();
+    else if (view === 'people') loadPeople();
+    else if (view === 'pay') loadMonths();
+  }
+
+  $('gGo').onclick = function () { tryPass($('gPass').value.trim()); };
+  $('gPass').onkeydown = function (e) { if (e.key === 'Enter') $('gGo').onclick(); };
+
+  (function boot() {
+    go('jobs');
+    var saved = loadPass();
+    var snap = loadSnap();
+    // 合言葉の画面は最初から隠してある。通らなかったとき（lockOut）に出す。
+    // 覚えているときに一瞬出ないようにするため
+    hideGate();
+    if (snap && snap.boot && snap.boot.config) {
+      // 前回の中身をすぐ出す（サーバーの返事を待たない）。そのあと裏で読み直す
+      startApp(snap.boot, Number(snap.at) || Date.now(), true);
+    }
+    // 合言葉を覚えていなくても、一度通ったGoogleアカウントならサーバーが通す。だまって1回試す
+    tryPass(saved, true);
+  })();
+
+  /* 利用記録。誰が開いたかはサーバーが差し込む（__LOGWHO__）。
+     中地さん本人のときは __LOGSKIP__ が '1' になり、何も送らない。失敗してもアプリは止めない */
+  try { if (!'1') new Image().src = 'https://script.google.com/macros/s/AKfycbx60H_bXkfaEXrwhLvp4MOIH6wmtw414pembss8iu5VVb5_UAE3AmOnyIRk5Y4ak02Ouw/exec?app=AP002&k=webapp&who=__LOGWHO__'; } catch (e) {}
+</script>

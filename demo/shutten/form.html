@@ -1,0 +1,335 @@
+
+<!DOCTYPE html>
+<meta charset="utf-8">
+<script src="fake.js"></script>
+<style>
+  :root{ --navy:#345466; --green:#2a8761; --ink:#1c2b33; --sub:#6b7c86; --line:#e2e8ec; --bg:#f5f7f8; --red:#c0392b; }
+  *{box-sizing:border-box}
+  body{ margin:0; background:var(--bg); color:var(--ink); font-family:"Hiragino Kaku Gothic ProN","Yu Gothic","Meiryo",system-ui,sans-serif; font-size:15px; line-height:1.6; -webkit-text-size-adjust:100%; }
+  .wrap{max-width:640px; margin:0 auto; padding:0 0 60px}
+  .head img{display:block; width:100%; height:auto; border-radius:0 0 10px 10px}
+  h1{font-size:19px; margin:18px 16px 6px; line-height:1.4}
+  .intro{margin:0 16px 14px; white-space:pre-wrap; color:var(--ink); font-size:14px}
+  .intro a{color:#1a6fb5; word-break:break-all}
+  .card{background:#fff; border:1px solid var(--line); border-radius:10px; padding:14px 16px; margin:0 12px 12px}
+  .q label.t{display:block; font-weight:700; font-size:15px; margin-bottom:4px}
+  .q .req{color:var(--red); font-weight:700; margin-left:4px; font-size:13px}
+  .q .help{font-size:13px; color:var(--sub); white-space:pre-wrap; margin-bottom:8px}
+  .q .help a{color:#1a6fb5; word-break:break-all}
+  input[type=text],input[type=email],input[type=tel],textarea,select{ font:inherit; font-size:16px; color:inherit; padding:10px 11px; border:1px solid #cfd8dd; border-radius:7px; background:#fff; width:100%; min-width:0; }
+  textarea{min-height:110px; resize:vertical}
+  input:focus,textarea:focus,select:focus{outline:none; border-color:var(--green); box-shadow:0 0 0 2px rgba(42,135,97,.15)}
+  .opt{display:flex; align-items:flex-start; gap:10px; padding:9px 6px; border-radius:7px; cursor:pointer}
+  .opt:active{background:#eef3f6}
+  .opt input{width:20px; height:20px; margin:3px 0 0; flex:0 0 auto}
+  .opt span{flex:1 1 auto}
+  .bad{border-color:var(--red) !important; box-shadow:0 0 0 2px rgba(192,57,43,.15) !important}
+  .err{color:var(--red); font-size:13px; margin-top:6px; display:none}
+  .err.on{display:block}
+  .pick{ display:inline-block; background:#fff; color:var(--navy); border:1px solid #b9c9d2; border-radius:8px; padding:10px 16px; font-weight:700; font:inherit; cursor:pointer; }
+  .pick:active{background:#eef3f6}
+  .thumbs{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px}
+  .th{position:relative; width:96px; height:96px; border-radius:8px; overflow:hidden; border:1px solid var(--line); background:#eee}
+  .th img{width:100%; height:100%; object-fit:cover; display:block}
+  .th .x{position:absolute; top:3px; right:3px; width:24px; height:24px; border-radius:50%; background:rgba(0,0,0,.6); color:#fff; border:none; font-size:15px; line-height:24px; padding:0; cursor:pointer}
+  .th .sz{position:absolute; left:0; right:0; bottom:0; background:rgba(0,0,0,.45); color:#fff; font-size:10px; text-align:center; padding:1px 0}
+  .th.ng{border-color:var(--red)}
+  .note{font-size:12px; color:var(--sub); margin-top:6px}
+  .go{ display:block; width:calc(100% - 24px); margin:6px 12px 0; background:var(--green); color:#fff; border:none; border-radius:9px; padding:14px; font:inherit; font-size:17px; font-weight:700; cursor:pointer; }
+  .go:disabled{background:#a9c6b7}
+  .prog{margin:14px 12px 0; display:none}
+  .prog.on{display:block}
+  .prog .bar{height:10px; background:#dfe6ea; border-radius:5px; overflow:hidden}
+  .prog .bar i{display:block; height:100%; width:0; background:var(--green); transition:width .3s}
+  .prog .tx{font-size:13px; color:var(--sub); margin-top:5px}
+  .done{margin:24px 12px; text-align:center; display:none}
+  .done.on{display:block}
+  .done .big{font-size:20px; font-weight:700; color:var(--green); margin-bottom:8px}
+  .done .no{font-size:14px; color:var(--sub)}
+  .done .thanks{white-space:pre-wrap; text-align:left; margin-top:14px; font-size:14px}
+  .say{ position:fixed; left:12px; right:12px; bottom:14px; background:#fff; border:1px solid #e2b4ae; color:var(--red); border-radius:9px; padding:10px 14px; font-size:14px; box-shadow:0 4px 14px rgba(0,0,0,.12); display:none; z-index:9; white-space:pre-wrap }
+  .say.on{display:block}
+  .closed{margin:40px 16px; text-align:center; color:var(--sub); font-size:15px}
+  .foot{margin:22px 16px 0; font-size:11px; color:#9aa8b0; text-align:center}
+  .draft{margin:0 16px 10px; font-size:12px; color:var(--sub)}
+  .draft button{font:inherit; font-size:12px; background:none; border:none; color:#1a6fb5; text-decoration:underline; cursor:pointer; padding:0 4px}
+</style>
+<div class="wrap" id="app"></div>
+<div class="say" id="say"></div>
+<script>
+  var FORM = window.DEMO_FORM;
+  var $ = function (id) { return document.getElementById(id); };
+  function esc(s) { return String(s === undefined || s === null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  /** 文章の中のURLをリンクにする（エスケープしてから） */
+  function linkify(s) {
+    return esc(s).replace(/(https?:\/\/[^\s<]+)/g, function (u) { return '<a href="' + u + '" target="_blank" rel="noopener">' + u + '</a>'; });
+  }
+  var sayTimer = null;
+  function say(text) {
+    var el = $('say'); el.textContent = text; el.className = 'say on';
+    if (sayTimer) clearTimeout(sayTimer);
+    sayTimer = setTimeout(function () { el.className = 'say'; }, 9000);
+  }
+
+  var PHOTOS = {};   // qid → [{file, name, mime, size, origB64, midB64, thumbB64, url, sent}]
+  var MAX_BYTES = 10 * 1024 * 1024;
+  var DKEY = 'shuten_draft_' + (FORM ? FORM.id : '');
+
+  function render() {
+    var app = $('app');
+    if (!FORM) { app.innerHTML = '<div class="closed">このフォームは見つかりません。<br>URLをもう一度確かめてください。</div>'; return; }
+    if (FORM.status === '締切') { app.innerHTML = '<h1>' + esc(FORM.title) + '</h1><div class="closed">受付を終えています。</div>'; return; }
+    var h = '';
+    if (FORM.headerData) h += '<div class="head"><img src="' + FORM.headerData + '" alt=""></div>';
+    h += '<h1>' + esc(FORM.title) + '</h1>';
+    if (FORM.intro) h += '<div class="intro">' + linkify(FORM.intro) + '</div>';
+    h += '<div class="draft" id="draft" style="display:none">前に入れかけた内容があります。<button type="button" id="dLoad">続きから</button><button type="button" id="dDrop">消す</button></div>';
+    if (FORM.needKey) {
+      h += '<div class="card q" id="c_key"><label class="t">受付の合言葉<span class="req">必須</span></label>'
+        + '<div class="help">主催者からお知らせした合言葉を入れてください。</div><input type="text" id="key" autocomplete="off"><div class="err" id="e_key"></div></div>';
+    }
+    FORM.questions.forEach(function (q) { h += qHtml(q); });
+    h += '<button class="go" id="go">送信する</button>';
+    h += '<div class="prog" id="prog"><div class="bar"><i id="pbar"></i></div><div class="tx" id="ptx"></div></div>';
+    h += '<div class="done" id="done"></div>';
+    h += '<div class="foot">出店フォーム</div>';
+    app.innerHTML = h;
+    FORM.questions.forEach(function (q) { if (q.type === 'photo') bindPhoto(q); });
+    $('go').onclick = submit;
+    var d = loadDraft();
+    if (d) { $('draft').style.display = 'block'; $('dLoad').onclick = function () { applyDraft(d); $('draft').style.display = 'none'; }; $('dDrop').onclick = function () { dropDraft(); $('draft').style.display = 'none'; }; }
+    app.addEventListener('input', saveDraftLater);
+    app.addEventListener('change', saveDraftLater);
+  }
+
+  function qHtml(q) {
+    var req = q.required ? '<span class="req">必須</span>' : '';
+    var h = '<div class="card q" id="c_' + esc(q.id) + '">';
+    if (q.type === 'note') {
+      h += (q.label ? '<label class="t">' + esc(q.label) + '</label>' : '') + (q.help ? '<div class="help">' + linkify(q.help) + '</div>' : '');
+      return h + '</div>';
+    }
+    h += '<label class="t">' + esc(q.label) + req + '</label>';
+    if (q.help) h += '<div class="help">' + linkify(q.help) + '</div>';
+    var id = 'i_' + esc(q.id);
+    if (q.type === 'text') {
+      var t = q.role === 'email' ? 'email' : q.role === 'phone' ? 'tel' : 'text';
+      h += '<input type="' + t + '" id="' + id + '" autocomplete="' + (q.role === 'email' ? 'email' : q.role === 'phone' ? 'tel' : 'on') + '">';
+    } else if (q.type === 'long') {
+      h += '<textarea id="' + id + '"></textarea>';
+    } else if (q.type === 'radio' || q.type === 'check') {
+      var typ = q.type === 'radio' ? 'radio' : 'checkbox';
+      (q.options || []).forEach(function (o, i) {
+        h += '<label class="opt"><input type="' + typ + '" name="' + id + '" value="' + esc(o) + '"><span>' + esc(o) + '</span></label>';
+      });
+    } else if (q.type === 'select') {
+      h += '<select id="' + id + '"><option value="">選んでください</option>';
+      (q.options || []).forEach(function (o) { h += '<option value="' + esc(o) + '">' + esc(o) + '</option>'; });
+      h += '</select>';
+    } else if (q.type === 'photo') {
+      h += '<button type="button" class="pick" id="p_' + esc(q.id) + '">写真を選ぶ</button>'
+        + '<input type="file" id="f_' + esc(q.id) + '" accept="image/*" multiple style="display:none">'
+        + '<div class="note">' + q.max + '枚まで。1枚10MBまで。縮めずにそのまま送ります。</div>'
+        + '<div class="thumbs" id="t_' + esc(q.id) + '"></div>';
+    }
+    h += '<div class="err" id="e_' + esc(q.id) + '"></div></div>';
+    return h;
+  }
+
+  /* ---------- 写真 ---------- */
+  function bindPhoto(q) {
+    PHOTOS[q.id] = PHOTOS[q.id] || [];
+    var inp = $('f_' + q.id);
+    $('p_' + q.id).onclick = function () { inp.click(); };
+    inp.onchange = function () {
+      var files = [].slice.call(inp.files || []);
+      inp.value = '';
+      files.forEach(function (file) {
+        if (PHOTOS[q.id].length >= q.max) { say(q.max + '枚までです。'); return; }
+        if (file.size > MAX_BYTES) { say(file.name + ' は ' + mb(file.size) + ' あって大きすぎます（10MBまで）。'); return; }
+        var ph = { file: file, name: file.name, mime: file.type || 'image/jpeg', size: file.size, url: URL.createObjectURL(file), sent: false };
+        PHOTOS[q.id].push(ph);
+        drawThumbs(q);
+        prepare(ph, q);
+      });
+    };
+  }
+  function mb(n) { return (n / 1048576).toFixed(1) + 'MB'; }
+  function drawThumbs(q) {
+    var box = $('t_' + q.id);
+    box.innerHTML = PHOTOS[q.id].map(function (p, i) {
+      return '<div class="th' + (p.bad ? ' ng' : '') + '"><img src="' + (p.thumbUrl || p.url) + '" alt="">'
+        + '<button type="button" class="x" data-i="' + i + '">×</button><div class="sz">' + mb(p.size) + (p.sent ? ' 済' : '') + '</div></div>';
+    }).join('');
+    [].forEach.call(box.querySelectorAll('.x'), function (b) {
+      b.onclick = function () { PHOTOS[q.id].splice(Number(b.getAttribute('data-i')), 1); drawThumbs(q); };
+    });
+    var pick = $('p_' + q.id);
+    pick.style.display = PHOTOS[q.id].length >= q.max ? 'none' : '';
+  }
+  /** 写真を読み、原本(base64)と縮小2種(中1600px・小320px)を作る。読めない形式は原本だけ送る */
+  function prepare(ph, q) {
+    var fr = new FileReader();
+    fr.onload = function () {
+      var s = String(fr.result || '');
+      ph.origB64 = s.slice(s.indexOf(',') + 1);
+      var img = new Image();
+      img.onload = function () {
+        try {
+          ph.midB64 = shrink(img, 1600, 0.86);
+          ph.thumbB64 = shrink(img, 320, 0.8);
+          ph.thumbUrl = 'data:image/jpeg;base64,' + ph.thumbB64;
+          // ブラウザがJPEGにできる形式で、原本がJPEG/PNGでないとき（HEICなど）は、JPEGにした原本を送る
+          if (!/jpe?g|png/i.test(ph.mime)) { ph.origB64 = shrink(img, 0, 0.95); ph.mime = 'image/jpeg'; ph.name = ph.name.replace(/\.[^.]+$/, '') + '.jpg'; }
+        } catch (e) { ph.midB64 = ''; ph.thumbB64 = ''; }
+        ph.ready = true; drawThumbs(q);
+      };
+      img.onerror = function () { ph.ready = true; ph.midB64 = ''; ph.thumbB64 = ''; drawThumbs(q); };
+      img.src = ph.url;
+    };
+    fr.onerror = function () { ph.bad = true; ph.ready = true; drawThumbs(q); say(ph.name + ' を読めませんでした。'); };
+    fr.readAsDataURL(ph.file);
+  }
+  /** 長辺 max px に縮めてJPEGのbase64にする。max が 0 なら大きさはそのまま */
+  function shrink(img, max, qual) {
+    var w = img.naturalWidth || img.width, h = img.naturalHeight || img.height;
+    var sc = max ? Math.min(1, max / Math.max(w, h)) : 1;
+    var c = document.createElement('canvas');
+    c.width = Math.max(1, Math.round(w * sc)); c.height = Math.max(1, Math.round(h * sc));
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+    var s = c.toDataURL('image/jpeg', qual);
+    return s.slice(s.indexOf(',') + 1);
+  }
+
+  /* ---------- 答えを集める ---------- */
+  function collect() {
+    var ans = {};
+    FORM.questions.forEach(function (q) {
+      var id = 'i_' + q.id;
+      if (q.type === 'text' || q.type === 'long' || q.type === 'select') ans[q.id] = $(id) ? $(id).value.trim() : '';
+      else if (q.type === 'radio') { var r = document.querySelector('input[name="' + id + '"]:checked'); ans[q.id] = r ? r.value : ''; }
+      else if (q.type === 'check') ans[q.id] = [].map.call(document.querySelectorAll('input[name="' + id + '"]:checked'), function (x) { return x.value; });
+      else if (q.type === 'photo') ans[q.id] = (PHOTOS[q.id] || []).length + '枚';
+    });
+    return ans;
+  }
+  function validate(ans) {
+    var first = null;
+    if (FORM.needKey) { var ok = $('key').value.trim() !== ''; mark('key', ok ? '' : '合言葉を入れてください。'); if (!ok && !first) first = 'c_key'; }
+    FORM.questions.forEach(function (q) {
+      if (q.type === 'note') return;
+      var v = ans[q.id], empty;
+      if (q.type === 'photo') empty = (PHOTOS[q.id] || []).length === 0;
+      else empty = Array.isArray(v) ? v.length === 0 : v === '';
+      var msg = '';
+      if (q.required && empty) msg = q.type === 'photo' ? '写真を選んでください。' : '入れてください。';
+      else if (q.type === 'text' && !empty && q.role === 'email' && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v)) msg = 'メールアドレスの形になっていません。';
+      if (q.type === 'photo' && (PHOTOS[q.id] || []).some(function (p) { return !p.ready; })) msg = '写真をまだ読み込んでいます。少し待ってください。';
+      mark(q.id, msg);
+      if (msg && !first) first = 'c_' + q.id;
+    });
+    if (first) { var el = $(first); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+    return !first;
+  }
+  function mark(id, msg) {
+    var e = $('e_' + id); if (!e) return;
+    e.textContent = msg; e.className = 'err' + (msg ? ' on' : '');
+    var c = $('c_' + id); if (c) { var inp = c.querySelector('input,textarea,select'); if (inp && inp.type !== 'file') inp.className = msg ? 'bad' : ''; }
+  }
+
+  /* ---------- 送る ---------- */
+  var CHUNK = 1400000;   // base64の文字数。1回に送るのは約1MB
+  var RID = null;        // 受付番号（回答が入ったあと）
+  function submit() {
+    var ans = collect();
+    if (!validate(ans)) return;
+    $('go').disabled = true; $('go').textContent = '送っています…';
+    prog(0, '回答を送っています…');
+    var key = FORM.needKey ? $('key').value.trim() : '';
+    var send = function () {
+      if (RID) { sendPhotos(); return; }
+      google.script.run.withSuccessHandler(function (r) { RID = r.id; sendPhotos(); })
+        .withFailureHandler(function (e) { failed(e); }).apiSubmit(FORM.id, key, ans);
+    };
+    send();
+  }
+  function allPhotos() {
+    var list = [];
+    FORM.questions.forEach(function (q) { if (q.type === 'photo') (PHOTOS[q.id] || []).forEach(function (p, i) { if (!p.bad) list.push({ q: q, p: p, idx: i }); }); });
+    return list;
+  }
+  function sendPhotos() {
+    var list = allPhotos().filter(function (x) { return !x.p.sent; });
+    var total = allPhotos().length, doneN = total - list.length;
+    var next = function () {
+      if (!list.length) { finish(); return; }
+      var x = list.shift();
+      var kinds = [['thumb', x.p.thumbB64], ['mid', x.p.midB64], ['orig', x.p.origB64]].filter(function (k) { return k[1]; });
+      var k = 0;
+      var sendKind = function () {
+        if (k >= kinds.length) { x.p.sent = true; doneN++; drawThumbs(x.q); next(); return; }
+        var kind = kinds[k][0], b64 = kinds[k][1];
+        var n = Math.max(1, Math.ceil(b64.length / CHUNK)), c = 0;
+        var sendChunk = function (tries) {
+          var part = b64.slice(c * CHUNK, (c + 1) * CHUNK);
+          var pct = Math.round(((doneN + (k + c / n) / kinds.length) / total) * 100);
+          prog(pct, '写真 ' + (doneN + 1) + '/' + total + ' を送っています…' + (kind === 'orig' && n > 1 ? '（' + (c + 1) + '/' + n + '）' : ''));
+          google.script.run.withSuccessHandler(function () { c++; if (c < n) sendChunk(0); else { k++; sendKind(); } })
+            .withFailureHandler(function (e) {
+              if (tries < 2) { setTimeout(function () { sendChunk(tries + 1); }, 1500); return; }
+              failed(e, true);
+            })
+            .apiPhotoChunk({ answerId: RID, qid: x.q.id, idx: x.idx, name: x.p.name, mime: x.p.mime, kind: kind, chunk: c, total: n, data: part });
+        };
+        sendChunk(0);
+      };
+      sendKind();
+    };
+    next();
+  }
+  function prog(pct, text) { $('prog').className = 'prog on'; $('pbar').style.width = pct + '%'; $('ptx').textContent = text; }
+  function finish() {
+    prog(100, '送り終わりました。');
+    dropDraft();
+    $('go').style.display = 'none'; $('prog').className = 'prog';
+    var d = $('done');
+    d.innerHTML = '<div class="big">受け付けました</div><div class="no">受付番号 ' + esc(RID) + '</div>'
+      + (FORM.thanks ? '<div class="thanks">' + linkify(FORM.thanks) + '</div>' : '');
+    d.className = 'done on';
+    [].forEach.call(document.querySelectorAll('.card input, .card textarea, .card select, .card button'), function (el) { el.disabled = true; });
+    d.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+  function failed(e, photo) {
+    var m = (e && e.message) ? e.message : String(e);
+    $('go').disabled = false;
+    $('go').textContent = photo ? '写真を送り直す' : '送信する';
+    $('prog').className = 'prog';
+    say((photo ? '写真を送れませんでした。電波の良いところで「写真を送り直す」を押してください。\n' : '送れませんでした。\n') + m);
+  }
+
+  /* ---------- 書きかけの覚え（この端末だけ） ---------- */
+  var draftTimer = null;
+  function saveDraftLater() { if (draftTimer) clearTimeout(draftTimer); draftTimer = setTimeout(saveDraft, 600); }
+  function saveDraft() { if (RID) return; try { localStorage.setItem(DKEY, JSON.stringify({ at: Date.now(), ans: collect() })); } catch (e) {} }
+  function loadDraft() {
+    try { var s = localStorage.getItem(DKEY); if (!s) return null; var d = JSON.parse(s); var has = false;
+      for (var k in d.ans) { var v = d.ans[k]; if ((Array.isArray(v) && v.length) || (!Array.isArray(v) && v && !/枚$/.test(v))) has = true; }
+      return has ? d : null; } catch (e) { return null; }
+  }
+  function dropDraft() { try { localStorage.removeItem(DKEY); } catch (e) {} }
+  function applyDraft(d) {
+    FORM.questions.forEach(function (q) {
+      var v = d.ans[q.id], id = 'i_' + q.id;
+      if (v === undefined) return;
+      if (q.type === 'text' || q.type === 'long' || q.type === 'select') { if ($(id)) $(id).value = v; }
+      else if (q.type === 'radio') [].forEach.call(document.querySelectorAll('input[name="' + id + '"]'), function (x) { x.checked = x.value === v; });
+      else if (q.type === 'check') [].forEach.call(document.querySelectorAll('input[name="' + id + '"]'), function (x) { x.checked = (v || []).indexOf(x.value) >= 0; });
+    });
+  }
+
+  render();
+
+  /* 利用記録。誰が開いたかはサーバーが差し込む（__LOGWHO__）。
+     中地さん本人のときは __LOGSKIP__ が '1' になり、何も送らない。失敗してもアプリは止めない */
+  try { if (!'1') new Image().src = 'https://script.google.com/macros/s/AKfycbx60H_bXkfaEXrwhLvp4MOIH6wmtw414pembss8iu5VVb5_UAE3AmOnyIRk5Y4ak02Ouw/exec?app=AP001&k=form&who=__LOGWHO__'; } catch (e) {}
+</script>

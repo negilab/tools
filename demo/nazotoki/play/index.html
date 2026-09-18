@@ -1,0 +1,3624 @@
+<script>window.NAZO_CONFIG = { base: "", gasUrl: "" };</script>
+<!DOCTYPE html>
+<meta charset="utf-8">
+<script src="../fake.js"></script>
+<!-- interactive-widget=resizes-content … キーボードが出たら、その分だけ見える領域を縮める
+     （Android Chrome が読む。iOS は読み飛ばす）。答えの欄を押したときの寄せ直しが同じように効く。 -->
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, interactive-widget=resizes-content">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- フォントは描画を止めない（media=print で読み、届いたら all にする）。
+     届くまでは fallback で出る（css2 の display=swap も付けてある）。 -->
+<link rel="stylesheet" media="print" onload="this.media='all'"
+      href="https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@400;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<noscript><link rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@400;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap"></noscript>
+<!-- CSS と JS は build.mjs が流し込む（style と script のタグごと差し替える）。
+     この骨には、ページの設定（シナリオID・ノードID・つなぎ先）だけを置く。 -->
+<style>
+/* ===== play/css/base.css ===== */
+  *{box-sizing:border-box}
+  /* 地は html と body の両方に同じものを付ける（2026-09-17 中地さんの写し。
+     下までスクロールすると、和紙の模様が途中で終わって、その下が白っぽく見えていた）。
+     前は html,body を height:100% にしていたので、地の「貼り付け先」が画面1つ分の高さで決まり、
+     cover で伸ばしている紙の陰が、そこから下に無かった。いまは高さを決めず、
+     body に min-height を置く（対応していれば 100dvh、だめなら 100vh）。
+     画面を入れ替えたあとの scrollTo(0,0) が、ブラウザのスクロールの固定に
+     押し戻されないように overflow-anchor も切る（2026-09-17。app.js の scrollTop() と対）。 */
+  html{ overflow-anchor:none; background-color:var(--bg) }
+  body{ margin:0; background-color:var(--bg); color:var(--ink);
+        min-height:100vh; min-height:100dvh;
+        font-family:var(--gothic);
+        font-size:16px; line-height:1.7; -webkit-text-size-adjust:100%; }
+  .wrap{max-width:560px; margin:0 auto; padding:8px 14px 48px}
+
+  /* 上の帯（イベント名と、いまの人の名前） */
+  .bar{ display:flex; justify-content:space-between; align-items:center; gap:10px;
+        font-size:11px; color:var(--sub); min-height:20px; margin-bottom:7px }
+  .bar .ev{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+  .bar .who{ flex:none; max-width:45%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+             padding:2px 8px; border-radius:8px; border:1px solid var(--line);
+             -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
+  .bar .who:empty{ border-color:transparent; padding:0 }
+  /* 試験環境の札（2026-09-18）。base が /stg のときだけ call.js の nzStgTag が hidden を外す。
+     本番と間違えないための印なので、テーマの変数を使わず決め打ちの赤にする（4テーマとも読める） */
+  .bar .stgtag{ flex:none; background:#d7263d; color:#fff; font-family:var(--mono); font-size:9.5px;
+        font-weight:700; letter-spacing:.14em; padding:1px 7px; border-radius:4px; margin-right:auto }
+  .bar .stgtag[hidden]{ display:none }
+  /* 管理者モード（app.js が .bar に data-admin="1" を付ける）。
+     2026-09-17 帯全体を金色に塗るのをやめた。残すのは帯の下辺の1px の金の線だけで、
+     「管理者で入っている」ことがどの画面でも静かに分かるようにする。
+     金はテーマごとの --gold（theme-*.css）。黒テーマでも読める明るさにしてある */
+  .bar[data-admin="1"]{ box-shadow:inset 0 -1px 0 var(--gold) }
+  /* なまえの札を、小さな金の札（pill）にする。左に6pxの丸い点を1つ */
+  .bar[data-admin="1"] .who{ display:inline-flex; align-items:center; gap:6px;
+        padding:2px 8px; border-radius:999px; border:1px solid var(--gold); background:transparent;
+        font-family:var(--mono); font-size:10px; font-weight:500; letter-spacing:.14em; color:var(--gold) }
+  .bar[data-admin="1"] .who:before{ content:""; flex:none; width:6px; height:6px;
+        border-radius:50%; background:var(--gold) }
+
+  h1.ttl{ font-size:20px; line-height:1.45; margin:0 0 10px; font-weight:700; letter-spacing:.02em }
+  h2.ttl{ font-size:17px; line-height:1.5; margin:0 0 6px; font-weight:700; letter-spacing:.02em }
+  .lead{ font-size:13px; color:var(--sub); margin:0 0 12px; white-space:pre-wrap }
+  .body{ font-size:16px; white-space:pre-wrap; word-break:break-word; margin:0 0 6px }
+  img.pic{ display:block; width:100%; max-height:36vh; object-fit:contain; border-radius:10px; margin:10px 0 }
+  img.logo{ display:block; max-width:70%; max-height:96px; object-fit:contain; margin:0 auto 12px }
+  audio.pic{ display:block; width:100%; margin:10px 0 }
+
+  /* 題名の行。左に題名、右に「もう一度…」の小さな文字リンク（2026-09-17） */
+  .ttlrow{ display:flex; align-items:baseline; gap:12px; margin:0 }
+  .ttlrow > h1.ttl, .ttlrow > h2.ttl{ margin:0; min-width:0; flex:1 1 auto }
+  .mdAgains{ flex:none; display:flex; align-items:baseline; gap:12px; margin-left:auto }
+
+  /* ===== 開始時の演出（media）。2026-09-17 に作り替えた =====
+     動画は操作ボタンを出さず、上を触っても止まらない（pointer-events:none）。
+     枠は動画の縦横比どおり。幅は枠いっぱい、高さは画面の 50% まで（幅の上限は media.js が入れる）。 */
+  .mdWrap{ position:relative; margin:12px 0 }
+  .mdWrap + .body.qtext{ margin-top:12px }
+  video.pic{ display:block; width:100%; height:auto; max-height:50vh; object-fit:contain;
+             background:#000; border-radius:10px; margin:10px 0 }
+  .mdWrap video.pic{ margin:0 }
+  video.pic.media{ pointer-events:none }
+  /* 全画面。メイン画面の上にかぶせる。下は触れない。消えるときは 0.6秒かけて薄くする */
+  .mdLayer{ position:fixed; inset:0; z-index:9000; background:#000;
+            display:flex; align-items:center; justify-content:center;
+            opacity:1; transition:opacity .6s linear }
+  .mdLayer.out{ opacity:0 }
+  .mdLayer video.pic{ width:100%; height:100%; max-height:none; max-width:none;
+                      margin:0; border-radius:0; object-fit:contain }
+  /* 「とばす」。動画の右下に置く小さな札（2026-09-17）。
+     地はすりガラス、縁は白の 1px。見た目は小さく、押せる高さは 32px を保つ。
+     出るときは 0.3秒でふわっと（display:none から出るので transition ではなく animation） */
+  .mdSkip{ position:absolute; right:10px; bottom:10px; z-index:2;
+           display:inline-flex; align-items:center; justify-content:center; min-height:32px;
+           font-family:var(--mono); font-size:11px; letter-spacing:.14em; line-height:1;
+           padding:5px 12px; border-radius:999px; cursor:pointer; white-space:nowrap;
+           color:rgba(255,255,255,.9); background:rgba(0,0,0,.45);
+           border:1px solid rgba(255,255,255,.35);
+           -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px) }
+  /* display を入れたので、hidden を効かせ直す（ブラウザの [hidden]{display:none} より強いため） */
+  .mdSkip[hidden]{ display:none }
+  .mdSkip:not([hidden]){ animation:mdSkipIn .3s linear both }
+  @keyframes mdSkipIn{ from{ opacity:0 } to{ opacity:1 } }
+  /* 全画面のときは画面の右下（下は端末の安全な余白のぶん上げる） */
+  .mdLayer .mdSkip{ right:20px; bottom:calc(20px + env(safe-area-inset-bottom, 0px)) }
+  /* 「タップして再生」。自動再生を断られたときだけ、動画の上に1つだけ出す */
+  .mdTap{ position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); z-index:3;
+          font:inherit; font-size:17px; font-weight:700; padding:16px 26px; border-radius:999px; cursor:pointer;
+          color:#111; background:#fff; border:none; box-shadow:0 6px 20px rgba(0,0,0,.35) }
+  /* 音声だけのノードには動画の枠が無いので、「タップして再生」はふつうの行として置く（2026-09-18） */
+  .mdTapRow{ display:flex; justify-content:center; margin:12px 0 }
+  .mdTapRow:empty, .mdTapRow:has(> .mdTap[hidden]){ margin:0 }
+  .mdTap.mdTapA{ position:static; left:auto; top:auto; transform:none; width:auto; min-height:0 }
+  .mdTap[hidden]{ display:none }
+  /* 「もう一度動画を見る」「もう一度音声を聞く」。題名の行の右に置く小さな文字リンク（2026-09-17）。
+     ボタンだが枠も地も持たない。頭に「↻」を1つ。.go の width:100% などを上書きする */
+  button.mdAgain{ display:inline-block; width:auto; min-height:0; margin:0; padding:0;
+                  border:0; background:none; text-decoration:none; cursor:pointer;
+                  font-family:var(--mono); font-size:10.5px; font-weight:400; letter-spacing:.1em;
+                  line-height:1.4; color:var(--muted); white-space:nowrap }
+  button.mdAgain:before{ content:"\21bb"; margin-right:4px }
+  button.mdAgain:hover{ color:var(--ink) }
+  /* display を上書きしたので、hidden を効かせ直す（ブラウザの [hidden]{display:none} より強いため） */
+  button.mdAgain[hidden]{ display:none }
+  @media (prefers-reduced-motion: reduce){ .mdLayer{ transition:none } .mdSkip:not([hidden]){ animation:none } }
+
+  .ans{ margin-top:16px }
+  .btn{ display:block; width:100%; min-height:50px; margin:0 0 10px; padding:11px 14px;
+        font:inherit; font-size:16px; line-height:1.5; text-align:left; color:var(--ink);
+        background:var(--card); border:1.5px solid var(--line); border-radius:var(--radius); cursor:pointer }
+  .btn:active{ background:var(--tap) }
+  .btn:disabled{ opacity:.6 }
+  .go{ display:block; width:100%; min-height:46px; padding:10px 16px; margin-top:4px;
+       font:inherit; font-size:16px; font-weight:700; color:var(--accentInk); background:var(--accent);
+       border:none; border-radius:var(--radius); cursor:pointer }
+  .go:active{ opacity:.85 }
+  .go:disabled{ opacity:.5 }
+  .thin{ background:var(--card); color:var(--sub); border:1px solid var(--line); font-weight:400; font-size:13.5px; min-height:38px }
+  .ghost{ background:transparent; color:var(--accent); border:1.5px solid var(--accent); font-weight:700 }
+  .ghost:disabled{ color:var(--muted); border-color:var(--line) }
+
+  label.lab{ display:block; font-size:13px; color:var(--sub); margin:0 0 5px }
+  input[type=text]{ display:block; width:100%; min-height:42px; padding:9px 12px; margin-bottom:12px;
+        font:inherit; font-size:16px; color:var(--ink); background:var(--card);
+        border:1.5px solid var(--line); border-radius:var(--radius) }
+
+  .wrongtx{ color:var(--wrong); font-size:15px; white-space:pre-wrap; margin:13px 0 0 }
+  .hint{ background:var(--hintBg); color:var(--hint); border-radius:10px; padding:11px 13px; margin:12px 0 0;
+         font-size:15px; white-space:pre-wrap }
+  .fb{ border:1.5px solid var(--accent); border-radius:var(--radius); padding:14px; margin:0 0 15px;
+       font-size:16px; white-space:pre-wrap; background:var(--card) }
+  .code{ text-align:center; font-size:26px; font-weight:700; letter-spacing:.12em; padding:12px 10px;
+         border:2px dashed var(--accent); border-radius:var(--radius); margin:15px 0 6px; word-break:break-all }
+  .codeLab{ text-align:center; font-size:12px; color:var(--sub); margin:0 }
+  .qr{ border:1.5px dashed var(--line); border-radius:var(--radius); padding:15px 14px }
+  .qr .big{ font-size:17px; font-weight:700; margin-bottom:7px; text-align:center }
+
+  .net{ margin-top:20px; font-size:11.5px; color:var(--sub); white-space:pre-wrap }
+  .say{ position:fixed; left:12px; right:12px; bottom:12px; max-width:534px; margin:0 auto;
+        background:var(--card); color:var(--ink); border:1px solid var(--line);
+        border-radius:10px; padding:12px 14px; font-size:14px;
+        box-shadow:0 4px 14px rgba(0,0,0,.18); display:none; }
+  .say.on{ display:block }
+
+  /* ===== ここから B案（段階1）で足した部品 ===== */
+  .card{ background-color:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+         padding:15px 14px; box-shadow:0 1px 0 rgba(0,0,0,.03), 0 6px 18px -14px rgba(0,0,0,.35) }
+  .card + .card{ margin-top:11px }
+
+  .meta{ display:flex; justify-content:space-between; align-items:baseline; gap:8px;
+         font-family:var(--mono); font-size:10px; letter-spacing:.08em; color:var(--muted) }
+  .mono{ font-family:var(--mono); letter-spacing:.06em }
+
+  /* 順路バー。押すと進捗ホームへ */
+  .route{ display:flex; gap:4px; margin:10px 0 0; padding:0; border:0; background:none; width:100%; cursor:pointer }
+  .route span{ flex:1; height:4px; border-radius:2px; background:var(--line); transition:background .3s }
+  .route span.done{ background:var(--accent) }
+  .route span.now{ background:var(--accent); box-shadow:0 0 0 2px rgba(140,107,30,.18) }
+  .route-legend{ display:flex; justify-content:space-between; font-family:var(--mono); font-size:9.5px;
+                 color:var(--muted); margin-top:4px; letter-spacing:.04em }
+
+  /* 移動案内の「つぎの会場」の行。右はしに「もう一度…」が入ることがあるので flex（2026-09-17） */
+  .seeline{ display:flex; flex-wrap:wrap; align-items:baseline;
+            margin:12px 0 0; padding-bottom:8px; border-bottom:1px solid var(--line); font-size:13px; color:var(--ink) }
+  .seeline b{ font-family:var(--mono); font-size:10px; letter-spacing:.1em; color:var(--muted); font-weight:500 }
+  .seeline .sep{ color:var(--line); margin:0 7px }
+  .seeline .what{ font-weight:700 }
+  /* 補助解説（問題文の下。ノードの see 列）。
+     2026-09-17 囲みと左の縁をやめ、ふつうの段落にした（問題文より目立っていたため）。
+     同日ふたたび、頭に細い「—」を1つ付けて、補足だと分かるようにした */
+  .subnote{ margin:7px 2px 9px; padding:0; font-size:12px; line-height:1.65;
+            color:var(--muted); white-space:pre-wrap }
+  .subnote:before{ content:"\2014\00a0" }
+
+  .figure{ margin:11px 0 0; padding:11px 10px; text-align:center; background-color:var(--inset);
+           border:1px solid var(--line); border-radius:8px; font-family:var(--mono); font-size:14.5px;
+           letter-spacing:.12em; color:var(--ink); overflow-x:auto; white-space:nowrap }
+
+  .field{ width:100%; min-height:42px; padding:9px 12px; margin-top:9px; font-family:var(--gothic);
+          font-size:15.5px; color:var(--ink); background:var(--card); border:1px solid var(--line);
+          border-radius:8px; -webkit-appearance:none; appearance:none }
+  .field:focus{ outline:none; border-color:var(--accent) }
+  .note{ font-size:11.5px; color:var(--muted); margin:6px 0 0 }
+  .fixed{ display:flex; align-items:center; gap:8px; min-height:42px; margin-top:9px; padding:9px 12px;
+          border-radius:8px; background:var(--mossBg); border:1px solid var(--mossEdge); color:var(--moss); font-size:14.5px }
+  .fixed .lb{ font-family:var(--mono); font-size:11px; letter-spacing:.06em; opacity:.85 }
+  .fixed .ck{ margin-left:auto; font-size:14px }
+  .fixed.off{ background:var(--inset); border-color:var(--line); color:var(--muted) }
+
+  .verdict{ margin-top:10px; padding:10px 12px; border-radius:8px; font-size:13.5px; border:1px solid; white-space:pre-wrap }
+  .verdict.near{ background:var(--nearBg); border-color:var(--nearEdge); color:var(--nearInk) }
+  .verdict.bad{ background:var(--wrongBg); border-color:var(--wrong); color:var(--wrong) }
+
+  .hints{ margin-top:15px; padding-top:12px; border-top:1px solid var(--line) }
+  .hint-locked{ min-height:40px; display:flex; align-items:center; margin-top:8px; padding:9px 12px;
+                border:1px dashed var(--line); border-radius:8px; font-family:var(--mono); font-size:11px;
+                color:var(--muted); letter-spacing:.04em }
+  .hint-open{ margin-top:8px; padding:10px 12px 10px 11px; background:var(--hintBg); border:1px solid var(--hintEdge);
+              border-left:3px solid var(--accent); border-radius:0 8px 8px 0; font-size:13px; color:var(--hint);
+              white-space:pre-wrap }
+  .hint-open b{ font-family:var(--mono); font-size:10px; letter-spacing:.1em; color:var(--accent); display:block; font-weight:500 }
+
+  .staff{ text-align:right; margin-top:13px }
+  .staff .open{ background:none; border:0; padding:6px; font-family:var(--mono); font-size:10px;
+                color:var(--muted); letter-spacing:.08em; cursor:pointer }
+  .staffbox{ margin-top:8px; padding:12px; border:1px solid var(--line); border-radius:8px;
+             background:var(--inset); text-align:left }
+  .staffbox .field{ margin-top:0 }
+
+  /* スタンプ */
+  .stampwrap{ position:relative; display:flex; justify-content:center; align-items:center; height:150px; margin-top:6px }
+  .bleed{ position:absolute; width:136px; height:136px; border-radius:50%;
+          background:radial-gradient(circle, rgba(200,85,61,.17) 0%, rgba(200,85,61,.07) 45%, rgba(200,85,61,0) 72%); opacity:0 }
+  .stamp{ width:112px; height:112px; opacity:0 }
+  .stamp img{ width:100%; height:100%; object-fit:contain }
+  .animate .stamp{ animation:press .52s cubic-bezier(.2,.9,.25,1) .12s both }
+  .animate .bleed{ animation:bleed 1.1s ease-out .28s both }
+  .animate .shake{ animation:shake .34s ease-out .3s both }
+  @keyframes press{ 0%{opacity:0;transform:scale(1.6) rotate(-9deg)} 55%{opacity:1;transform:scale(.97) rotate(-2.5deg)} 100%{opacity:1;transform:scale(1) rotate(-3.5deg)} }
+  @keyframes bleed{ 0%{opacity:0;transform:scale(.55)} 30%{opacity:1} 100%{opacity:.55;transform:scale(1.12)} }
+  @keyframes shake{ 0%{transform:translate(0,0)} 22%{transform:translate(-2px,1.5px)} 48%{transform:translate(2px,-1px)} 74%{transform:translate(-1px,.5px)} 100%{transform:translate(0,0)} }
+  .fadeup{ opacity:0 }
+  .animate .fadeup{ animation:fadeup .7s ease-out .82s both }
+  @keyframes fadeup{ from{opacity:0;transform:translateY(9px)} to{opacity:1;transform:none} }
+
+  /* スタンプ帳 */
+  .slots{ display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin-top:12px }
+  .slots.n6{ grid-template-columns:repeat(6,1fr) }
+  .slot{ aspect-ratio:1; border:1px dashed var(--line); border-radius:50%; display:flex; align-items:center;
+         justify-content:center; background:var(--inset); overflow:hidden }
+  .slot.got{ border-style:solid; border-color:var(--vermilion); background:var(--card) }
+  .slot svg, .slot img{ width:100%; height:100%; object-fit:contain }
+  .slot .n{ font-family:var(--mono); font-size:11px; color:var(--muted) }
+
+  /* 年表（認定証） */
+  .tl{ margin:16px 0 0; padding:0; list-style:none; position:relative }
+  .tl:before{ content:""; position:absolute; left:21px; top:8px; bottom:8px; width:1px; background:var(--line) }
+  .tl li{ position:relative; display:flex; gap:12px; align-items:center; padding:9px 0 }
+  .tl .dot{ width:44px; height:44px; flex:none; border-radius:50%; background:var(--card);
+            border:1px solid var(--line); display:flex; align-items:center; justify-content:center; z-index:1; overflow:hidden }
+  .tl .dot.got{ border-color:var(--vermilion) }
+  .tl .dot svg, .tl .dot img{ width:100%; height:100%; object-fit:contain }
+  .tl .txt{ min-width:0 }
+  .tl .st{ font-family:var(--mono); font-size:10px; color:var(--muted); letter-spacing:.1em }
+  .tl .an{ font-size:15.5px; font-weight:500; line-height:1.5; word-break:break-word }
+
+  .cert{ text-align:center; padding-block:4px 2px }
+  .cert .en{ font-family:var(--mincho); font-size:10px; letter-spacing:.32em; color:var(--vermilion); padding-left:.32em }
+  .cert h1{ font-size:23px; font-weight:700; margin:7px 0 2px; letter-spacing:.14em; padding-left:.14em }
+  .cert .sub{ font-size:12px; color:var(--sub); margin:0 }
+  .divider{ display:flex; align-items:center; gap:9px; margin:14px 0 2px; color:var(--line) }
+  .divider:before,.divider:after{ content:""; flex:1; height:1px; background:var(--line) }
+  .divider span{ font-family:var(--mono); font-size:10px; letter-spacing:.14em; color:var(--muted) }
+  .band{ height:9px; background:linear-gradient(180deg,#e0806a,var(--vermilion)); margin:18px -16px -18px; border-radius:0 0 9px 9px }
+
+  /* 移動案内 */
+  .mapbox{ margin-top:12px; height:118px; border:1px solid var(--line); border-radius:8px; background-color:var(--inset);
+           display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px }
+  .mapbox .to{ font-size:18px; font-weight:700; letter-spacing:.05em }
+  .mapbox .tag{ font-family:var(--mono); font-size:10px; color:var(--muted); letter-spacing:.1em }
+  .cautions{ margin:12px 0 0; padding:0; list-style:none }
+  .cautions li{ position:relative; padding-left:16px; font-size:13px; color:var(--sub); margin-top:5px }
+  .cautions li:before{ content:""; position:absolute; left:3px; top:11px; width:5px; height:5px; border-radius:50%;
+                       background:var(--vermilion); opacity:.6 }
+
+  /* 進捗ホーム */
+  .kv{ display:flex; justify-content:space-between; align-items:baseline; gap:10px; padding:8px 0; border-bottom:1px solid var(--line) }
+  .kv:last-child{ border-bottom:0 }
+  .kv .k{ font-family:var(--mono); font-size:10px; color:var(--muted); letter-spacing:.08em; flex:none }
+  .kv .v{ text-align:right; font-size:14px }
+  .kv .v.big{ font-family:var(--mono); font-size:17px; letter-spacing:.04em }
+
+  /* 景品 */
+  .clock{ font-family:var(--mono); font-size:27px; letter-spacing:.06em; text-align:center; margin:4px 0 0; color:var(--ink) }
+  .clock .d{ font-size:12px; color:var(--muted); display:block; letter-spacing:.14em; margin-bottom:2px }
+  .holdbtn{ position:relative; overflow:hidden }
+  .holdbtn .fill{ position:absolute; left:0; top:0; bottom:0; width:0; background:rgba(255,255,255,.26); pointer-events:none }
+  .gotprize{ text-align:center; padding:16px 0 4px }
+  .gotprize .t{ font-size:19px; font-weight:700; color:var(--moss) }
+  .gotprize .s{ font-family:var(--mono); font-size:13px; color:var(--sub); margin-top:4px }
+
+  /* 遊び方の大見出し（2026-09-17 の案）。カードの外、上の帯のすぐ下。
+     上に小さな欧文、まんなかに大きな題名、下に 24px の細い線。和紙は theme-washi.css で明朝にする */
+  .howto-head{ text-align:center; margin:4px 0 13px }
+  .howto-head .en{ display:block; font-family:var(--mono); font-size:10px; font-weight:500;
+                   letter-spacing:.2em; padding-left:.2em; color:var(--muted); margin:0 0 5px }
+  .howto-head h1{ font-size:26px; line-height:1.3; font-weight:700;
+                  letter-spacing:.12em; padding-left:.12em; color:var(--ink); margin:0 }
+  .howto-head .rule{ display:block; width:24px; height:1px; background:var(--gold); margin:9px auto 0 }
+
+  /* 遊び方（複数ページ） */
+  .howto-fig{ height:106px; display:flex; align-items:center; justify-content:center; background-color:var(--inset);
+              border:1px solid var(--line); border-radius:8px; margin-bottom:12px; overflow:hidden }
+  .howto-fig img{ width:100%; height:100%; object-fit:contain }
+  .dots{ display:flex; gap:7px; justify-content:center; margin-top:13px }
+  .dots i{ width:6px; height:6px; border-radius:50%; background:var(--line) }
+  .dots i.on{ background:var(--accent) }
+
+  .row{ display:flex; gap:10px }
+  .row .go{ margin-top:12px }
+  .center{ text-align:center }
+
+  @media (prefers-reduced-motion: reduce){
+    .animate .stamp, .animate .bleed, .animate .shake, .animate .fadeup{ animation-duration:.001ms !important }
+    .stamp, .bleed, .fadeup{ opacity:1 !important }
+  }
+
+/* 表紙（entry） */
+h1.ttl.cover{ text-align:center; font-size:21px }
+.lead.center{ text-align:center }
+.body.lead2{ font-size:15px; color:var(--sub) }
+
+/* 直書きの style を置き換えたもの（テーマで上書きできるように） */
+.lead.evname{ margin-bottom:6px }
+.wrongtx.tight{ margin:0 0 14px }
+/* 問題文。ここが主役。2026-09-17 角丸の箱をやめ、上下だけの細い罫（1px）で挟む。
+   地色は置かない（すぐ下の .figure が --inset の地なので、同じ見た目の箱を2つ並べない） */
+.body.qtext{ font-size:15.5px; line-height:1.7; color:var(--ink); font-weight:500;
+             margin:14px 0 8px; padding:11px 0; background:transparent;
+             border:0; border-top:1px solid var(--line); border-bottom:1px solid var(--line); border-radius:0 }
+.body.tight{ font-size:14px; margin:0 }
+.note.tight{ margin:0 0 8px }
+.body.movebody{ font-size:15px; margin-top:10px }
+h2.ttl.okans{ margin-top:10px }
+.go.ghost.hintbtn{ margin-top:9px }
+.figure.clockbox{ padding:16px 10px }
+.donestamp{ display:flex; justify-content:center }
+.donestamp svg, .donestamp img{ width:96px; height:96px }
+.proto{ margin-top:9px; font-family:var(--mono); font-size:10px; color:var(--muted); text-align:center; letter-spacing:.04em }
+
+/* シナリオが届く前の見え方。前に開いたことがあれば、そのテーマの紙を先に出す（白い画面を見せない） */
+html[data-pretheme], html[data-pretheme] body{ background-color:#f3efe6 }
+html[data-pretheme="black"], html[data-pretheme="black"] body{ background-color:#111417 }
+html[data-pretheme="black"] body{ color:#f2f5f7 }
+html[data-pretheme="green"], html[data-pretheme="green"] body{ background-color:#f2f7f4 }
+html[data-pretheme="white"], html[data-pretheme="white"] body{ background-color:#ffffff }
+.boot{ margin:22vh auto 0; text-align:center; color:#8d8776; font-size:13px; letter-spacing:.08em }
+
+/* シリアル入場（段階3）。控えの2行と、欄の下の小さな説明 */
+.serialhelp{ margin:2px 2px 9px; font-size:11px; line-height:1.6 }
+.keep{ margin:2px 0 10px }
+.keep .kv{ display:flex; justify-content:space-between; align-items:baseline; gap:10px;
+           padding:7px 2px; border-bottom:1px solid var(--line) }
+.keep .kv .k{ font-size:11.5px; color:var(--sub) }
+.keep .kv .v{ font-size:17.5px; letter-spacing:.14em }
+.keep .keepnote{ margin:9px 2px 0; font-size:11.5px; line-height:1.7 }
+
+/* 「あなたのコード」（段階3b）。もらったシリアルを大きく出して、控えてもらう */
+.codebox{ border:1px solid var(--line); border-radius:var(--radius); padding:12px 12px 10px; margin:0 0 12px;
+          background:var(--card) }
+.codebox .lab2{ font-size:11px; letter-spacing:.14em; color:var(--sub); margin:0 0 4px }
+.codebox .code{ font-family:var(--mono,ui-monospace,monospace); font-size:23px; letter-spacing:.16em;
+                font-weight:700; margin:0 0 10px; word-break:break-all }
+.codebox .coderow{ display:flex; gap:8px }
+.codebox .coderow .btn{ flex:1; min-height:38px; font-size:13px; padding:6px 8px }
+.codebox .codenote{ margin:8px 0 0; font-size:11.5px; line-height:1.7 }
+
+/* 記念画像の重ね物（2026-09-17）。共有シートも <a download> も使えない端末（古い iOS Safari）で、
+   作った PNG を画面いっぱいに出す。長押しで保存してもらう。閉じるは右上の × 。 */
+.certLayer{ position:fixed; inset:0; z-index:9500; background:#000;
+            display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; padding:16px }
+.certLayer img{ max-width:100%; max-height:82vh; object-fit:contain; border-radius:4px;
+                -webkit-touch-callout:default; -webkit-user-select:auto; user-select:auto }
+.certLayer .certHold{ margin:0; font-size:13px; line-height:1.7; color:#e8e8e8; text-align:center }
+.certLayer .certX{ position:absolute; right:10px; top:10px; width:40px; height:40px; line-height:1;
+                   border:1px solid rgba(255,255,255,.45); border-radius:999px; background:transparent;
+                   color:#fff; font-size:20px; cursor:pointer }
+
+/* ===== play/css/theme-black.css ===== */
+  html[data-theme="black"], body[data-theme="black"]{
+    --bg:#111417; --card:#1b2024; --ink:#f2f5f7; --sub:#9aa8b2; --line:#2c343a;
+    --accent:#f2f5f7; --accentInk:#111417; --wrong:#ff8a7a; --hint:#ffe9a3; --hintBg:#3a3320;
+    --tap:#252c32;
+    --muted:#7c8b95; --vermilion:#ff8a7a; --indigo:#9fd8bd; --moss:#8fd6ae;
+    --mossBg:#1f2b24; --mossEdge:#35513f; --wrongBg:#331f1c; --nearBg:#3a3320; --nearEdge:#5a4f2c; --nearInk:#ffe9a3;
+    --hintEdge:#5a4f2c; --inset:#151a1e;
+    --gold:#d9b45c;   /* 暗い地で読める明るめの金（管理者モードの札） */
+  }
+
+/* ===== play/css/theme-green.css ===== */
+  html[data-theme="green"], body[data-theme="green"]{
+    --bg:#f2f7f4; --card:#ffffff; --ink:#132a20; --sub:#5c7d6d; --line:#cfe3d8;
+    --accent:#2a8761; --accentInk:#ffffff; --wrong:#c0392b; --hint:#7a5b00; --hintBg:#fff3bf;
+    --tap:#e8f2ec;
+    --muted:#8aa598; --vermilion:#c0392b; --indigo:#2a8761; --moss:#2a8761;
+    --mossBg:#e8f2ec; --mossEdge:#bcd9c8; --wrongBg:#fdeeec; --nearBg:#fff3bf; --nearEdge:#e6d49a; --nearInk:#7a5b00;
+    --hintEdge:#e6d49a; --inset:#f2f7f4;
+  }
+  /* 和紙。生成りの紙＋淡い菱形格子＋紺の細い線＋朱のスタンプ。テクスチャは 256px のタイルを repeat する */
+
+/* ===== play/css/theme-washi.css ===== */
+  html[data-theme="washi"], body[data-theme="washi"]{
+    --bg:#f3efe6; --card:#fbf9f4; --ink:#2b3244; --sub:#5a6070; --line:#d9d2c3;
+    --accent:#8c6b1e; --accentInk:#ffffff; --wrong:#8f3b28; --hint:#4a3d18; --hintBg:#f2ead6;
+    --tap:#f0ebe0;
+    --muted:#8d8776; --vermilion:#c8553d; --indigo:#3b4a6b; --moss:#4f6b4a;
+    --mossBg:#e8efe4; --mossEdge:#bdd0b6; --wrongBg:#f7e6e0; --nearBg:#f2ead6; --nearEdge:#ddcfa6; --nearInk:#6b5312;
+    --hintEdge:#e3d7b6; --inset:#f3efe6;
+    --gold:#8c6b1e;   /* 和紙の金は accent と同じ（管理者モードの札） */
+    --radius:10px;
+    --mincho:"Zen Old Mincho","Hiragino Mincho ProN","Yu Mincho",serif;
+    --gothic:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
+    --mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Consolas,monospace;
+    --fiber:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='256'%3E%3Cfilter id='w' x='0' y='0' width='256' height='256' filterUnits='userSpaceOnUse'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.035 0.78' numOctaves='2' seed='11' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.9 0 0 0 -0.5'/%3E%3C/filter%3E%3Crect width='256' height='256' filter='url(%23w)' opacity='0.32'/%3E%3C/svg%3E");
+    --grain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='256'%3E%3Cfilter id='g' x='0' y='0' width='256' height='256' filterUnits='userSpaceOnUse'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' seed='5' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.75 0 0 0 -0.42'/%3E%3C/filter%3E%3Crect width='256' height='256' filter='url(%23g)' opacity='0.22'/%3E%3C/svg%3E");
+    --paper:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='256'%3E%3Cfilter id='c' x='0' y='0' width='256' height='256' filterUnits='userSpaceOnUse'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.04 0.72' numOctaves='2' seed='23' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.9 0 0 0 -0.54'/%3E%3C/filter%3E%3Crect width='256' height='256' filter='url(%23c)' opacity='0.22'/%3E%3C/svg%3E");
+  }
+  /* 和紙の地。html と body の両方に同じものを付ける（2026-09-17）。
+     片方だけだと、下までスクロールしたときに模様の続きが無く、そこから白っぽくなる */
+  html[data-theme="washi"], body[data-theme="washi"]{
+    background-image:
+      var(--grain), var(--fiber),
+      repeating-linear-gradient(62deg, rgba(59,74,107,.045) 0 1px, transparent 1px 30px),
+      repeating-linear-gradient(-62deg, rgba(59,74,107,.045) 0 1px, transparent 1px 30px),
+      radial-gradient(130% 90% at 16% 6%, rgba(255,253,246,.75), rgba(255,253,246,0) 55%),
+      radial-gradient(100% 75% at 88% 28%, rgba(203,189,162,.3), rgba(203,189,162,0) 60%),
+      radial-gradient(120% 95% at 40% 94%, rgba(208,196,172,.34), rgba(208,196,172,0) 58%);
+    background-size:256px 256px, 256px 256px, auto, auto, cover, cover, cover;
+    background-repeat:repeat, repeat, repeat, repeat, no-repeat, no-repeat, no-repeat;
+    background-position:0 0, 37px 61px, 0 0, 0 0, center, center, center;
+  }
+  body[data-theme="washi"] .card, body[data-theme="washi"] .figure,
+  body[data-theme="washi"] .mapbox, body[data-theme="washi"] .howto-fig{
+    background-image:var(--paper); background-size:256px 256px;
+  }
+  body[data-theme="washi"] h1.ttl, body[data-theme="washi"] h2.ttl,
+  body[data-theme="washi"] .cert h1, body[data-theme="washi"] .tl .an,
+  body[data-theme="washi"] .mapbox .to, body[data-theme="washi"] .gotprize .t{ font-family:var(--mincho) }
+  body[data-theme="washi"] .wrap{ max-width:480px }
+
+/* ===== 試作（kintaro タグ v3）に合わせる土台 =====
+   base.css は白・黒・緑と共通なので、和紙のときだけここで上書きする。
+   ../../../../kintaro/index.html（タグ v3）の値をそのまま写したもの。 */
+body[data-theme="washi"]{ font-size:15px; line-height:1.7; min-height:100vh; min-height:100dvh }
+body[data-theme="washi"] .wrap{ max-width:480px; padding:0 16px 64px }
+
+/* 冊子の頭（イベント名を小さな明朝で置き、下に細い紺の線） */
+body[data-theme="washi"] .bar{
+  display:block; text-align:center; padding-block:12px 8px; margin-bottom:0; min-height:0; position:relative;
+}
+body[data-theme="washi"] .bar .ev{
+  display:block; font-family:var(--mincho); font-weight:400; font-size:10px; letter-spacing:.34em;
+  color:var(--indigo); opacity:.8; margin:0 0 4px; padding-left:.34em;
+}
+body[data-theme="washi"] .bar:after{
+  content:""; display:block; height:1px; width:74px; margin:0 auto; background:var(--indigo); opacity:.35;
+}
+/* なまえの札は、試作（シリアル方式）には無いもの。小さく右上に逃がす */
+body[data-theme="washi"] .bar .who{
+  position:absolute; right:0; top:8px; max-width:40%; border:0; padding:0;
+  font-family:var(--mono); font-size:10px; color:var(--muted);
+}
+
+/* 見出し・本文 */
+body[data-theme="washi"] h1.ttl{ font-size:21px; line-height:1.4; margin:10px 0 9px; letter-spacing:.03em }
+body[data-theme="washi"] .ttlrow{ margin-top:10px }
+body[data-theme="washi"] .ttlrow > h1.ttl{ margin:0 }
+body[data-theme="washi"] h1.ttl.cover{ font-size:20px; text-align:left; margin-top:0 }
+body[data-theme="washi"] h2.ttl{ font-size:17px; line-height:1.5; letter-spacing:.03em }
+body[data-theme="washi"] .body{ font-size:14px }
+body[data-theme="washi"] .body.lead2{ font-size:14px; color:var(--sub) }
+body[data-theme="washi"] .lead{ font-size:12px }
+body[data-theme="washi"] .lead.center{ text-align:center }
+
+/* ボタン（試作の .btn） */
+body[data-theme="washi"] .go{
+  min-height:46px; margin-top:12px; padding:0 16px; border:1px solid var(--accent);
+  border-radius:8px; font-weight:700; font-size:15px; letter-spacing:.06em;
+  transition:background .15s, transform .08s;
+}
+body[data-theme="washi"] .go:active{ transform:translateY(1px); opacity:1 }
+body[data-theme="washi"] .go:disabled{ background:#c3b48c; border-color:#c3b48c; opacity:1 }
+body[data-theme="washi"] .go.thin, body[data-theme="washi"] .go.quiet{
+  background:transparent; color:var(--sub); border:1px solid var(--line); font-weight:500; font-size:14.5px; min-height:44px;
+}
+body[data-theme="washi"] .go.ghost{ background:transparent; color:var(--accent); border:1.5px solid var(--accent) }
+/* 選ぶボタン */
+body[data-theme="washi"] .btn{
+  min-height:46px; margin:0 0 9px; padding:10px 13px; border:1px solid var(--line);
+  border-radius:8px; font-size:15px; background:var(--card);
+}
+/* 入れる欄は .field と同じ形に */
+body[data-theme="washi"] input[type=text]{
+  min-height:42px; padding:9px 12px; margin-bottom:0; margin-top:9px;
+  font-size:15.5px; background:#fff; border:1px solid var(--line); border-radius:8px;
+}
+body[data-theme="washi"] input[type=text]::placeholder, body[data-theme="washi"] .field::placeholder{ color:#a9a396 }
+body[data-theme="washi"] input[type=text]:focus, body[data-theme="washi"] .field:focus{
+  outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(140,107,30,.13);
+}
+body[data-theme="washi"] label.lab{ font-size:12px; color:var(--muted); margin:10px 0 0 }
+
+/* 表紙（試作は1枚のカード＋裾の朱の帯） */
+body[data-theme="washi"] .cover-card .ans{ margin-top:0 }
+body[data-theme="washi"] img.logo{ max-height:80px; margin-bottom:10px }
+
+/* 会場のQR待ち・一言 */
+body[data-theme="washi"] .qr{ border:1px dashed var(--line); border-radius:10px; padding:14px 13px }
+body[data-theme="washi"] .qr .big{ font-family:var(--mincho); font-size:16px }
+body[data-theme="washi"] .body.qrbody{ font-size:13.5px }
+body[data-theme="washi"] .lead.qrnote{ margin-top:12px }
+body[data-theme="washi"] .fb{ border:1px solid var(--line); border-radius:10px; font-size:14.5px }
+body[data-theme="washi"] .wrongtx{ font-size:13.5px }
+body[data-theme="washi"] .code{ font-size:23px; border:2px dashed var(--vermilion); color:var(--vermilion) }
+body[data-theme="washi"] .net{ font-size:10.5px; margin-top:16px }
+body[data-theme="washi"] .body.howto-body{ font-size:14px; margin:0 0 6px }
+body[data-theme="washi"] .howto-fig{ margin-top:10px }
+/* 遊び方の大見出し（2026-09-17 の案）。和紙は明朝で少し大きく */
+body[data-theme="washi"] .howto-head{ margin:10px 0 13px }
+body[data-theme="washi"] .howto-head h1{ font-family:var(--mincho); font-size:28px; line-height:1.3 }
+/* 試作にそろえる字の大きさ */
+body[data-theme="washi"] .body.qtext{ font-size:15.5px }   /* 2026-09-17 問題文。補助解説（12px）より大きく */
+body[data-theme="washi"] .body.movebody{ font-size:14px }
+body[data-theme="washi"] .body.tight{ font-size:14px }
+/* 入れる欄は、試作と同じく行の高さを字に任せる（body の 1.7 を継がない） */
+body[data-theme="washi"] input[type=text], body[data-theme="washi"] .field{ line-height:normal }
+/* 名前の札を空にしても、長押しの「やり直す」は押せるだけの広さを残す */
+body[data-theme="washi"] .bar .who{ display:inline-block; min-width:44px; min-height:24px }
+/* 管理者モードの札（2026-09-17）。和紙は .bar .who を上書きしている（border:0 / padding:0）ので、
+   ここで金の札に戻す。位置は右上のまま */
+body[data-theme="washi"] .bar[data-admin="1"] .who{
+  display:inline-flex; align-items:center; gap:6px; width:auto; min-width:0;
+  padding:2px 8px; border:1px solid var(--gold); border-radius:999px; background:transparent;
+  font-size:10.5px; letter-spacing:.14em; color:var(--gold);
+}
+
+/* ===== play/css/theme-white.css ===== */
+  /* ===== 基調色。シナリオの theme（white / black / green / washi）で切り替える =====
+     色を足すときはここに変数を増やす。画面の中では var(--…) だけを使うこと。
+     washi は 2026-09-15（B案 段階1）に足した。../kintaro/index.html（タグ v3）から移した。 */
+  :root{
+    --bg:#ffffff; --card:#ffffff; --ink:#16202a; --sub:#6b7c86; --line:#e2e8ec;
+    --accent:#2a8761; --accentInk:#ffffff; --wrong:#c0392b; --hint:#7a5b00; --hintBg:#fff3bf;
+    --tap:#f3f7f5;
+    --radius:12px; --pad:16px;
+    /* ここから下は B案の部品（順路バー・スタンプ・惜しい・確定表示）が使う。テーマごとに上書きしてよい */
+    --muted:#98a6ae; --vermilion:#c0392b; --indigo:#2a8761; --moss:#2a8761;
+    --mossBg:#eef6f1; --mossEdge:#bcd9c8; --wrongBg:#fdeeec; --nearBg:#fff3bf; --nearEdge:#e6d49a; --nearInk:#7a5b00;
+    --hintEdge:#e6d49a; --inset:#f7f9fa;
+    /* 管理者モードの札の金（.bar[data-admin="1"]）。白い地で読める深めの金。黒テーマだけ上書きする */
+    --gold:#a8801f;
+    --paper:none; --fiber:none;
+    --mincho:"Hiragino Mincho ProN","Yu Mincho",serif;
+    --gothic:"Hiragino Kaku Gothic ProN","Yu Gothic","Meiryo",system-ui,sans-serif;
+    --mono:ui-monospace,"SFMono-Regular",Consolas,monospace;
+  }
+</style>
+<script>
+  /* シナリオを受け取る前に、前に見たときのテーマで紙を出しておく（白い画面を見せないため）。
+     まだ一度も開いていないときは、何も付けない（既定の白）。 */
+  (function () {
+    try {
+      var s = (new URLSearchParams(location.search)).get('s') || '';
+      var t = localStorage.getItem('nazotoki_theme_' + s);
+      if (t) document.documentElement.setAttribute('data-pretheme', t);
+    } catch (e) {}
+  })();
+</script>
+<div class="wrap">
+  <div class="bar">
+    <span class="ev" id="ev"></span>
+    <span class="stgtag" id="stgTag" hidden>試験</span>
+    <span class="who" id="who"></span>
+  </div>
+  <div id="app"><p class="boot">読み込み中…</p></div>
+  <div class="net" id="net"></div>
+</div>
+<div class="say" id="say"></div>
+
+<script>
+  /* シナリオID・ノードID・シリアル（固有QR）・鍵（数分で変わるQR）・試し遊びの合い札。
+     build が URL を読む式に差し替える（手元の試しだけ、決め打ちの値を入れることがある）。 */
+  var S = (new URLSearchParams(location.search).get("s") || "");
+  var N = (new URLSearchParams(location.search).get("n") || "");
+  var TSER = (new URLSearchParams(location.search).get("t") || "");
+  var AKEY = (new URLSearchParams(location.search).get("k") || "");
+  var PVTOK = (new URLSearchParams(location.search).get("preview") || "");
+  /* 利用記録（記録係）。誰が開いたかはサーバが差し込む（）。中地さん本人のときは  が '1' になり送らない。
+     静的版は build が両方を空にする。手元の試し（test_make）は字がそのまま残るので送らない。失敗してもアプリは止めない */
+  try { if (false) new Image().src = 'https://script.google.com/macros/s/AKfycbx60H_bXkfaEXrwhLvp4MOIH6wmtw414pembss8iu5VVb5_UAE3AmOnyIRk5Y4ak02Ouw/exec?app=AP003&k=play&who='; } catch (e) {}
+</script>
+<script>
+/* ===== shared/util.js ===== */
+/* 小さな道具。play と admin の両方が使う。 */
+
+/* シナリオ画面の中央プレビューとして開かれているか（?adminpreview=1）。
+   このときはサーバを呼ばず、親からの postMessage でシナリオを受け取る。
+   スマホに何も残さない（進み具合も記録も保存しない）。 */
+var EMBED = false;
+try { EMBED = /(^|[?&])adminpreview=1/.test(location.search); } catch (e) {}
+var $ = function (id) { return document.getElementById(id); };
+function esc(s) { return String(s === undefined || s === null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+function num(v) { var n = Number(v); return isFinite(n) ? n : 0; }
+/** 0/1 の欄は、シートから来ると文字の '0' になる（'0' は JS では真）。server.gs の bool_ と同じきまりでそろえる */
+function yes(v) {
+  if (v === true) return true;
+  var s = String(v === undefined || v === null ? '' : v).trim().toLowerCase();
+  return s === 'true' || s === '1' || s === 'はい' || s === 'yes';
+}
+function pad2(n) { return (n < 10 ? '0' : '') + n; }
+/** 丸数字（①②③…）。1〜20 まで。それ以外はふつうの数字で返す */
+function maru(i) { var n = num(i); return (n >= 1 && n <= 20) ? String.fromCharCode(0x2460 + n - 1) : String(n); }
+var sayTimer = null;
+function say(t) { var el = $('say'); el.textContent = t; el.className = 'say on'; if (sayTimer) clearTimeout(sayTimer); sayTimer = setTimeout(function () { el.className = 'say'; }, 6000); }
+function reduced() { try { return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; } }
+function buzz(ms) { try { if (navigator.vibrate && !reduced()) navigator.vibrate(ms); } catch (e) {} }
+
+
+/** CSV の文を、2次元配列（行 × 欄）にほどく。設計図シートの読み込みで使う。
+ *  ・`"…"` で囲んだ欄。その中の改行とカンマはそのまま中身になる
+ *  ・囲みの中の `""` は、引用符そのもの1つ
+ *  ・先頭の BOM（﻿）は落とす
+ *  ・改行は CRLF・LF・CR のどれでもよい
+ *  ・いちばん終わりの空行（最後の改行のぶん）は落とす。途中の空行は1欄の行として残す
+ *    （設計図シートの読み込み側が、題名も本文も種類も空の行をとばす） */
+function nzCsvRows(text) {
+  var s = String(text === undefined || text === null ? '' : text);
+  if (s.charAt(0) === '﻿') s = s.slice(1);
+  var rows = [], row = [], cell = '', q = false, i = 0, c;
+  while (i < s.length) {
+    c = s.charAt(i);
+    if (q) {
+      if (c === '"') {
+        if (s.charAt(i + 1) === '"') { cell += '"'; i += 2; continue; }
+        q = false; i++; continue;
+      }
+      cell += c; i++; continue;
+    }
+    if (c === '"') { q = true; i++; continue; }
+    if (c === ',') { row.push(cell); cell = ''; i++; continue; }
+    if (c === '\r' || c === '\n') {
+      if (c === '\r' && s.charAt(i + 1) === '\n') i++;
+      row.push(cell); cell = ''; rows.push(row); row = []; i++; continue;
+    }
+    cell += c; i++;
+  }
+  row.push(cell); rows.push(row);
+  while (rows.length && rows[rows.length - 1].length === 1 && rows[rows.length - 1][0] === '') rows.pop();
+  return rows;
+}
+
+/* ===== shared/texts.js ===== */
+/* ---------- 文言辞書 ----------
+   **回答画面に出る文字は、全部ここか、シナリオの中身（ノードの項目・blocksJson）から来る。**
+   既定値はこの TXD 1か所。シナリオの textsJson（{キー: 文}）が上から書き換える。
+   {n} {sec} {cond} {i} {t} などは、その場で数や文字に置き換わる（TF を使う）。
+   キーの一覧と出どころは ../TEXTS.md（シナリオ画面の「文言」タブの仕様にもなる）。 */
+var TXD = {
+  /* 入口 */
+  'entry.title': '',                 /* 空ならシナリオの題名を使う */
+  'entry.fallback': '謎解き',            /* 題名が無いときの代わり */
+  'entry.lead': 'なまえを入れると、はじまります。\nこたえると、つぎへ進みます。\nとちゅうで画面を閉じても、同じスマホなら続きから遊べます。', /* 入口の説明 */
+  'entry.name': 'なまえ（チーム名でもよい）',      /* なまえの欄 */
+  'entry.nameEmpty': 'なまえを入れてください。',  /* なまえが空のとき */
+  'entry.pass': 'アクセスキー',                /* 合言葉の欄 */
+  'entry.passLead': '会場でお知らせしたアクセスキーと、なまえを入れてください', /* 合言葉つきのときの説明 */
+  'entry.passNg': 'アクセスキーが違うようです。もう一度入れてください。', /* 合言葉がちがうとき */
+  'entry.checking': '確かめています…',       /* 確かめている間 */
+  /* シリアル方式（段階3） */
+  'entry.serial': 'シリアルコード',           /* シリアルの欄 */
+  'entry.serialEmpty': 'シリアルを入れてください。', /* シリアルが空のとき */
+  'pin.label': '暗証番号（4桁の数字）',  /* 暗証番号の欄 */
+  'pin.bad': '暗証番号は4桁の数字です。', /* 形がちがうとき */
+  'pin.ask': '別の端末で続きをプレイする際に使う4桁の暗証番号を決めてください。', /* 暗証番号を決めてもらう文 */
+  'pin.keep': 'この2つがあれば、別の端末でも続きから遊べます。', /* シリアルと暗証の控え */
+  'pin.keepSerial': 'シリアルコード',         /* 控えの見出し（シリアル） */
+  'pin.keepPin': '暗証番号',            /* 控えの見出し（暗証番号） */
+  /* 渡し方（段階3b）。あなたのコード → 暗証番号を決める */
+  'code.title': 'あなたのコード',        /* もらったシリアルの見出し */
+  'code.save': 'スクリーンショットか、メモに残してください。別の端末で続きから遊ぶときに使います。', /* 控えを促す文 */
+  'code.copy': 'コピーする',            /* コピーのボタン */
+  'code.copied': 'コピーしました。',     /* コピーできたとき */
+  'code.mail': 'メールで自分に送る',     /* メールのボタン */
+  'code.mailSub': '謎解きのコード',      /* メールの件名 */
+  'code.setPin': 'この画面を閉じても続けられるように、4桁の数字を決めてください。', /* 暗証番号を決める案内 */
+  'code.have': 'コードを持っている方はこちら', /* 手入力に切り替える文 */
+  'code.back': 'コードをもらう画面にもどる', /* 手入力から戻る文 */
+  'staff.assign': 'スタッフ用の暗証番号', /* 共通QRのときの暗証番号の欄 */
+  'staff.assignLead': 'スタッフが暗証番号を入れると、コードをお渡しします。', /* 共通QRの案内 */
+  'staff.assignGo': 'コードをもらう',     /* 払い出しのボタン */
+  'assign.expired': 'このQRは新しくなりました。受付の画面をもう一度読んでください。', /* 鍵が古いとき */
+  'assign.empty': '用意したコードが残っていません。スタッフにお声がけください。', /* 在庫切れ */
+  'assign.used': 'このコードは、すでに使われています。お手元のコードで入るか、スタッフにお声がけください。', /* t= が使用済み */
+  /* 遊び方 */
+  'howto.start': 'はじめる',              /* 遊び方の最後のボタン */
+  'howto.mark': '',                  /* 遊び方カードの右肩の小さな字。空なら出さない */
+  'howto.title': 'あそびかた',            /* 遊び方の大見出し（カードの外・いちばん上）。ノードの題名が空のときに使う */
+  'howto.en': 'HOW TO PLAY',         /* 大見出しの上の小さな欧文。空なら出さない */
+  'howto.page': '{i} / {t}',         /* 遊び方カードの左肩の枚数の札。{i} は今のページ、{t} は全部の枚数 */
+  /* 進捗ホーム */
+  'home.title': 'つぎに向かうところ',          /* 進捗ホームの見出し */
+  'home.resume': 'つづきから',             /* つづきのボタン */
+  'home.stamps': 'あつめたスタンプ',          /* スタンプの欄の見出し */
+  'home.elapsed': 'たった時間',            /* たった時間の見出し */
+  'home.name': 'NAME',                /* なまえの欄の見出し */
+  'home.q': '謎{mark}　{title}',      /* つぎに解く謎の名ざし方 */
+  'home.note': '',                   /* ホームのいちばん下の小さな字。空なら出さない */
+  /* 順路バーの端の字（進捗ホームだけ）。空なら順路の最初・最後のノードの場所を使う */
+  'route.first': '',                 /* 順路バーの左端 */
+  'route.mid': '',                   /* 順路バーのまんなか */
+  'route.last': '',                  /* 順路バーの右端 */
+  /* 動画・音声（media） */
+  'media.skip': 'とばす',              /* 動画をとばすボタン */
+  'media.again': 'もう一度動画を見る',   /* 見終わったあと、メイン画面に出る小さなボタン */
+  'media.againAudio': 'もう一度音声を聞く', /* 同じく、音声のほう */
+  'media.tap': 'タップして再生',         /* ブラウザに自動再生を断られたとき、動画の上に出す1ボタン */
+  /* クエスチョン */
+  'q.n': '謎 {i} / {t}',               /* 何問目かの札 */
+  'q.step': 'STEP {n}',               /* 順路の段の札 */
+  'q.stepPlace': 'STEP {n} ／ {place}', /* 段と場所の札 */
+  'q.answer': 'こたえあわせ',               /* 答え合わせのボタン */
+  'q.hint': 'ヒントを見る',                 /* ヒントのボタン */
+  'q.ph': 'こたえ',                      /* 入力欄の薄い字 */
+  'q.empty': 'こたえを入れてください。',          /* 空で押したとき */
+  'q.wrong': 'ちがうようです。',   /* ノードの wrongText が入っていれば、そちらが勝つ */
+  'q.wrongCount': '（{n}回目）',          /* 誤答の回数 */
+  'q.noChoice': 'この問題には選択肢がありません。運営の人に伝えてください。', /* 選択肢が無いとき */
+  'q.time': 'のこり',                    /* のこり時間の札 */
+  'q.timeUp': '（時間切れ）',               /* 時間切れの札 */
+  /* 複数・順不同（set） */
+  'set.lead': '答えは{n}つ。順番は問いません。',      /* 複数答えの説明。{n} は答えの数 */
+  'set.partial': '{done}つ合っています。あと{left}つを探してください。', /* 途中まで合ったとき。{done} は合った数、{left} は残りの数 */
+  'set.already': 'それはもう確定しています。ほかの答えを入れてください。', /* 同じ答えをもう一度 */
+  'steps.first': '{prev}は合っています。つづけて{next}を答えてください。', /* 前の段が合ったとき。{prev} は前の段、{next} はいまの段（①②③…） */
+  /* ヒント */
+  'hint.label': 'ヒント {i}',            /* ヒントの見出し */
+  'hint.head': 'HINT',                /* ヒント欄の小見出し */
+  'hint.wait': '{cond} で開きます',      /* 段ごとに hint.wait2 / hint.wait3 … を置けば、そちらが勝つ */
+  'hint.left': '（あと {sec}秒）',         /* あと何秒 */
+  'hint.or': ' か ',                   /* 条件のつなぎ */
+  'hint.wrongN': '誤答{n}回',            /* 条件：誤答の回数 */
+  'hint.secN': '{sec}秒',              /* 条件：秒数 */
+  'hint.prevN': '前のヒントから{sec}秒',      /* 条件：前のヒントから */
+  /* 移動案内 */
+  'move.arrived': '着いた',              /* 着いたのボタン */
+  'move.step': 'STEP {n} ／ 移動',       /* 移動の札 */
+  'move.next': 'つぎの会場',               /* つぎの会場の札 */
+  'move.map': 'MAP（仮）',               /* 地図が無いとき */
+  /* 正解演出（after ブロック） */
+  'ok.head': 'CLEARED',               /* 正解の小見出し */
+  'ok.step': 'STEP {n} ／ CLEARED',    /* 正解の札（段つき） */
+  'ok.story': 'STORY {n}',            /* ストーリー断片の札 */
+  'ok.rescued': 'STAFF',              /* 救済の札 */
+  'ok.rescuedBody': 'スタッフの手で先へ進みました。', /* 救済されたときの文 */
+  'ok.toQuestion': 'つぎの謎へ',           /* つぎの謎へのボタン */
+  'ok.toMove': 'つぎの場所へ',              /* つぎの場所へのボタン */
+  'ok.toClear': 'クリア認定へ',             /* 認定証へのボタン */
+  /* 認定証 */
+  'clear.title': '認定証',               /* 認定証の見出し */
+  'clear.en': 'CERTIFICATE',          /* 認定証の欧文 */
+  'clear.sub': '最後まで歩き通したことを認めます。',   /* 認定の一文 */
+  'clear.record': 'RECORD',           /* 記録の小見出し */
+  'clear.time': 'TIME',               /* 時間の小見出し */
+  'clear.rescued': ' ／ 救済',           /* 救済があったときの添え字 */
+  'clear.next': '景品の引換へ',             /* 景品へのボタン */
+  'clear.save': '記念画像を保存',            /* 画像保存のボタン */
+  'clear.saving': '作っています…',          /* 画像を作っているあいだのボタンの字 */
+  'clear.saveHold': '長押しして保存してください',  /* 保存の入口が無いときに、画像の下に出す一文 */
+  'clear.saveNg': '画像を作れませんでした',      /* 画像を作れなかったとき */
+  /* 景品 */
+  'prize.title': '景品の引換',             /* 景品の見出し */
+  'prize.show': 'この画面をスタッフに見せてください',  /* 見せてくださいの文 */
+  'prize.do': 'やること',                 /* やることの小見出し */
+  'prize.mark': '引換',                 /* 引換の小見出し */
+  'prize.back': '認定証にもどる',            /* 認定証へ戻るボタン */
+  'prize.now': 'ただいまの時刻',             /* 時刻の札 */
+  'prize.staffOnly': 'STAFF ONLY',    /* スタッフ欄の小見出し */
+  'prize.staffNote': '下のボタンはスタッフが押します。1.5秒の長押しで確認に進みます。', /* スタッフへの説明 */
+  'prize.hold': 'スタッフが押す（長押し）',       /* スタッフが押すボタン */
+  'prize.confirmQ': '景品をお渡ししましたか？\n記録すると元に戻せません。', /* 渡したかの確認 */
+  'prize.yes': '渡した',                 /* 渡したボタン */
+  'prize.no': 'やめる',                  /* やめるボタン */
+  'prize.done': '受け取り済み',             /* 受け取り済みの札 */
+  'prize.thanks': 'ご参加ありがとうございました。',  /* お礼の文 */
+  'prize.log': '（景品引換）',              /* 記録に残す言葉 */
+  /* 結末（ふつうのエンド） */
+  'end.your': 'あなたの結末は「{t}」',         /* 結末の言い方 */
+  'end.codeLab': 'この合言葉を運営の人に見せてください。', /* 合言葉を見せる文 */
+  /* 不正解ノード */
+  'wrong.again': 'もう一度',              /* もう一度のボタン */
+  /* スタッフ救済 */
+  'staff.open': 'スタッフ用',              /* スタッフ用のボタン */
+  'staff.pin': '暗証番号',                /* 暗証番号の欄 */
+  'staff.note': 'スタッフの方へ：暗証番号を入れると、この謎を解いたことにして次へ進めます。記録には「救済」と残ります。', /* スタッフへの説明 */
+  'staff.go': '強制クリア',                /* 強制クリアのボタン */
+  'staff.wrongPin': '暗証番号がちがいます',     /* 暗証がちがうとき */
+  'staff.mark': '（救済）',               /* 記録に残す言葉 */
+  /* 会場のQR待ち */
+  'qr.title': '会場のQRコードを読んでください',     /* QR待ちの見出し */
+  'qr.body': 'つぎは、会場に貼ってあるQRコードから開きます。\nスマホのカメラでQRを読むと、そのまま続きがはじまります。', /* QR待ちの説明 */
+  'qr.note': 'この画面は閉じてしまってかまいません。同じスマホでQRを読めば、続きから遊べます。', /* 閉じてよいという文 */
+  /* スタンプ（絵が無いときの仮の印） */
+  'stamp.alt': 'スタンプ',               /* スタンプの絵の代わりの字 */
+  'stamp.mark': '印',                  /* スタンプの中の仮の字 */
+  /* つながらないとき・直すところ */
+  'busy.title': '混んでいます',             /* 混んでいるときの見出し */
+  'busy.body': '少し待ってください。{sec}秒後にもう一度ためします。', /* 混んでいるときの文 */
+  'net.queued': '記録を送れていません（{n}件）。電波が戻ったら自動で送ります。', /* 記録を送れていないとき */
+  'net.stale': 'さいしんのシナリオを取れませんでした。いまの内容のまま遊べます。', /* シナリオを取れなかったとき */
+  'scen.updated': 'シナリオが新しくなりました。',   /* シナリオが新しくなった */
+  'scen.reset': 'シナリオが新しくなりました。はじめからお願いします。', /* シナリオが変わってやり直し */
+  'err.noGo': '進む先が見つかりません。運営の人に伝えてください。', /* 進む先が無いとき */
+  'err.noNext': 'つぎに進む先がありません。運営の人に伝えてください。', /* つぎが無いとき */
+  'err.noApi': 'api {name} がありません。',  /* api が無いとき */
+  'err.noUrl': 'つなぎ先が決まっていません。',      /* つなぎ先が無いとき */
+  'err.net': 'つながりませんでした（{n}）。',      /* つながらないとき */
+  'err.server': 'サーバでエラーになりました。',     /* サーバがこけたとき */
+  /* 運営用の隠しボタン */
+  'reset.button': 'この端末をやり直す（運営用）',   /* やり直しのボタン */
+  'reset.confirm': 'この端末の進み具合を消して、はじめから遊びますか。', /* やり直しの確認 */
+  /* 共通 */
+  'bar.who': '{name}',               /* 上の帯の右に出す札。空にすると出ない（長押しのやり直しは効いたまま） */
+  'bar.admin': 'ADMIN',              /* 管理者モードのとき、上の帯の右に出す札 */
+  'common.next': 'つぎへ',               /* つぎへのボタン */
+  'common.prev': 'まえへ',               /* まえへのボタン */
+  'common.begin': 'はじめる',             /* はじめるボタン */
+  'common.home': '進捗ホームへ',            /* ホームへのボタン */
+};
+var TX = {};
+function T(k) {
+  var v = TX[k];
+  if (v !== undefined && v !== null && String(v) !== '') return String(v);
+  return TXD[k] === undefined ? '' : TXD[k];
+}
+function TF(k, map) {
+  var s = T(k);
+  for (var p in map) s = s.split('{' + p + '}').join(String(map[p]));
+  return s;
+}
+
+/* ===== shared/judge.js ===== */
+/* ---------- 打った文字をそろえる（server.gs の norm_ と同じにすること） ---------- */
+function nzNorm(s) {
+  var t = String(s === undefined || s === null ? '' : s);
+  try { t = t.normalize('NFKC'); } catch (e) {}
+  t = t.toLowerCase();
+  t = t.replace(/[ァ-ヶ]/g, function (c) { return String.fromCharCode(c.charCodeAt(0) - 0x60); });
+  t = t.replace(/[\s　]/g, '');
+  t = t.replace(/[、。，．・「」『』（）()!！?？"'’”]/g, '');
+  return t;
+}
+/* もっと緩く寄せる（../kintaro/index.html から移した）。
+   長音符を落とし、小書きを大書きにし、お段・う段のあとの「う」を吸う。
+   nzNorm は README のとおり長音符を落とさないので、これは
+   blocksJson の looseKana が true のノードだけで使う（「キンタロー」を通すため）。 */
+var SMALLK = { 'ぁ': 'あ', 'ぃ': 'い', 'ぅ': 'う', 'ぇ': 'え', 'ぉ': 'お', 'っ': 'つ', 'ゃ': 'や', 'ゅ': 'ゆ', 'ょ': 'よ', 'ゎ': 'わ' };
+function nzLoose(s) {
+  var t = nzNorm(s);
+  t = t.replace(/[ー‐\-]/g, '');
+  t = t.replace(/[ぁぃぅぇぉっゃゅょゎ]/g, function (c) { return SMALLK[c]; });
+  t = t.replace(/([おこそとのほもよろごぞどぼぽ])う/g, '$1');
+  t = t.replace(/([うくすつぬふむゆるぐずづぶぷ])う/g, '$1');
+  return t;
+}
+function nzKey(s, loose) { return loose ? nzLoose(s) : nzNorm(s); }
+/** 1文字ちがい（入れ替え・足す・減らす）か */
+function edit1(a, b) {
+  if (a === b) return false;
+  var la = a.length, lb = b.length;
+  if (Math.abs(la - lb) > 1) return false;
+  if (la === lb) { var d = 0; for (var i = 0; i < la; i++) if (a.charAt(i) !== b.charAt(i)) { d++; if (d > 1) return false; } return d === 1; }
+  var s = la < lb ? a : b, l = la < lb ? b : a, i2 = 0, j = 0, skip = 0;
+  while (i2 < s.length && j < l.length) {
+    if (s.charAt(i2) === l.charAt(j)) { i2++; j++; } else { skip++; if (skip > 1) return false; j++; }
+  }
+  return true;
+}
+/** 打つノードで、入れた言葉に合う選択肢を返す（無ければ null） */
+function nzMatch(node, text) {
+  var loose = !!blk(node).looseKana;
+  var t = nzKey(text, loose);
+  if (!t) return null;
+  var cs = nzChoices(node.id);
+  for (var i = 0; i < cs.length; i++) {
+    var ws = String(cs[i].keywords || '').split(',');
+    for (var j = 0; j < ws.length; j++) { var w = nzKey(ws[j], loose); if (w && w === t) return cs[i]; }
+  }
+  return null;
+}
+
+/* ===== shared/model.js ===== */
+/* ---------- シナリオ ---------- */
+
+/** 使えるテーマ。**足すときは play/css/theme-<名前>.css を1本置いて、ここに名前を足すだけ**
+ *  （build.mjs は play/css/theme-*.css を勝手に全部拾う）。
+ *  server/sheets.gs の THEMES と同じ並びにしておくこと（シートに書ける値を決めているのはあちら）。 */
+var THEMES = ['white', 'black', 'green', 'washi'];
+
+/** ノードの種類・答え方・info の型。server/scenarios.gs の同じ名前と合わせておくこと */
+var KINDS = ['start', 'question', 'info', 'ending', 'wrong'];
+var ANSWER_TYPES = ['choice', 'text', 'set', 'none'];
+var TEMPLATES = ['', 'howto', 'move'];
+
+var DATA = null, NODES = {}, CHOICES = {}, ROUTE = [], STAMPS = [], SHOWROUTE = false, ENTRY = 'name', STAFFPIN = '';
+function nzNode(id) { return (id && NODES[id]) || null; }
+function nzChoices(nodeId) { return CHOICES[nodeId] || []; }
+/** そのノードのブロック（blocksJson）。1回ほどいて持っておく */
+function blk(n) {
+  if (!n) return {};
+  if (n._b === undefined) { try { n._b = JSON.parse(String(n.blocksJson || '') || '{}') || {}; } catch (e) { n._b = {}; } }
+  return n._b;
+}
+function nzUnpack(b64) {
+  var bin = atob(b64), arr = new Uint8Array(bin.length);
+  for (var i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+  return JSON.parse(new TextDecoder('utf-8').decode(arr));
+}
+function nzIndex(d) {
+  DATA = d; NODES = {}; CHOICES = {};
+  d.nodes.forEach(function (n) { n._b = undefined; NODES[n.id] = n; });
+  d.choices.forEach(function (c) { (CHOICES[c.nodeId] = CHOICES[c.nodeId] || []).push(c); });
+  for (var k in CHOICES) CHOICES[k].sort(function (a, b) { return num(a.order) - num(b.order); });
+  var sc = d.scenario || {};
+  var th = String(sc.theme || '');
+  if (THEMES.indexOf(th) < 0) th = 'white';
+  /* html にも同じ印を付ける。地（色と和紙の模様）を html にも同じに敷くため（2026-09-17）。
+     下までスクロールしても紙が途切れないようにする（base.css・theme-washi.css） */
+  document.documentElement.setAttribute('data-theme', th);
+  document.body.setAttribute('data-theme', th);
+  /* つぎに開いたとき、シナリオが届く前から同じ紙を出せるように覚えておく */
+  try { if (!EMBED) localStorage.setItem('nazotoki_theme_' + (sc.id || ''), th); } catch (e) {}
+  ENTRY = String(sc.entryMode || 'name');
+  STAFFPIN = String(sc.staffPin || '');
+  SHOWROUTE = yes(sc.showRoute);
+  TX = {};
+  try { var t = JSON.parse(String(sc.textsJson || '') || '{}'); if (t && typeof t === 'object') TX = t; } catch (e) {}
+  var as = null;
+  try { as = JSON.parse(String(sc.assetsJson || '') || '{}'); } catch (e) { as = null; }
+  buildStamps(as);
+  buildRoute();
+}
+/** 順路バーに出す段。nodes.routeNo が同じものは1つにまとめる（⑤の2段階など） */
+function buildRoute() {
+  ROUTE = [];
+  var seen = {};
+  DATA.nodes.slice().sort(function (a, b) { return num(a.routeNo) - num(b.routeNo) || num(a.order) - num(b.order); })
+    .forEach(function (n) {
+      var r = n.routeNo;
+      if (r === '' || r === undefined || r === null) return;
+      var k = String(num(r));
+      if (seen[k]) return;
+      seen[k] = 1;
+      ROUTE.push({ no: num(r), id: n.id, kind: String(n.kind || ''), place: String(n.place || ''), title: String(n.title || '') });
+    });
+}
+/** スタンプ。assetsJson の stamps と、ノードの after.stampKey を突き合わせて並べる */
+function buildStamps(as) {
+  var def = {}, order = [];
+  if (as && Array.isArray(as.stamps)) as.stamps.forEach(function (s) { if (s && s.key) { def[s.key] = s; order.push(s.key); } });
+  DATA.nodes.slice().sort(function (a, b) { return num(a.routeNo) - num(b.routeNo) || num(a.order) - num(b.order); })
+    .forEach(function (n) {
+      var af = blk(n).after;
+      if (af && af.stampKey && order.indexOf(af.stampKey) < 0) order.push(af.stampKey);
+    });
+  STAMPS = order.map(function (k) {
+    var s = def[k] || {};
+    return { key: k, name: String(s.name || ''), imageUrl: String(s.imageUrl || ''), chars: String(s.chars || s.name || '').slice(0, 2) };
+  });
+}
+function stampOf(key) { for (var i = 0; i < STAMPS.length; i++) if (STAMPS[i].key === key) return STAMPS[i]; return null; }
+/** スタンプの絵。画像があれば画像、無ければ朱の二重丸に1〜2文字（絵描きさんの絵が来たら assetsJson で差し替える） */
+function stampHtml(st) {
+  if (!st) return '';
+  if (st.imageUrl) return '<img src="' + esc(st.imageUrl) + '" alt="' + esc(st.name) + '">';
+  var c = st.chars || T('stamp.mark');
+  var body = c.length > 1
+    ? '<text x="50" y="43" text-anchor="middle" font-family="serif" font-weight="700" font-size="28" fill="#c8553d">' + esc(c.charAt(0)) + '</text>'
+      + '<text x="50" y="76" text-anchor="middle" font-family="serif" font-weight="700" font-size="28" fill="#c8553d">' + esc(c.charAt(1)) + '</text>'
+    : '<text x="50" y="66" text-anchor="middle" font-family="serif" font-weight="700" font-size="44" fill="#c8553d">' + esc(c) + '</text>';
+  return '<svg viewBox="0 0 100 100" role="img" aria-label="' + esc(st.name || T('stamp.alt')) + '"><g opacity=".92">'
+    + '<circle cx="50" cy="50" r="45" fill="none" stroke="#c8553d" stroke-width="4.5"/>'
+    + '<circle cx="50" cy="50" r="38.5" fill="none" stroke="#c8553d" stroke-width="1.3" opacity=".75"/>'
+    + body + '</g></svg>';
+}
+
+/* ===== shared/call.js ===== */
+/* サーバ呼び出しはこの1関数だけ（DESIGN_B「お名前.com への引っ越しを見越した作り」）。
+     GAS の中で動いているとき … google.script.run[name](…)
+     静的ファイルとして動いているとき … fetch(gasUrl, POST text/plain, {fn, args}) → JSON
+   gasUrl は build.mjs が dist 版の先頭に入れる window.NAZO_CONFIG.gasUrl から取る。
+
+   引数は「positional の配列」で渡す（apiGetScenario(id, pass) のように既存の api は複数引数を取るため。
+   DESIGN_B は {fn, arg} と書いてあるが、それだと今の api をぜんぶ作り替えることになるので配列にした。
+   サーバ側（server/main.gs の doPost）は args・arg のどちらでも受ける）。
+
+   返りは Promise。試し遊び（server/main.gs の PREVIEW_JS）は google.script.run を差し替えるだけなので、
+   ここを通しても今までどおり動く。 */
+function nzGasUrl() {
+  try { return (window.NAZO_CONFIG && window.NAZO_CONFIG.gasUrl) || ''; } catch (e) { return ''; }
+}
+/* 置き場の頭（2026-09-18）。本番は ''、試験環境（/stg/…）は '/stg'。
+   build.mjs が --target で埋める。**画面の中で組む URL は、ここか location からしか作らない。**
+   これがあるので、同じ HTML が /play/ でも /stg/play/ でも動く。 */
+function nzBase() {
+  try { return (window.NAZO_CONFIG && window.NAZO_CONFIG.base) || ''; } catch (e) { return ''; }
+}
+/* 試験環境のときだけ、上の帯の「試験」の札を出す（骨に hidden で置いてある #stgTag）。
+   本番と間違えないための印。呼ぶのは play/js/app.js と admin/js/boot.js の2か所だけ。 */
+function nzStgTag() {
+  if (nzBase() !== '/stg') return;
+  var put = function () {
+    try { var e = document.getElementById('stgTag'); if (e) e.hidden = false; } catch (er) {}
+  };
+  if (document.body) put(); else window.addEventListener('DOMContentLoaded', put);
+}
+function nzInGas() {
+  return typeof google !== 'undefined' && google.script && google.script.run;
+}
+function call(name, args) {
+  var a = Array.isArray(args) ? args : (args === undefined ? [] : [args]);
+  return new Promise(function (res, rej) {
+    if (nzInGas()) {
+      var r = google.script.run.withSuccessHandler(res).withFailureHandler(rej);
+      if (typeof r[name] !== 'function') { rej(new Error(TF('err.noApi', { name: name }))); return; }
+      r[name].apply(r, a);
+      return;
+    }
+    var url = nzGasUrl();
+    if (!url) { rej(new Error(T('err.noUrl'))); return; }
+    /* Content-Type を text/plain にすると、ブラウザは preflight（OPTIONS）を投げない。
+       GAS の /exec は 302 で script.googleusercontent.com へ飛ばすので redirect:'follow' が要る。 */
+    fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      redirect: 'follow',
+      body: JSON.stringify({ fn: name, args: a }),
+    }).then(function (r) {
+      if (!r.ok) throw new Error(TF('err.net', { n: r.status }));
+      return r.json();
+    }).then(function (o) {
+      if (o && o.ok === false) throw new Error(String(o.error || T('err.server')));
+      res(o ? o.result : null);
+    }).catch(rej);
+  });
+}
+
+/* ===== play/js/state.js ===== */
+/* 進み具合の保存（localStorage）と、記録の送信キュー。ここだけが localStorage を知る。 */
+
+/* ---------- 管理者モード（admin） ----------
+   入場の欄に admin と打つ（または ?admin=1）と真になる。シナリオの adminOn が真のときだけ。
+   決めているのは app.js。ここは「残さない」の3つを引き受ける。
+     進み具合を端末に残さない（savePlayer）／記録を出さない（nzLog・nzFlush）／台帳に送らない（nzPrizeSend）
+   すでに端末にある控えは消さない（読まないだけ。開き直せば ADMIN は落ちて、その控えに戻る）。 */
+var ADMIN = false;
+
+/* ---------- 参加者（スマホの中に残す） ---------- */
+var PKEY = 'nazotoki_' + S;
+function blankPlayer() {
+  return { id: newPid(), name: '', nodeId: '', pending: '', wrong: {}, hinted: {}, hist: [], score: 0,
+    startedAt: '', finishedAt: '', endingNodeId: '', dirty: false, lastNode: '', lastAt: '', wrongFrom: '',
+    /* B案 段階1 */
+    openedAt: {}, hintsOpen: {}, hintAt: {}, setOk: {}, rescued: {}, ansText: {}, stamps: [], mediaDone: {},
+    routeNo: '', startMs: 0, prizeAt: 0, timeUp: {}, lastAns: null,
+    /* B案 段階3（entryMode=serial） */
+    serial: '', prizeSent: false };
+}
+var PLAYER = blankPlayer();
+function newPid() { return 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+function loadPlayer() {
+  try { var v = JSON.parse(localStorage.getItem(PKEY) || 'null'); if (v && v.id) PLAYER = v; } catch (e) {}
+  var b = blankPlayer();
+  for (var k in b) if (PLAYER[k] === undefined || PLAYER[k] === null) PLAYER[k] = b[k];
+  if (!PLAYER.id) PLAYER.id = newPid();
+  savePlayer();
+}
+function savePlayer() { if (EMBED || PREVIEW || ADMIN) return; try { localStorage.setItem(PKEY, JSON.stringify(PLAYER)); } catch (e) {} }
+
+/* ---------- シナリオもスマホに残す（次に開くときはこれで先に出す） ----------
+   運営の「試し遊び」（?preview=合い札）では、何もスマホに残さない。 */
+var SKEY = PKEY + '_scen';
+var PREVIEW = !!(typeof PVTOK !== 'undefined' && PVTOK);
+function loadScen() { if (PREVIEW) return null; try { return JSON.parse(localStorage.getItem(SKEY) || 'null'); } catch (e) { return null; } }
+function saveScen(o) { if (PREVIEW) { try { localStorage.removeItem(SKEY); } catch (e) {} return; } try { localStorage.setItem(SKEY, JSON.stringify(o)); } catch (e) {} }
+
+/* ---------- 参加者用の合言葉（アクセスキー）の控え ----------
+   この端末でいちど通った合言葉を残しておく。次に開いたときは黙って付けて聞きにいく。
+   合言葉つきのシナリオは、これが無いあいだ写しでも控えでも始めない（app.js の boot）。 */
+var WKEY = 'nazotoki_pass_' + S;
+function loadPass() { if (PREVIEW) return ''; try { return localStorage.getItem(WKEY) || ''; } catch (e) { return ''; } }
+function savePass(p) { if (EMBED || PREVIEW) return; try { localStorage.setItem(WKEY, String(p || '')); } catch (e) {} }
+
+/* ---------- この端末の目印（台帳の deviceId）。シナリオをまたいで1つ ---------- */
+var DKEY = 'nazotoki_device';
+function nzDeviceId() {
+  var v = '';
+  try { v = localStorage.getItem(DKEY) || ''; } catch (e) {}
+  if (!v) {
+    v = 'd' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+    try { localStorage.setItem(DKEY, v); } catch (e) {}
+  }
+  return v;
+}
+
+/* ---------- 記録のまとめ送り ---------- */
+var OKEY = PKEY + '_out', OUT = [];
+function loadOut() { try { OUT = JSON.parse(localStorage.getItem(OKEY) || '[]') || []; } catch (e) { OUT = []; } }
+function saveOut() { if (EMBED || PREVIEW) return; try { localStorage.setItem(OKEY, JSON.stringify(OUT)); } catch (e) {} }
+function stamp(d) {
+  return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()) + ' ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes()) + ':' + pad2(d.getSeconds());
+}
+function nzNow() { return stamp(new Date()); }
+/** 1秒たたないうちに同じノードでもう一度答えると、server.gs の key がぶつかって捨てられる。秒をひとつ進める */
+function nzAt(nodeId) {
+  var at = nzNow();
+  if (PLAYER.lastNode === nodeId && PLAYER.lastAt && PLAYER.lastAt >= at) {
+    at = stamp(new Date(new Date(PLAYER.lastAt.replace(/-/g, '/')).getTime() + 1000));
+  }
+  PLAYER.lastNode = nodeId; PLAYER.lastAt = at;
+  return at;
+}
+/** ev: { nodeId, choiceId, inputText, result('correct'|'wrong'|'near'|'hint'|'next'), nextNodeId, rescued, attempts, hintsOpened } */
+function nzLog(ev) {
+  if (ADMIN) return;                 // 管理者モードは記録を残さない（アナリティクスに混ぜない）
+  ev.at = ev.at || nzAt(ev.nodeId);
+  ev.key = PLAYER.id + '|' + (ev.nodeId || '') + '|' + ev.at;   // server.gs の answers.key と同じ形
+  if (ev.attempts === undefined && ev.nodeId) ev.attempts = num(PLAYER.wrong[ev.nodeId]);
+  if (ev.hintsOpened === undefined && ev.nodeId) ev.hintsOpened = num(PLAYER.hintsOpen[ev.nodeId]);
+  if (ev.rescued === undefined && ev.nodeId) ev.rescued = !!PLAYER.rescued[ev.nodeId];
+  OUT.push(ev);
+  if (OUT.length > 400) OUT = OUT.slice(-400);
+  saveOut();
+}
+function nzTouch() { PLAYER.dirty = true; savePlayer(); }
+var SENDING = false, SENDNG = false;
+function nzFlush() {
+  if (EMBED || PREVIEW || ADMIN) { OUT = []; PLAYER.dirty = false; return; }   // プレビュー・試し遊び・管理者モードは記録を残さない
+  if (SENDING || (!OUT.length && !PLAYER.dirty)) return;
+  if (!nzInGas() && !nzGasUrl()) return;      // つなぎ先がまだ分からない
+  SENDING = true;
+  var batch = OUT.slice(0, 40);
+  var p = { scenarioId: S, playerId: PLAYER.id, name: PLAYER.name, currentNodeId: PLAYER.nodeId,
+    userAgent: navigator.userAgent, finishedAt: PLAYER.finishedAt || '', endingNodeId: PLAYER.endingNodeId || '',
+    serial: PLAYER.serial || '', events: batch };
+  call('apiLog', [p])
+    .then(function () {
+      SENDING = false; SENDNG = false; PLAYER.dirty = false; savePlayer();
+      OUT = OUT.slice(batch.length); saveOut(); netDraw();
+    })
+    .catch(function () { SENDING = false; SENDNG = true; netDraw(); });   // 消さない。次の10秒でもう一度送る
+}
+/** 景品を渡したことを台帳に送る。送れなければスマホに残して、10秒ごとにやり直す（段階3） */
+function nzPrizeSend() {
+  if (EMBED || PREVIEW || ADMIN) return;   // 管理者モードは台帳に触らない
+  if (!PLAYER.serial || !PLAYER.prizeAt || PLAYER.prizeSent) return;
+  if (!nzInGas() && !nzGasUrl()) return;
+  call('apiPrizeConfirm', [PLAYER.serial, nzDeviceId()])
+    .then(function () { PLAYER.prizeSent = true; savePlayer(); })
+    .catch(function () {});     // 消さない。次の10秒でもう一度送る
+}
+setInterval(nzFlush, 10000);
+setInterval(nzPrizeSend, 10000);
+window.addEventListener('pagehide', function () { nzFlush(); });
+document.addEventListener('visibilitychange', function () { if (!document.hidden) nzFlush(); });
+
+/* ---------- いちばん下の細い字 ---------- */
+var NETMSG = '';
+function setNet(m) { NETMSG = m || ''; netDraw(); }
+function netDraw() {
+  var t = NETMSG;
+  if (SENDNG && OUT.length) t = (t ? t + '\n' : '') + TF('net.queued', { n: OUT.length });
+  $('net').textContent = t;
+}
+
+/** 現地QR（?n=）を1回だけ使うための覚え。使ったことがあれば true を返し、使ったことにする */
+function nzQrUsed(nodeId) {
+  var k = 'nzqr_' + S + '_' + nodeId, used = false;
+  try { used = !!sessionStorage.getItem(k); sessionStorage.setItem(k, '1'); } catch (e) {}
+  return used;
+}
+/** この端末の進み具合を消して、はじめからにする（運営がスマホを渡し直すとき）。
+ *  スマホに残しているものを知っているのはこのファイルだけなので、消すのもここでやる。 */
+function nzWipeDevice() {
+  try { localStorage.removeItem(PKEY); localStorage.removeItem(OKEY); } catch (e) {}
+  try { sessionStorage.clear(); } catch (e) {}
+  OUT = []; saveOut();
+  PLAYER = blankPlayer(); savePlayer();
+}
+
+/* ===== play/js/blocks/after.js ===== */
+/** after ブロック（正解演出）。スタンプがドンと押されて、その下にストーリー断片。
+ *  この画面が出ているときは、もう次のノードへ進んでいる（OKON.fromId が解いたノード）。 */
+var SND = null;
+/** 効果音を鳴らす。url が鳴らなければ fb（ドライブの直リンク）で鳴らし直す（2026-09-17） */
+function playSound(url) {
+  if (!url) return;
+  try {
+    SND = new Audio(url);
+    SND.play();
+  } catch (e) {}
+}
+
+function viewOk() {
+  var from = nzNode(OKON.fromId);
+  var af = blk(from).after || {};
+  var st = af.stampKey ? stampOf(af.stampKey) : null;
+  var story = String(af.story || '');
+  var ansT = from ? String(PLAYER.ansText[from.id] || '') : '';
+  var no = from && from.routeNo !== '' && from.routeNo !== undefined && from.routeNo !== null ? num(from.routeNo) : null;
+  var qi = from ? qIndexOf(from) : -1, qs = qSteps();
+  var rescued = !!(from && PLAYER.rescued[from.id]);
+  $('app').innerHTML =
+    '<div class="card shake" id="okCard">'
+    + '<div class="meta"><span>'
+    + esc(no === null ? (from ? from.place || '' : '') : TF('ok.step', { n: no }))
+    + '</span><span>' + esc(qi >= 0 ? TF('q.n', { i: qi + 1, t: qs.length }) : T('ok.head')) + '</span></div>'
+    + routeBar(false, no)
+    + (st ? '<div class="stampwrap"><div class="bleed"></div><div class="stamp">' + stampHtml(st) + '</div></div>' : '')
+    + '<div class="fadeup">'
+    + '<div class="divider"><span>' + esc(rescued ? T('ok.rescued') : TF('ok.story', { n: no === null ? '' : no })) + '</span></div>'
+    + (ansT ? '<h2 class="ttl center okans">' + esc(ansT) + '</h2>' : '')
+    + (story ? '<p class="body center qtext">' + esc(rescued ? T('ok.rescuedBody') : story) + '</p>' : '')
+    + '<button class="go" id="okGo">' + esc(okNextLabel()) + '</button>'
+    + '</div></div>';
+  var c = $('okCard');
+  c.className = 'card shake';
+  void c.offsetWidth;
+  c.className = 'card shake animate';
+  buzz(60);
+  $('okGo').onclick = function () { OKON = null; draw(); try { window.scrollTo(0, 0); } catch (e) {} };
+}
+/** ボタンの文。つぎに出す画面の種類で変える */
+function okNextLabel() {
+  var n = nzNode(PLAYER.nodeId);
+  if (!n) return T('common.next');
+  var k = String(n.kind || '');
+  if (k === 'question') return T('ok.toQuestion');
+  if (k === 'info' && String(n.template || '') === 'move') return T('ok.toMove');
+  if (k === 'ending' || blk(n).ending) return T('ok.toClear');
+  return T('common.next');
+}
+
+/* ===== play/js/blocks/answer.js ===== */
+/* ---------- クエスチョン ---------- */
+/** answerType=set の「まとまり」。group が同じ選択肢はひとつの答え */
+function setGroups(n) {
+  var cs = nzChoices(n.id), map = {}, order = [];
+  cs.forEach(function (c, i) {
+    var g = (c.group === '' || c.group === undefined || c.group === null) ? ('c' + i) : String(num(c.group));
+    if (!map[g]) { map[g] = { g: g, cs: [], label: '' }; order.push(g); }
+    map[g].cs.push(c);
+    if (!map[g].label) map[g].label = String(c.label || '');
+  });
+  return order.map(function (g) { return map[g]; });
+}
+function groupHit(grp, text, loose) {
+  var t = nzKey(text, loose);
+  if (!t) return false;
+  for (var i = 0; i < grp.cs.length; i++) {
+    var ws = String(grp.cs[i].keywords || '').split(',');
+    for (var j = 0; j < ws.length; j++) { var w = nzKey(ws[j], loose); if (w && w === t) return true; }
+  }
+  return false;
+}
+
+function verdictHtml() {
+  var h = '';
+  if (NEARTX) h += '<div class="verdict near">' + esc(NEARTX) + '</div>';
+  if (WRONGTX) h += '<div class="verdict bad">' + esc(WRONGTX) + '</div>';
+  if (HINTTX) h += '<div class="hint">' + esc(HINTTX) + '</div>';
+  return h;
+}
+/** 古いテーマ向け（B案のブロックが無いノード）は今までの見た目のまま */
+function wrongHtml() {
+  return (NEARTX ? '<p class="wrongtx" style="color:var(--nearInk)">' + esc(NEARTX) + '</p>' : '')
+    + (WRONGTX ? '<p class="wrongtx">' + esc(WRONGTX) + '</p>' : '')
+    + (HINTTX ? '<div class="hint">' + esc(HINTTX) + '</div>' : '');
+}
+/** 継続問題（continueOnSame）が何段目か。1段目は continueOnSame でないノード。
+ *  ①②③… の丸数字は、この番号から作る（steps.first の {prev} {next}） */
+function carryStepNo(n) {
+  var i = 1, cur = n, guard = 0;
+  while (cur && yes(cur.continueOnSame) && guard++ < 20) {
+    var p = carryPrevNode(cur);
+    if (!p) break;
+    i++; cur = p;
+  }
+  return i;
+}
+/** そのノードへ来る手前のノード（正解の出口・つぎ・選択肢のつなぎ先をたどる） */
+function carryPrevNode(n) {
+  var all = (DATA && DATA.nodes) || [];
+  for (var i = 0; i < all.length; i++) {
+    var p = all[i];
+    if (p.id === n.id) continue;
+    if (String(p.correctNodeId || '') === n.id || String(p.nextNodeId || '') === n.id) return p;
+    var cs = nzChoices(p.id);
+    for (var j = 0; j < cs.length; j++) if (String(cs[j].nextNodeId || '') === n.id) return p;
+  }
+  return null;
+}
+/** ⑤の2段階など。前のクエスチョンの答えを、上に確定表示して続ける。
+ *  肩の小さな文字は blocksJson の carryLabel、無ければ前のノードの題名 */
+function carryHtml(n) {
+  if (!yes(n.continueOnSame)) return '';
+  var la = PLAYER.lastAns;
+  if (!la || !la.text) return '';
+  var lb = String(blk(n).carryLabel || la.title || '');
+  var st = carryStepNo(n);
+  return '<div class="fixed"><span class="lb">' + esc(lb) + '</span>'
+    + '<span>' + esc(la.text) + '</span><span class="ck">✓</span></div>'
+    + '<p class="note">' + esc(TF('steps.first', { prev: maru(st - 1), next: maru(st) })) + '</p>';
+}
+/** 入れる欄の薄い字。blocksJson の placeholder（文字、または set のときは配列）。無ければ既定値 */
+function phOf(n, i) {
+  var p = blk(n).placeholder;
+  if (Array.isArray(p)) return String(p[i] === undefined ? (T('q.ph') + ' ' + (i + 1)) : p[i]);
+  if (p) return String(p);
+  return Array.isArray(blk(n).placeholder) || String(n.answerType) === 'set' ? (T('q.ph') + ' ' + (i + 1)) : T('q.ph');
+}
+
+/* 答え方ごとの描き分け。**答え方を足すときはここに1つ関数を足して ANSWERS に載せるだけ**
+   （DESIGN_B「広がりを見越した約束」。将来 photo / gps / qr など）。
+   どの関数も (n, box, vh) を受け取り、box の中身を作って、押されたら answered() か submit系 を呼ぶ。 */
+var ANSWERS = {
+  choice: ansChoice,
+  text: ansText,
+  set: ansSet,
+  none: ansNone,
+};
+
+function viewQuestion(n) {
+  var at = String(n.answerType || 'none');
+  var tl = blk(n).timeLimit;
+  var right = tl ? '' : undefined;
+  $('app').innerHTML = '<div class="card">' + headHtml(n, right) + mediaHtml(n)
+    + '<div class="ans" id="ansBox"></div>' + hintsHtml(n) + '</div>' + mediaLayerHtml(n) + staffHtml(n);
+  var box = $('ansBox');
+  var isB = !!(blk(n).hints || blk(n).near);
+  var vh = isB ? verdictHtml() : wrongHtml();
+  (ANSWERS[at] || ansNone)(n, box, vh);
+  bindAnsFocus(box);  // 答えの欄を押したとき、題名が上に隠れないように寄せ直す（2026-09-17）
+  bindHints(n); bindStaff(n); startTimer(n);
+  bindMedia(n);       // 開始時の演出（押された処理の中から同期的に play するので、ここで呼ぶ）
+}
+
+/* ---------- 答えの欄を押したときの寄せ直し（2026-09-17 中地さん・iPhone の写し） ----------
+   スマホで答えの欄を押すとキーボードが出る。ブラウザは欄を見える所に運ぼうとして
+   ページを上へ送るので、謎の題名が画面の外へ出てしまう（見えるのは問題文の途中から）。
+   iOS Safari の標準の動きなので止められない。**あちらが寄せたあとに、こちらが寄せ直す。**
+   寄せ先は題名の行。ただし 題名＋問題文＋入力欄 が見える領域に収まらない長い問題文のときは、
+   題名をあきらめて問題文の枠の上に合わせる（入力欄が見えないほうが困るため）。
+   それでも収まらないほど長い問題文のときは、入力欄が見えるぎりぎりまでしか下げない。
+   blur（キーボードを閉じたとき）は何もしない。閉じれば自然に戻る。 */
+
+/** いまのスクロール量 */
+function ansScrollY() { return window.scrollY !== undefined ? window.scrollY : (window.pageYOffset || 0); }
+/** 見える領域の高さ（キーボードが出ているあいだは visualViewport のほうが小さい） */
+function ansViewH() {
+  var vv = window.visualViewport;
+  return (vv && vv.height) ? vv.height : (window.innerHeight || 0);
+}
+/** 寄せ先の2つ（題名の行と、問題文の枠）。答えの欄と同じカードの中から探す */
+function ansAnchors(box) {
+  var card = box;
+  while (card && card !== document && String((card.className || '')).indexOf('card') < 0) card = card.parentNode;
+  var root = (card && card.querySelector) ? card : document;
+  return {
+    head: root.querySelector('.ttlrow') || root.querySelector('h1.ttl'),
+    qtext: root.querySelector('.body.qtext'),
+  };
+}
+/** 寄せるための空き。ページが短いと、題名を上まで持ち上げられない
+ *  （スマホはキーボードで見える所が半分になるので、たいてい足りない）。
+ *  足りないぶんだけ、ページのいちばん下に空きを足す。欄から手が離れたら 0 に戻す。 */
+function ansRoom(want) {
+  var sp = document.getElementById('kbdRoom');
+  var max = document.documentElement.scrollHeight - (window.innerHeight || 0) - (sp ? sp.offsetHeight : 0);
+  var need = Math.max(0, Math.ceil(want - max) + 8);
+  if (!need) { if (sp) sp.style.height = '0px'; return; }
+  if (!sp) {
+    sp = document.createElement('div');
+    sp.id = 'kbdRoom';
+    sp.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(sp);
+  }
+  sp.style.height = need + 'px';
+}
+/** 足した空きを片づける（画面が変わったとき。app.js の scrollTop から呼ぶ） */
+function ansRoomClear() {
+  var sp = document.getElementById('kbdRoom');
+  if (sp) sp.style.height = '0px';
+}
+/** 欄から手が離れたとき。**いまの位置が動かない分だけ**空きを削る
+ *  （いきなり 0 にすると、ブラウザがスクロールを押し戻してページが上へ跳ぶ） */
+function ansRoomTrim() {
+  var sp = document.getElementById('kbdRoom');
+  if (!sp) return;
+  var h = sp.offsetHeight;
+  if (!h) return;
+  var keep = ansScrollY() + (window.innerHeight || 0) - (document.documentElement.scrollHeight - h);
+  sp.style.height = Math.max(0, Math.min(h, Math.ceil(keep))) + 'px';
+}
+/** 題名の行に合わせる。それだと入力欄が見える領域から出てしまうなら問題文の枠に、
+ *  それでも出てしまうなら、入力欄が見えるぎりぎりまでしか下げない
+ *  （20行のような長い問題文だと、題名も問題文の頭も入り切らない。入力欄が見えないほうが困る）。 */
+function ansScrollFix(box, el) {
+  var a = ansAnchors(box);
+  if (!a.head && !a.qtext) return;
+  var vv = window.visualViewport;
+  var off = (vv && vv.offsetTop) || 0;      // iOS は見える領域そのものをずらすことがある
+  var vh = ansViewH();
+  var sy = ansScrollY();
+  /* その節の上を、見える領域のいちばん上（8px 下）に置くためのスクロール量 */
+  var yOf = function (e2) { return Math.max(0, e2.getBoundingClientRect().top + sy - off - 8); };
+  /* 入力欄が見える領域に収まるために、最低これだけは下げないといけない量 */
+  var need = el ? Math.max(0, el.getBoundingClientRect().bottom + sy - off - vh + 8) : 0;
+  var y;
+  if (a.head && yOf(a.head) >= need) y = yOf(a.head);
+  else if (a.qtext && yOf(a.qtext) >= need) y = yOf(a.qtext);
+  else y = need;
+  ansRoom(y);
+  try { window.scrollTo(0, y); } catch (e) {}
+}
+/** 答えの欄（input / textarea。複数の set の欄も）に focus したら寄せ直す */
+function bindAnsFocus(box) {
+  if (!box || !box.querySelectorAll) return;
+  var els = box.querySelectorAll('input, textarea');
+  for (var i = 0; i < els.length; i++) ansFocusOne(box, els[i]);
+}
+function ansFocusOne(box, el) {
+  el.addEventListener('focus', function () {
+    var run = function () { if (document.activeElement === el) ansScrollFix(box, el); };
+    /* iOS は自分で欄を寄せたあとなので、こちらは遅れて2回上書きする */
+    setTimeout(run, 300);
+    setTimeout(run, 600);
+    /* キーボードが出切って見える領域が縮んだとき（Android Chrome と、iOS 16 以降）に、もう一度だけ */
+    var vv = window.visualViewport;
+    if (!vv) return;
+    var once = function () { vv.removeEventListener('resize', once); run(); };
+    vv.addEventListener('resize', once);
+    setTimeout(function () { vv.removeEventListener('resize', once); }, 1500);
+  });
+  /* 手が離れたとき（キーボードが閉じたとき）は**スクロールを動かさない**。自然に戻る。
+     足しておいた空きだけ、位置が動かない分まで削る（ほかの欄へ移ったときは、そのまま残す） */
+  el.addEventListener('blur', function () {
+    setTimeout(function () {
+      var a = document.activeElement;
+      if (a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA')) return;
+      ansRoomTrim();
+    }, 400);
+  });
+}
+
+/** 選ぶ */
+function ansChoice(n, box, vh) {
+  var cs = nzChoices(n.id);
+  if (!cs.length) { box.innerHTML = '<p class="wrongtx">' + esc(T('q.noChoice')) + '</p>'; return; }
+  var html = carryHtml(n);
+  for (var i = 0; i < cs.length; i++) html += '<button class="btn" data-i="' + i + '">' + esc(cs[i].label || '') + '</button>';
+  box.innerHTML = html + vh;
+  var bs = box.getElementsByClassName('btn');
+  for (var j = 0; j < bs.length; j++) {
+    bs[j].onclick = function () {
+      var c = cs[num(this.getAttribute('data-i'))];
+      var all = box.getElementsByClassName('btn');
+      for (var k = 0; k < all.length; k++) all[k].disabled = true;
+      answered(n, c, '');
+    };
+  }
+}
+
+/** 打つ */
+function ansText(n, box, vh) {
+  box.innerHTML = carryHtml(n)
+    + '<input class="field" type="text" id="tx" placeholder="' + esc(phOf(n, 0)) + '" aria-label="' + esc(phOf(n, 0))
+    + '" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" maxlength="60">'
+    + vh
+    + '<button class="go" id="txGo">' + esc(T('q.answer')) + '</button>';
+  $('tx').value = lastIn(n.id, 0);           // はずれても打った字は残す（試作と同じ）
+  holdGo('txGo');
+  var go = function () {
+    if (Date.now() < LOCKUNTIL) return;
+    var v = $('tx').value.trim();
+    if (!v) { say(T('q.empty')); return; }
+    keepIn(n.id, [v]);
+    lockGo('txGo');
+    submitText(n, v);
+  };
+  $('txGo').onclick = go;
+  $('tx').onkeydown = function (e) { if (e.key === 'Enter') { e.preventDefault(); go(); } };
+}
+
+/** 複数・順不同（choices.group のまとまりごと） */
+function ansSet(n, box, vh) { viewSet(n, box, vh); }
+
+/** 読むだけ */
+function ansNone(n, box) {
+  box.innerHTML = '<button class="go" id="nx">' + esc(T('common.next')) + '</button>';
+  $('nx').onclick = function () {
+    var next = String(n.nextNodeId || '');
+    if (!next) { say(T('err.noNext')); return; }
+    $('nx').disabled = true;
+    nzLog({ nodeId: n.id, choiceId: '', inputText: '', result: 'next', nextNodeId: next });
+    goTo(next);
+  };
+}
+
+/** 送ってから2秒はボタンを押せない（二度押し・連打よけ） */
+var LOCKUNTIL = 0;
+function lockGo(id) {
+  LOCKUNTIL = Date.now() + 2000;
+  holdGo(id);
+}
+/** 画面を描き直したあとも、残り時間ぶんはボタンを押せないままにする */
+function holdGo(id) {
+  var left = LOCKUNTIL - Date.now();
+  if (left <= 0) return;
+  var b = $(id);
+  if (!b) return;
+  b.disabled = true;
+  setTimeout(function () { var x = $(id); if (x) x.disabled = false; }, left);
+}
+
+/** 打った字の覚え（はずれて描き直したときに戻す）。ノードごとに持つ */
+var LASTIN = {};
+function keepIn(id, vals) { LASTIN[id] = vals; }
+function lastIn(id, i) { var v = LASTIN[id]; return v && v[i] !== undefined ? v[i] : ''; }
+
+function submitText(n, v) {
+  var c = nzMatch(n, v);
+  if (c) { NEARTX = ''; answered(n, c, v); return; }
+  var nm = nearHit(n, v);
+  if (nm) {
+    var nb = blk(n).near || {};
+    if (nb.countAsWrong) { PLAYER.wrong[n.id] = num(PLAYER.wrong[n.id]) + 1; savePlayer(); }
+    /* 「惜しい」は 'near' として記録する（運営の集計で、ただの誤答と分けて数えるため） */
+    nzLog({ nodeId: n.id, choiceId: '', inputText: v, result: 'near', nextNodeId: '' });
+    nzFlush();
+    NEARTX = nm; WRONGTX = ''; HINTTX = '';
+    draw();
+    return;
+  }
+  NEARTX = '';
+  answered(n, null, v);
+}
+
+/** 複数・順不同（answerType=set）。当たったまとまりは確定表示にして残りを続けさせる */
+function viewSet(n, box, vh) {
+  var gs = setGroups(n);
+  var done = PLAYER.setOk[n.id] || [];
+  var h = carryHtml(n), rest = [];
+  for (var i = 0; i < gs.length; i++) {
+    if (done.indexOf(gs[i].g) >= 0) {
+      h += '<div class="fixed"><span class="lb">' + esc(T('q.ph')) + ' ' + (i + 1) + '</span>'
+        + '<span>' + esc(gs[i].label) + '</span><span class="ck">✓</span></div>';
+    } else {
+      rest.push(gs[i]);
+      h += '<input class="field" type="text" id="sx' + rest.length + '" placeholder="' + esc(phOf(n, i))
+        + '" aria-label="' + esc(phOf(n, i)) + '" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" maxlength="60">';
+    }
+  }
+  h += '<p class="note">' + esc(TF('set.lead', { n: gs.length })) + '</p>' + vh
+    + '<button class="go" id="sxGo">' + esc(T('q.answer')) + '</button>';
+  box.innerHTML = h;
+  for (var q = 1; q <= rest.length; q++) $('sx' + q).value = lastIn(n.id, q - 1);
+  holdGo('sxGo');
+  var go = function () {
+    if (Date.now() < LOCKUNTIL) return;
+    var vals = [];
+    for (var k = 1; k <= rest.length; k++) vals.push($('sx' + k).value.trim());
+    var any = false;
+    for (var k2 = 0; k2 < vals.length; k2++) if (vals[k2]) any = true;
+    if (!any) { say(T('q.empty')); return; }
+    keepIn(n.id, vals);
+    lockGo('sxGo');
+    submitSet(n, gs, rest, vals);
+  };
+  $('sxGo').onclick = go;
+  for (var k3 = 1; k3 <= rest.length; k3++) {
+    $('sx' + k3).onkeydown = function (e) { if (e.key === 'Enter') { e.preventDefault(); go(); } };
+  }
+}
+function submitSet(n, gs, rest, vals) {
+  var loose = !!blk(n).looseKana;
+  var done = (PLAYER.setOk[n.id] || []).slice();
+  var hitNow = [], used = {};
+  for (var i = 0; i < vals.length; i++) {
+    if (!vals[i]) continue;
+    for (var j = 0; j < rest.length; j++) {
+      if (used[rest[j].g]) continue;
+      if (groupHit(rest[j], vals[i], loose)) { used[rest[j].g] = 1; hitNow.push(rest[j]); break; }
+    }
+  }
+  if (hitNow.length === rest.length) {          // 残り全部そろった＝正解
+    var c = null, cs = nzChoices(n.id);
+    for (var m = 0; m < cs.length; m++) if (yes(cs[m].isCorrect)) { c = cs[m]; break; }
+    PLAYER.setOk[n.id] = gs.map(function (g) { return g.g; });
+    PLAYER.ansText[n.id] = gs.map(function (g) { return g.label; }).join(' ／ ');
+    savePlayer();
+    NEARTX = ''; WRONGTX = '';
+    var joined = gs.map(function (g) { return g.label; }).join(' ／ ');
+    answered(n, c || { id: '', isCorrect: true, label: joined, score: 0, feedback: '' }, joined);
+    return;
+  }
+  if (hitNow.length) {                          // 片方だけ当たった
+    hitNow.forEach(function (g) { if (done.indexOf(g.g) < 0) done.push(g.g); });
+    PLAYER.setOk[n.id] = done;
+    savePlayer();
+    nzLog({ nodeId: n.id, choiceId: '', inputText: vals.join(' / '), result: 'wrong', nextNodeId: '' });
+    nzFlush();
+    NEARTX = TF('set.partial', { done: done.length, left: Math.max(0, gs.length - done.length) });
+    WRONGTX = '';
+    draw();
+    return;
+  }
+  // ひとつも当たらない。すでに確定しているものを打ち直しただけなら、その旨だけ伝える
+  for (var v2 = 0; v2 < vals.length; v2++) {
+    if (!vals[v2]) continue;
+    for (var g2 = 0; g2 < gs.length; g2++) {
+      if (done.indexOf(gs[g2].g) >= 0 && groupHit(gs[g2], vals[v2], loose)) {
+        NEARTX = T('set.already'); WRONGTX = ''; draw(); return;
+      }
+    }
+  }
+  NEARTX = '';
+  answered(n, null, vals.join(' / '));
+}
+
+/* ===== play/js/blocks/cert_image.js ===== */
+/* ---------- 認定証の記念画像（2026-09-17） ----------
+   「記念画像を保存」を押すと、ここが Canvas に認定証を描いて PNG（1080×1350・SNS 向けの 4:5）にする。
+   出すところは3段（スマホの制約に合わせる）:
+     1. navigator.canShare({files}) が通れば navigator.share（iPhone は共有シートから「画像を保存」）
+     2. だめなら <a download> を click（Android / PC）
+     3. それもだめなら .certLayer に <img> で出して「長押しして保存してください」（古い iOS Safari）
+   記録は残さない（apiLog を呼ばない）。管理者モードでも使える。
+   色と書体は、いま出ている画面のテーマから読む（getComputedStyle(document.body) の --bg / --ink など）。
+   影・グラデーションは使わない。細い罫と余白だけ。 */
+
+var CERT_W = 1080, CERT_H = 1350;
+
+/** いまのテーマの色と書体。画面と同じものを使う（和紙なら 生成り／紺／朱・明朝） */
+function certVars() {
+  var cs = getComputedStyle(document.body);
+  function v(k, d) { var s = String(cs.getPropertyValue(k) || '').trim(); return s || d; }
+  return {
+    bg: v('--bg', '#ffffff'), ink: v('--ink', '#16202a'), sub: v('--sub', '#6b7c86'),
+    line: v('--line', '#e2e8ec'), muted: v('--muted', '#98a6ae'), vermilion: v('--vermilion', '#c8553d'),
+    mincho: v('--mincho', 'serif'), gothic: v('--gothic', 'sans-serif'), mono: v('--mono', 'monospace')
+  };
+}
+/** 書体が届くのを待つ（届かなければ serif などの控えで描く。待ちすぎない） */
+function certFonts() {
+  if (!document.fonts || !document.fonts.load) return Promise.resolve();
+  var want = ['700 64px "Zen Old Mincho"', '400 26px "Zen Old Mincho"',
+    '500 30px "Zen Kaku Gothic New"', '400 20px "IBM Plex Mono"'];
+  var all = Promise.all(want.map(function (f) {
+    try { return document.fonts.load(f, '認定証 CERTIFICATE 0123'); } catch (e) { return null; }
+  })).then(function () { return document.fonts.ready; });
+  return Promise.race([all, new Promise(function (r) { setTimeout(r, 2500); })]).catch(function () {});
+}
+
+/* ---------- 字を置く（字間は1文字ずつ置いて作る。ブラウザの letterSpacing に頼らない） ---------- */
+function certWidth(ctx, s, tr) {
+  var w = 0;
+  for (var i = 0; i < s.length; i++) w += ctx.measureText(s.charAt(i)).width;
+  return w + tr * Math.max(0, s.length - 1);
+}
+/** o: { font, color, track, align('left'|'center'|'right'), max } 。max を超えたら字を縮める */
+function certText(ctx, s, x, y, o) {
+  s = String(s === undefined || s === null ? '' : s);
+  if (!s) return 0;
+  ctx.font = o.font;
+  ctx.fillStyle = o.color;
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
+  var tr = o.track || 0, w = certWidth(ctx, s, tr);
+  if (o.max && w > o.max) {
+    var m = o.font.match(/(\d+(?:\.\d+)?)px/);
+    if (m) {
+      var k = o.max / w;
+      ctx.font = o.font.replace(/(\d+(?:\.\d+)?)px/, (parseFloat(m[1]) * k).toFixed(1) + 'px');
+      tr = tr * k;
+      w = certWidth(ctx, s, tr);
+    }
+  }
+  var sx = o.align === 'center' ? x - w / 2 : (o.align === 'right' ? x - w : x);
+  for (var i = 0; i < s.length; i++) {
+    var c = s.charAt(i);
+    ctx.fillText(c, sx, y);
+    sx += ctx.measureText(c).width + tr;
+  }
+  return w;
+}
+function certRule(ctx, x1, y, x2, color, w) {
+  ctx.strokeStyle = color; ctx.lineWidth = w || 1;
+  ctx.beginPath(); ctx.moveTo(x1, y + 0.5); ctx.lineTo(x2, y + 0.5); ctx.stroke();
+}
+
+/* ---------- スタンプの絵 ---------- */
+/** 朱の丸（stampHtml の SVG）を、画像にできる形にする */
+function certStampSvg(st) {
+  var s = stampHtml({ key: st.key, name: st.name, chars: st.chars, imageUrl: '' });
+  return s.replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" ');
+}
+function certImgFrom(src, cors) {
+  return new Promise(function (res, rej) {
+    var im = new Image();
+    if (cors) im.crossOrigin = 'anonymous';
+    im.onload = function () { res(im); };
+    im.onerror = function () { rej(new Error('img')); };
+    im.src = src;
+  });
+}
+/** 画像URLのスタンプは crossOrigin で読む。読めなければ朱の丸に文字で代用する */
+function certStampImg(st) {
+  var fall = function () {
+    return certImgFrom('data:image/svg+xml;charset=utf-8,' + encodeURIComponent(certStampSvg(st)), false)
+      .catch(function () { return null; });
+  };
+  if (!st) return Promise.resolve(null);
+  if (st.imageUrl) return certImgFrom(st.imageUrl, true).catch(fall);
+  return fall();
+}
+/** 円の中に収めて描く（縦横比は保つ） */
+function certFit(ctx, im, cx, cy, d) {
+  if (!im) return;
+  var w = im.naturalWidth || im.width || 1, h = im.naturalHeight || im.height || 1;
+  var k = Math.min(d / w, d / h);
+  ctx.drawImage(im, cx - (w * k) / 2, cy - (h * k) / 2, w * k, h * k);
+}
+
+/* ---------- 日付（JST） ---------- */
+function certJst() {
+  var now = new Date();
+  return new Date(now.getTime() + now.getTimezoneOffset() * 60000 + 9 * 3600000);
+}
+function certDateText() {
+  var d = certJst();
+  return d.getFullYear() + '年' + (d.getMonth() + 1) + '月' + d.getDate() + '日';
+}
+function certFileName() {
+  var d = certJst();
+  return 'nazotoki_認定証_' + d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()) + '.png';
+}
+/** 画像に出す人の名まえ。管理者モードは ADMIN、シリアル方式はシリアル */
+function certWho() {
+  if (ADMIN) return T('bar.admin') || 'ADMIN';
+  return String(PLAYER.name || PLAYER.serial || '—');
+}
+
+/* ---------- 本体。canvas を1枚作って返す ---------- */
+function certCanvas(n) {
+  var c = certVars();
+  var rows = certSteps();
+  var stamps = STAMPS.slice(0);
+  return certFonts()
+    .then(function () { return Promise.all(stamps.map(certStampImg)); })
+    .then(function (imgs) {
+      var tl = rows.map(function (r) {
+        var i = r.stamp ? stamps.indexOf(r.stamp) : -1;
+        return i >= 0 ? imgs[i] : null;
+      });
+      return certPaint(n, c, rows, stamps, imgs, tl);
+    });
+}
+function certPaint(n, c, rows, stamps, imgs, tlImgs) {
+  var cv = document.createElement('canvas');
+  cv.width = CERT_W; cv.height = CERT_H;
+  var ctx = cv.getContext('2d');
+  var W = CERT_W, H = CERT_H, cx = W / 2, m = 96, inner = W - m * 2;
+  var sc = (DATA && DATA.scenario) || {};
+
+  /* 地と、細い二重の罫 */
+  ctx.fillStyle = c.bg; ctx.fillRect(0, 0, W, H);
+  ctx.strokeStyle = c.line;
+  ctx.lineWidth = 2; ctx.strokeRect(41, 41, W - 82, H - 82);
+  ctx.lineWidth = 1; ctx.strokeRect(54.5, 54.5, W - 109, H - 109);
+
+  /* 見出し */
+  certText(ctx, T('clear.en'), cx, 152, { font: '400 22px ' + c.mincho, color: c.vermilion, track: 7.5, align: 'center', max: inner });
+  certText(ctx, T('clear.title'), cx, 236, { font: '700 64px ' + c.mincho, color: c.ink, track: 9, align: 'center', max: inner });
+  certRule(ctx, cx - 48, 268, cx + 48, c.vermilion, 2);
+
+  /* シナリオの題名とイベント名 */
+  certText(ctx, sc.title || '', cx, 322, { font: '500 30px ' + c.gothic, color: c.ink, track: 1.5, align: 'center', max: inner - 40 });
+  certText(ctx, sc.eventName || '', cx, 360, { font: '400 19px ' + c.mono, color: c.muted, track: 3.8, align: 'center', max: inner - 40 });
+
+  /* なまえ */
+  certText(ctx, T('home.name'), cx, 418, { font: '400 18px ' + c.mono, color: c.muted, track: 2.5, align: 'center', max: inner });
+  certText(ctx, certWho(), cx, 468, { font: '700 44px ' + c.mincho, color: c.ink, track: 3, align: 'center', max: inner - 80 });
+  certRule(ctx, cx - 230, 486, cx + 230, c.line, 1);
+
+  /* 認定の一文 */
+  certText(ctx, T('clear.sub'), cx, 534, { font: '400 24px ' + c.gothic, color: c.sub, track: 1, align: 'center', max: inner - 20 });
+
+  /* スタンプの並び（持っているものは色、持っていないものは薄く） */
+  var top = 572, d = 112, gap = 30;
+  if (stamps.length) {
+    var tot = stamps.length * d + (stamps.length - 1) * gap;
+    if (tot > inner) { var k = inner / tot; d = Math.floor(d * k); gap = Math.floor(gap * k); tot = stamps.length * d + (stamps.length - 1) * gap; }
+    var sx = cx - tot / 2;
+    for (var i = 0; i < stamps.length; i++) {
+      var ccx = sx + d / 2, ccy = top + d / 2;
+      ctx.strokeStyle = c.line; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(ccx, ccy, d / 2, 0, Math.PI * 2); ctx.stroke();
+      var got = PLAYER.stamps.indexOf(stamps[i].key) >= 0;
+      ctx.globalAlpha = got ? 1 : 0.18;
+      certFit(ctx, imgs[i], ccx, ccy, d - 10);
+      ctx.globalAlpha = 1;
+      sx += d + gap;
+    }
+    top += d;
+  }
+
+  /* 年表（RECORD）。certHtml と同じ並び */
+  var dy = Math.max(top + 52, 700);
+  certText(ctx, T('clear.record'), cx, dy, { font: '400 18px ' + c.mono, color: c.muted, track: 2.5, align: 'center' });
+  var lw = certWidth(ctx, T('clear.record'), 2.5);
+  certRule(ctx, m, dy - 6, cx - lw / 2 - 18, c.line, 1);
+  certRule(ctx, cx + lw / 2 + 18, dy - 6, W - m, c.line, 1);
+
+  var y0 = dy + 34, bottom = 1124;
+  if (rows.length) {
+    var rh = Math.min(94, (bottom - y0) / rows.length);
+    var dd = Math.min(62, rh - 14);
+    for (var j = 0; j < rows.length; j++) {
+      var cy = y0 + rh * j + rh / 2, dx = m + dd / 2 + 4;
+      if (j < rows.length - 1) {
+        ctx.strokeStyle = c.line; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(dx + 0.5, cy + dd / 2); ctx.lineTo(dx + 0.5, cy + rh - dd / 2); ctx.stroke();
+      }
+      ctx.strokeStyle = rows[j].got ? c.vermilion : c.line; ctx.lineWidth = rows[j].got ? 2 : 1;
+      ctx.beginPath(); ctx.arc(dx, cy, dd / 2, 0, Math.PI * 2); ctx.stroke();
+      ctx.globalAlpha = rows[j].got ? 1 : 0.18;
+      certFit(ctx, tlImgs[j], dx, cy, dd - 8);
+      ctx.globalAlpha = 1;
+      var tx = m + dd + 30, tmax = W - m - tx;
+      certText(ctx, rows[j].label + (rows[j].rescued ? T('clear.rescued') : ''), tx, cy - 8,
+        { font: '400 18px ' + c.mono, color: c.muted, track: 1.8, max: tmax });
+      certText(ctx, rows[j].answer, tx, cy + 26, { font: '500 30px ' + c.mincho, color: c.ink, track: 1, max: tmax });
+    }
+  }
+
+  /* かかった時間と日付 */
+  certRule(ctx, m, 1152, W - m, c.line, 1);
+  certText(ctx, T('clear.time'), m, 1196, { font: '400 18px ' + c.mono, color: c.muted, track: 2.5 });
+  certText(ctx, elapsed(), W - m, 1200, { font: '400 36px ' + c.mono, color: c.ink, track: 1.5, align: 'right' });
+  certText(ctx, certDateText(), m, 1242, { font: '400 20px ' + c.gothic, color: c.muted, track: 1 });
+
+  /* いちばん下 */
+  certText(ctx, 'nazotoki', cx, 1278, { font: '400 17px ' + c.mono, color: c.muted, track: 3.5, align: 'center' });
+  return cv;
+}
+
+/* ---------- 保存の入口（3段） ---------- */
+function certBlob(cv) {
+  return new Promise(function (res, rej) {
+    if (!cv.toBlob) { rej(new Error('toBlob')); return; }
+    cv.toBlob(function (b) { b ? res(b) : rej(new Error('blob')); }, 'image/png');
+  });
+}
+/** (2) <a download> を click。download が効かない端末なら (3) の重ね物へ落とす */
+function certDownload(blob, name) {
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  if (!('download' in a)) { certLayer(url); return 'layer'; }
+  a.href = url; a.download = name; a.rel = 'noopener';
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  if (a.parentNode) a.parentNode.removeChild(a);
+  setTimeout(function () { try { URL.revokeObjectURL(url); } catch (e) {} }, 60000);
+  return 'download';
+}
+/** (3) 画面いっぱいの黒い重ね物に画像を出して、長押しで保存してもらう */
+function certLayer(url) {
+  var old = document.querySelector('.certLayer');
+  if (old && old.parentNode) old.parentNode.removeChild(old);
+  var d = document.createElement('div');
+  d.className = 'certLayer';
+  d.innerHTML = '<button class="certX" type="button" aria-label="閉じる">×</button>'
+    + '<img alt="' + esc(T('clear.title')) + '">'
+    + '<p class="certHold">' + esc(T('clear.saveHold')) + '</p>';
+  d.querySelector('img').src = url;
+  d.querySelector('.certX').onclick = function () {
+    if (d.parentNode) d.parentNode.removeChild(d);
+    try { URL.revokeObjectURL(url); } catch (e) {}
+  };
+  document.body.appendChild(d);
+  return d;
+}
+/** 「記念画像を保存」を押したとき。記録は残さない */
+function certSave(n) {
+  var btn = $('saveImg');
+  if (!btn || btn.disabled) return Promise.resolve('busy');
+  var was = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = T('clear.saving');
+  function done(r) { btn.disabled = false; btn.textContent = was; return r; }
+  return certCanvas(n).then(certBlob).then(function (blob) {
+    var name = certFileName(), file = null;
+    try { file = new File([blob], name, { type: 'image/png' }); } catch (e) { file = null; }
+    if (file && navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+      return navigator.share({ files: [file], title: T('clear.title') })
+        .then(function () { return 'share'; }, function (err) {
+          if (err && err.name === 'AbortError') return 'cancel';   // 人がやめた。落としに行かない
+          return certDownload(blob, name);
+        });
+    }
+    return certDownload(blob, name);
+  }).then(done, function (e) {
+    done();
+    say(T('clear.saveNg'));
+    return 'ng';
+  });
+}
+
+/* ===== play/js/blocks/ending.js ===== */
+/* ---------- 結末（認定証・景品） ---------- */
+function viewEnding(n) {
+  var eb = blk(n).ending || {};
+  var no = n.routeNo !== '' && n.routeNo !== undefined && n.routeNo !== null ? num(n.routeNo) : null;
+  var h = '<div class="card">';
+  if (eb.prizeConfirm && (no !== null || n.place)) {
+    h += '<div class="meta"><span>'
+      + esc(no === null ? (n.place || '') : (n.place ? TF('q.stepPlace', { n: no, place: n.place }) : TF('q.step', { n: no })))
+      + '</span><span>' + esc(T('prize.mark')) + '</span></div>';
+  }
+  if (SHOWROUTE) h += routeBar();
+  if (eb.prizeConfirm) h += prizeLead(n);
+  /* 開始時の演出（2026-09-17）。置き場は見出しの上。「もう一度…」は見出しの行の右はし */
+  h += mediaStageHeadHtml(n);
+  var ag = mediaAgainHtml(n);
+  if (eb.certificate) h += certHtml(n) + ttlRowHtml('', ag);
+  else if (eb.prizeConfirm) h += ttlRowHtml(n.title ? '<h1 class="ttl">' + esc(n.title) + '</h1>' : '', ag);
+  else h += ttlRowHtml('<h1 class="ttl">' + esc(n.title ? TF('end.your', { t: n.title }) : '') + '</h1>', ag);
+  h += mediaHtml(n);
+  if (n.body) h += '<p class="body qtext">' + esc(n.body) + '</p>';
+  if (n.endingCode) h += '<div class="code">' + esc(n.endingCode) + '</div><p class="codeLab">' + esc(T('end.codeLab')) + '</p>';
+  if (eb.prizeConfirm) h += prizeHtml(n);
+  /* 試作と同じ並び: さきに「つぎへ」（認定証なら「景品の引換へ」）、そのあと控えめな「記念画像を保存」 */
+  if (String(n.nextNodeId || '')) h += '<button class="go" id="enNext">'
+    + esc(eb.certificate ? T('clear.next') : T('common.next')) + '</button>';
+  if (eb.certificate) h += '<button class="go thin" id="saveImg">' + esc(T('clear.save')) + '</button>';
+  if (eb.certificate) h += '<div class="band"></div>';
+  if (eb.prizeConfirm && eb.backTo && !PLAYER.prizeAt) {
+    h += '<button class="go thin" id="enBack">' + esc(T('prize.back')) + '</button>';
+  }
+  h += '</div>';
+  $('app').innerHTML = h + mediaLayerHtml(n);
+  bindMedia(n);
+  /* 記念画像（Canvas で PNG を作る。play/js/blocks/cert_image.js。記録は残さない） */
+  if ($('saveImg')) $('saveImg').onclick = function () { certSave(n); };
+  if ($('enNext')) $('enNext').onclick = function () { goTo(String(n.nextNodeId)); };
+  if ($('enBack')) $('enBack').onclick = function () { goTo(String(eb.backTo)); };
+  bindPrize();
+  tickSec();
+}
+/** 景品の「やること」の行（題名の上） */
+function prizeLead() {
+  if (PLAYER.prizeAt) return '';
+  return '<div class="seeline"><b>' + esc(T('prize.do')) + '</b><span class="sep">／</span>'
+    + '<span class="what">' + esc(T('prize.show')) + '</span></div>';
+}
+
+/** 認定証の年表のもと。**画面（certHtml）と記念画像（cert_image.js）が同じ並びを見る** */
+function certSteps() {
+  var qs = qSteps(), out = [];
+  for (var i = 0; i < qs.length; i++) {
+    var no = qs[i].no, texts = [], st = null, place = qs[i].place;
+    DATA.nodes.forEach(function (x) {
+      if (num(x.routeNo) !== no || String(x.kind) !== 'question') return;
+      var t = PLAYER.ansText[x.id];
+      if (t) texts.push(t);
+      var af = blk(x).after;
+      if (af && af.stampKey && !st) st = stampOf(af.stampKey);
+    });
+    out.push({ no: no, place: place, stamp: st,
+      got: !!(st && PLAYER.stamps.indexOf(st.key) >= 0),
+      label: place ? TF('q.stepPlace', { n: no, place: place }) : TF('q.step', { n: no }),
+      rescued: isRescued(no),
+      answer: texts.join(' ／ ') || '—' });
+  }
+  return out;
+}
+/** 認定証（年表）。クエスチョンの段ごとに、答えとスタンプを並べる */
+function certHtml(n) {
+  var rows = certSteps(), li = '';
+  for (var i = 0; i < rows.length; i++) {
+    var r = rows[i];
+    li += '<li><div class="dot' + (r.got ? ' got' : '') + '">' + (r.got ? stampHtml(r.stamp) : '') + '</div>'
+      + '<div class="txt"><div class="st">' + esc(r.label) + (r.rescued ? esc(T('clear.rescued')) : '') + '</div>'
+      + '<div class="an">' + esc(r.answer) + '</div></div></li>';
+  }
+  return '<div class="cert"><span class="en">' + esc(T('clear.en')) + '</span>'
+    + '<h1>' + esc(T('clear.title')) + '</h1>'
+    + '<p class="sub">' + esc(n.body ? '' : T('clear.sub')) + '</p></div>'
+    + '<ul class="tl">' + li + '</ul>'
+    + '<div class="divider"><span>' + esc(T('clear.record')) + '</span></div>'
+    + '<div class="kv"><span class="k">' + esc(T('home.name')) + '</span><span class="v">' + esc(PLAYER.name || '—') + '</span></div>'
+    + '<div class="kv"><span class="k">' + esc(T('clear.time')) + '</span><span class="v big js-elapsed">--:--</span></div>';
+}
+function isRescued(no) {
+  var yes = false;
+  DATA.nodes.forEach(function (x) { if (num(x.routeNo) === no && PLAYER.rescued[x.id]) yes = true; });
+  return yes;
+}
+function prizeHtml(n) {
+  if (PLAYER.prizeAt) {
+    var d = new Date(num(PLAYER.prizeAt));
+    var last = STAMPS.length ? STAMPS[STAMPS.length - 1] : null;
+    return '<div class="gotprize">'
+      + (last ? '<div class="donestamp">' + stampHtml(last) + '</div>' : '')
+      + '<div class="t">' + esc(T('prize.done')) + '</div>'
+      + '<div class="s">' + pad2(d.getHours()) + ':' + pad2(d.getMinutes()) + '</div></div>'
+      + '<p class="body center qtext">' + esc(T('prize.thanks')) + '</p>';
+  }
+  return '<div class="figure clockbox"><div class="clock">'
+    + '<span class="d">' + esc(T('prize.now')) + '</span><span class="js-clock">--:--:--</span></div></div>'
+    + '<div class="divider"><span>' + esc(T('prize.staffOnly')) + '</span></div>'
+    + '<p class="note">' + esc(T('prize.staffNote')) + '</p>'
+    + '<button class="go holdbtn" id="hold"><span class="fill" id="holdFill"></span>'
+    + '<span>' + esc(T('prize.hold')) + '</span></button><div id="pzBox"></div>';
+}
+/** 景品のボタンはスタッフが1.5秒長押し。GAS の iframe では window.confirm が塞がれることがあるので自前の確認にする */
+function bindPrize() {
+  var btn = $('hold');
+  if (!btn) return;
+  var fill = $('holdFill'), t0 = 0, raf = null, fired = false;
+  function frame() {
+    var r = Math.min(1, (Date.now() - t0) / 1500);
+    fill.style.width = (r * 100) + '%';
+    if (r >= 1 && !fired) { fired = true; stop(); ask(); return; }
+    raf = requestAnimationFrame(frame);
+  }
+  function start(e) { if (e.cancelable) e.preventDefault(); if (fired) return; t0 = Date.now(); raf = requestAnimationFrame(frame); }
+  function stop() { if (raf) cancelAnimationFrame(raf); raf = null; if (!fired) fill.style.width = '0%'; }
+  function ask() {
+    buzz(40);
+    btn.style.display = 'none';
+    $('pzBox').innerHTML = '<div class="staffbox"><p class="body tight">'
+      + esc(T('prize.confirmQ')) + '</p><div class="row">'
+      + '<button class="go thin" id="pzNo">' + esc(T('prize.no')) + '</button>'
+      + '<button class="go" id="pzYes">' + esc(T('prize.yes')) + '</button></div></div>';
+    $('pzNo').onclick = function () { draw(); };
+    $('pzYes').onclick = function () {
+      PLAYER.prizeAt = Date.now();
+      savePlayer();
+      nzLog({ nodeId: PLAYER.nodeId, choiceId: '', inputText: T('prize.log'), result: 'next', nextNodeId: '' });
+      nzFlush();
+      nzPrizeSend();     /* 台帳にも残す（段階3）。送れなくてもスマホに残って、あとで送り直す */
+      draw();
+    };
+  }
+  btn.addEventListener('touchstart', start, { passive: false });
+  btn.addEventListener('touchend', stop);
+  btn.addEventListener('touchcancel', stop);
+  btn.addEventListener('mousedown', start);
+  btn.addEventListener('mouseup', stop);
+  btn.addEventListener('mouseleave', stop);
+}
+
+/** 不正解ノードで、いま出すもの・つぎに行く先を決める */
+function wrongPlan(n) {
+  var q = String(PLAYER.wrongFrom || '');
+  var w = q ? num(PLAYER.wrong[q]) : 0;
+  var ha = num(n.hintAfter), ga = num(n.giveUpAfter);
+  var away = String(n.wrongNextNodeId || '');
+  var give = ga > 0 && w >= ga && !!away && !!nzNode(away);
+  var mode = String(n.mode || '') === 'end' ? 'end' : 'repeat';
+  return { qid: q, w: w,
+    hint: (ha > 0 && w >= ha) ? String(n.hintText || '') : '',
+    give: give,
+    next: give ? away : String(n.nextNodeId || ''),
+    label: (give || mode === 'end') ? T('common.next') : T('wrong.again') };
+}
+function viewWrong(n) {
+  var p = wrongPlan(n);
+  if (p.hint && p.qid && !PLAYER.hinted[p.qid]) {
+    PLAYER.hinted[p.qid] = 1; savePlayer();
+    nzLog({ nodeId: p.qid, choiceId: '', inputText: '', result: 'hint', nextNodeId: '' });
+    nzFlush();
+  }
+  $('app').innerHTML =
+    (n.title ? '<h1 class="ttl">' + esc(n.title) + '</h1>' : '')
+    + (WFB ? '<div class="fb">' + esc(WFB) + '</div>' : '')
+    + (n.imageUrl ? '<img class="pic" src="' + esc(n.imageUrl) + '" alt="">' : '')
+    + '<div class="body">' + esc(n.body || '') + '</div>'
+    + (p.hint ? '<div class="hint">' + esc(p.hint) + '</div>' : '')
+    + '<div class="ans"><button class="go" id="wgo">' + esc(p.label) + '</button></div>';
+  $('wgo').onclick = function () {
+    if (!p.next) { say(T('err.noNext')); return; }
+    $('wgo').disabled = true;
+    goTo(p.next);
+  };
+}
+
+/* ===== play/js/blocks/figure.js ===== */
+/** figure ブロック（画像・文字列）。画像か、等幅で並べる文字列のどちらか */
+function figureHtml(n) {
+  var f = blk(n).figure, h = '';
+  if (!f) return '';
+  if (f.imageUrl) h += '<img class="pic" src="' + esc(f.imageUrl) + '" alt="">';
+  if (f.text) h += '<div class="figure">' + esc(f.text) + '</div>';
+  return h;
+}
+
+/* ===== play/js/blocks/hints.js ===== */
+/** ヒントの段。when は配列＝「または」。{start} / {wrong,n} / {sinceOpen,sec} / {sincePrevHint,sec} */
+function hintPlan(n) {
+  var hs = blk(n).hints;
+  if (!hs || !hs.length) return null;
+  var opened = num(PLAYER.hintsOpen[n.id]);
+  if (opened > hs.length) opened = hs.length;
+  var out = { list: hs.slice(0, opened), total: hs.length, opened: opened, next: -1, ok: false, cond: '', left: 0 };
+  if (opened >= hs.length) return out;
+  out.next = opened;
+  var when = hs[opened].when;
+  if (!when || !when.length) when = [{ type: 'start' }];
+  var openedAt = num(PLAYER.openedAt[n.id]) || Date.now();
+  var ats = PLAYER.hintAt[n.id] || [];
+  var prevAt = num(ats[opened - 1]) || openedAt;
+  var w = num(PLAYER.wrong[n.id]);
+  var names = [], left = null;
+  for (var i = 0; i < when.length; i++) {
+    var c = when[i] || {}, ty = String(c.type || 'start');
+    if (ty === 'start') { out.ok = true; continue; }
+    if (ty === 'wrong') {
+      names.push(TF('hint.wrongN', { n: num(c.n) }));
+      if (w >= num(c.n)) out.ok = true;
+      continue;
+    }
+    var base = ty === 'sincePrevHint' ? prevAt : openedAt;
+    var l = num(c.sec) - Math.floor((Date.now() - base) / 1000);
+    names.push(TF(ty === 'sincePrevHint' ? 'hint.prevN' : 'hint.secN', { sec: num(c.sec) }));
+    if (l <= 0) out.ok = true; else left = (left === null) ? l : Math.min(left, l);
+  }
+  out.cond = names.join(T('hint.or'));
+  out.left = left === null ? 0 : left;
+  return out;
+}
+function hintsHtml(n) {
+  var p = hintPlan(n);
+  if (!p) return '';
+  var h = '<div class="hints" id="hintBox"><div class="meta"><span>' + esc(T('hint.head')) + '</span><span>' + p.opened + ' / ' + p.total + '</span></div>';
+  for (var i = 0; i < p.list.length; i++) {
+    h += '<div class="hint-open"><b>' + esc(TF('hint.label', { i: i + 1 })) + '</b>' + esc(String(p.list[i].text || '')) + '</div>';
+  }
+  if (p.next >= 0) {
+    if (p.ok) h += '<button class="go ghost hintbtn" id="hintGo">' + esc(T('q.hint'))
+      + '（' + (p.next + 1) + '/' + p.total + '）</button>';
+    else h += '<div class="hint-locked js-wait">' + esc(TF('hint.wait', { cond: p.cond })
+      + (p.left > 0 ? TF('hint.left', { sec: p.left }) : '')) + '</div>';
+  }
+  return h + '</div>';
+}
+function bindHints(n) {
+  var b = $('hintGo');
+  if (!b) return;
+  b.onclick = function () {
+    var i = num(PLAYER.hintsOpen[n.id]);
+    PLAYER.hintsOpen[n.id] = i + 1;
+    if (!PLAYER.hintAt[n.id]) PLAYER.hintAt[n.id] = [];
+    PLAYER.hintAt[n.id][i] = Date.now();
+    savePlayer();
+    nzLog({ nodeId: n.id, choiceId: '', inputText: '', result: 'hint', nextNodeId: '' });
+    nzFlush();
+    redrawHints(n);
+  };
+}
+function redrawHints(n) {
+  var box = $('hintBox');
+  if (!box) { draw(); return; }
+  var tmp = document.createElement('div');
+  tmp.innerHTML = hintsHtml(n);
+  box.parentNode.replaceChild(tmp.firstChild, box);
+  bindHints(n);
+}
+
+/** ヒントが開くまでの待ち文。段ごとに hint.wait2 / hint.wait3 … があればそちらを使う
+ *  （無ければ hint.wait）。{i} 段の番号 ／ {cond} 開く条件 ／ {sec} あと何秒 */
+function waitText(p) {
+  var i = p.next + 1;
+  var key = TX['hint.wait' + i] !== undefined || TXD['hint.wait' + i] !== undefined ? 'hint.wait' + i : 'hint.wait';
+  var s = TF(key, { i: i, cond: p.cond, sec: p.left });
+  if (key === 'hint.wait' && p.left > 0) s += TF('hint.left', { sec: p.left });
+  return s;
+}
+
+/* ===== play/js/blocks/howto.js ===== */
+/** 遊び方（info の template=howto）。
+ *  **新しい形**（2026-09-17）… blocksJson.howto.pages = [ { head, text, imageUrl }, … ]。
+ *    1ページ＝1つの入力枠。絵もページごとに持つ（jpg / png を Drive に上げた URL）。
+ *  **古い形**（読めるだけ。運営画面で開くと新しい形に直る）…
+ *    body を `---` だけの行で区切って複数ページ。各ページの1行目が見出し、残りが本文。
+ *    絵は blocksJson.figure.pages[ページ番号]、無ければ1枚目だけ nodes.imageUrl。 */
+var HOWTOI = 0;
+function howtoPages(n) {
+  var b = blk(n);
+  var hp = (b.howto && Array.isArray(b.howto.pages)) ? b.howto.pages : null;
+  if (hp && hp.length) {
+    return hp.map(function (p) {
+      p = p || {};
+      return { head: String(p.head || ''), body: String(p.text || ''), img: String(p.imageUrl || '') };
+    });
+  }
+  var fig = b.figure;
+  var figs = (fig && Array.isArray(fig.pages)) ? fig.pages : null;
+  var parts = String(n.body || '').split(/\r?\n\s*---\s*\r?\n/);
+  return parts.map(function (t, i) {
+    var lines = String(t).replace(/^\s*\n/, '').split('\n');
+    return { head: (lines[0] || '').trim(),
+      body: lines.slice(1).join('\n').replace(/^\s*\n/, ''),
+      img: figs ? String(figs[i] || '') : (i === 0 ? String(n.imageUrl || '') : '') };
+  });
+}
+function viewHowto(n) {
+  var ps = howtoPages(n);
+  if (HOWTOI >= ps.length) HOWTOI = ps.length - 1;
+  if (HOWTOI < 0) HOWTOI = 0;
+  var last = HOWTOI === ps.length - 1;
+  var img = ps[HOWTOI].img;
+  var d = '';
+  for (var i = 0; i < ps.length; i++) d += '<i class="' + (i === HOWTOI ? 'on' : '') + '"></i>';
+  /* 開始時の演出（2026-09-17）。1ページ目にだけ置く（ページを送るたびに流し直さないため）。
+     置き場は「カード（ページ）の上」。ほかの種類のノードと同じ動きにする */
+  var one = HOWTOI === 0;
+  /* 大見出し（2026-09-17 の案）。カードの外、上の帯のすぐ下。
+     「いまは遊び方の画面だ」が一目で分かるようにする。文はノードの題名、無ければ辞書の既定 */
+  var big = esc(String(n.title || T('howto.title')));
+  var en = esc(T('howto.en'));
+  var headTop = big
+    ? '<div class="howto-head">'
+      + (en ? '<span class="en">' + en + '</span>' : '')
+      + '<h1>' + big + '</h1>'
+      + '<i class="rule"></i>'
+      + '</div>'
+    : '';
+  $('app').innerHTML = headTop
+    + '<div class="card">'
+    /* 左肩は枚数だけ（2026-09-17）。題名はカードの外の大見出しに出ているので繰り返さない */
+    + '<div class="meta"><span>' + esc(TF('howto.page', { i: HOWTOI + 1, t: ps.length })) + '</span>'
+    + '<span>' + esc(T('howto.mark')) + '</span></div>'
+    + (one ? mediaStageHeadHtml(n) : '')
+    + (img ? '<div class="howto-fig">' + '<img src="' + esc(img) + '" alt=""></div>' : '')
+    + ttlRowHtml(ps[HOWTOI].head ? '<h2 class="ttl">' + esc(ps[HOWTOI].head) + '</h2>' : '',
+      one ? mediaAgainHtml(n) : '')
+    + '<p class="body howto-body">' + esc(ps[HOWTOI].body) + '</p>'
+    + '<button class="go" id="htNext">' + esc(last ? T('howto.start') : T('common.next')) + '</button>'
+    + (HOWTOI > 0 ? '<button class="go thin" id="htPrev">' + esc(T('common.prev')) + '</button>' : '')
+    + '</div>'
+    + '<div class="dots">' + d + '</div>'
+    + (one ? mediaLayerHtml(n) : '');
+  if (one) bindMedia(n);
+  $('htNext').onclick = function () {
+    if (!last) { HOWTOI++; viewHowto(n); return; }
+    var next = String(n.nextNodeId || '');
+    if (!next) { say(T('err.noNext')); return; }
+    nzLog({ nodeId: n.id, choiceId: '', inputText: '', result: 'next', nextNodeId: next });
+    goTo(next);
+  };
+  if (HOWTOI > 0) $('htPrev').onclick = function () { HOWTOI--; viewHowto(n); };
+}
+
+/* ===== play/js/blocks/media.js ===== */
+/** media ブロック（開始時の演出）と、ノードのイラスト。figure は figure.js が受け持つ。
+ *
+ *  blocksJson の media
+ *    videoUrl / audioUrl … 出すもの（どちらか、または両方）。お名前.com に置いた素のファイル
+ *    mode                … 'overlay' 全画面で再生してからメイン画面 ／ 'inline' メイン画面の中で再生（既定）
+ *    skipAfterSec        … 何秒たったら「とばす」を出すか（0 か空ならすぐ）
+ *
+ *  2026-09-17 に作り替えた（中地さんの指示）。
+ *  - ノードを開いた瞬間に自動で再生する。再生ボタンも操作ボタン（controls）も出さない。
+ *    出すのは「とばす」だけで、動画の上を触っても止まらない（pointer-events:none）
+ *  - 終わったら、メイン画面に「もう一度動画を見る」「もう一度音声を聞く」の小さなボタン
+ *  - 音声はメイン画面といっしょに流れる（全画面のときは、レイヤーが消えてから）
+ *  - スマホは音の出る自動再生を「利用者が触った直後」しか許さない。参加者は「つぎへ」などを
+ *    押してこのノードに来るので、**その押した処理の中で（同期的に）** play() を呼ぶ
+ *    （goTo → draw → bindMedia は同期）。断られたときは「タップして再生」の1ボタンだけを出す
+ *  - 見終わったかは state.js の PLAYER.mediaDone に残す。はずれて描き直しても流れ直さない
+ *
+ *  2026-09-18 音声だけのノード。プレビュー（シナリオ画面の中央の「開始時の演出」）で、
+ *  待ちなしで「問題画面」に戻っていたのを直した。流れはじめた時点で PLAYER.mediaDone は立てる（本番の
+ *  動きは今までどおり。描き直しても流れ直さない）が、親に知らせる mediaTellDone は音声の ended まで待つ。
+ *  自動再生を断られたら「タップして再生」（mdTapA）を出し、押されて鳴り終わってから知らせる。
+ *  音声が無い・URL が壊れている（error / NotSupportedError）ときだけ、その場で知らせる。
+ */
+
+/** このノードに出すもの。無ければ null */
+function mediaOf(n) {
+  var m = blk(n).media;
+  if (!m) return null;
+  if (!m.videoUrl && !m.audioUrl) return null;
+  return m;
+}
+/** 'overlay'（全画面）か 'inline'（メイン画面の中。既定） */
+function mediaMode(m) { return String(m.mode || '') === 'overlay' ? 'overlay' : 'inline'; }
+
+/** 動画の枠ひとつ分。inline はメイン画面の中、overlay は上に重ねる黒いレイヤー */
+function mediaStageHtml(m, mode) {
+  var cls = mode === 'overlay' ? 'mdLayer' : 'mdWrap';
+  return '<div class="' + cls + '" id="' + cls + '">'
+    + '<video class="pic media" id="mdV" src="' + esc(m.videoUrl) + '" playsinline preload="auto"></video>'
+    + '<button class="mdSkip" type="button" id="mdSkip" hidden>' + esc(T('media.skip')) + '</button>'
+    + '<button class="mdTap" type="button" id="mdTap" hidden>' + esc(T('media.tap')) + '</button>'
+    + '</div>';
+}
+/** 「もう一度動画を見る」「もう一度音声を聞く」。**題名の行の右はし**に置く小さな文字リンク（2026-09-17） */
+function mediaAgainHtml(n) {
+  var m = mediaOf(n);
+  if (!m) return '';
+  var h = '';
+  if (m.videoUrl) h += '<button class="mdAgain" type="button" id="mdAgainV" hidden>' + esc(T('media.again')) + '</button>';
+  if (m.audioUrl) h += '<button class="mdAgain" type="button" id="mdAgainA" hidden>' + esc(T('media.againAudio')) + '</button>';
+  return h ? '<span class="mdAgains">' + h + '</span>' : '';
+}
+/** 画面の中の動画（inline）の枠と、音声の本体。題名の行と問題文のあいだ */
+function mediaStageHeadHtml(n) {
+  var m = mediaOf(n);
+  if (!m) return '';
+  var h = '';
+  if (m.videoUrl && mediaMode(m) === 'inline') h += mediaStageHtml(m, 'inline');
+  if (m.audioUrl) {
+    h += '<audio id="mdA" src="' + esc(m.audioUrl) + '" preload="auto"></audio>';
+    /* 音声だけのノードには動画の枠が無いので、「タップして再生」を置く場所をここに作る（2026-09-18） */
+    if (!m.videoUrl) h += '<div class="mdTapRow"><button class="mdTap mdTapA" type="button" id="mdTapA" hidden>'
+      + esc(T('media.tap')) + '</button></div>';
+  }
+  return h;
+}
+/** メイン画面の上に重ねるレイヤー（全画面のとき）。まだ見ていないときだけ出す */
+function mediaLayerHtml(n) {
+  var m = mediaOf(n);
+  if (!m || !m.videoUrl || mediaMode(m) !== 'overlay') return '';
+  if (PLAYER.mediaDone[n.id]) return '';
+  return mediaStageHtml(m, 'overlay');
+}
+/** ノードのイラストと「画像・文字列」。動画・音声は上の mediaStageHeadHtml が受け持つ */
+function mediaHtml(n) {
+  var h = n.imageUrl ? '<img class="pic" src="' + esc(n.imageUrl) + '" alt="">' : '';
+  return h + figureHtml(n);
+}
+
+/* ---------- 再生 ---------- */
+
+var MDSKIP = null;       // 「とばす」を出すまでの待ち
+
+/** 小さなボタンの出し入れ */
+function mediaBtn(id, on) { var e = $(id); if (e) e.hidden = !on; }
+/** 動画の枠を、その動画の縦横比どおりの大きさにする（上限は画面の 60%）。
+ *  width:100% と max-height だけだと、縦長の動画で横だけ伸びて比が崩れる。
+ *  高さの上限から幅の上限を出して、比を保ったまま小さくする（2026-09-17） */
+function mediaFit(v) {
+  if (!v || !v.videoWidth || !v.videoHeight) return;
+  if (v.parentNode && v.parentNode.className.indexOf('mdLayer') >= 0) return;   // 全画面はレイヤーいっぱい
+  var maxH = Math.round((window.innerHeight || 640) * 0.5);
+  v.style.aspectRatio = v.videoWidth + ' / ' + v.videoHeight;
+  v.style.width = '100%';
+  v.style.height = 'auto';
+  v.style.maxWidth = Math.round(maxH * v.videoWidth / v.videoHeight) + 'px';
+  v.style.maxHeight = maxH + 'px';
+}
+/** 動画の大きさが分かるたびに枠を合わせ直す。
+ *  loadedmetadata は、こちらが見はじめる前に済んでいると飛んでこないので、
+ *  resize（縦横が分かったとき）と、画面の向きが変わったときも見る（2026-09-17） */
+function mediaWatchSize(v) {
+  if (!v || v.getAttribute('data-fit')) return;
+  v.setAttribute('data-fit', '1');
+  ['loadedmetadata', 'loadeddata', 'resize'].forEach(function (e) {
+    v.addEventListener(e, function () { mediaFit(v); });
+  });
+  window.addEventListener('resize', function () { if (v.parentNode) mediaFit(v); });
+  /* 出来事は取りこぼすことがある（こちらが見はじめる前に読み終わっているなど）ので、
+     縦横が分かるまで少しのあいだ見に行く。分かったらそこでやめる */
+  var n = 0;
+  var t = setInterval(function () {
+    if (!v.parentNode || n++ > 40) { clearInterval(t); return; }
+    if (!v.videoWidth) return;
+    clearInterval(t);
+    mediaFit(v);
+  }, 50);
+}
+/** 全画面のレイヤーを作って、メイン画面の上にかぶせる（「もう一度」で作り直すときにも使う） */
+function mediaOpenLayer(m) {
+  if ($('mdLayer')) return;
+  var box = document.createElement('div');
+  box.innerHTML = mediaStageHtml(m, 'overlay');
+  document.body.appendChild(box.firstChild);
+}
+/** 「とばす」を、決めた秒数がきたら出す（0 か空ならすぐ） */
+function mediaArmSkip(n, m) {
+  if (MDSKIP) { clearTimeout(MDSKIP); MDSKIP = null; }
+  var sk = $('mdSkip');
+  if (!sk) return;
+  sk.onclick = function () { mediaEnd(n, m); };
+  var sec = num(m.skipAfterSec);
+  if (sec <= 0) { sk.hidden = false; return; }
+  sk.hidden = true;
+  MDSKIP = setTimeout(function () { MDSKIP = null; var e = $('mdSkip'); if (e) e.hidden = false; }, sec * 1000);
+}
+/** 「タップして再生」の出し入れ（ブラウザに自動再生を断られたとき） */
+function mediaTap(n, m, on) {
+  var t = $('mdTap');
+  if (!t) return;
+  t.hidden = !on;
+  if (on) t.onclick = function () { t.hidden = true; mediaVideoStart(n, m); };
+}
+/** 動画を最初から流す。**押された処理の中から同期的に呼ぶこと**（スマホの自動再生の決まり） */
+function mediaVideoStart(n, m) {
+  if (mediaMode(m) === 'overlay') mediaOpenLayer(m);
+  var v = $('mdV');
+  if (!v) return;
+  mediaBtn('mdAgainV', false);
+  v.controls = false;
+  mediaWatchSize(v);
+  v.onended = function () { mediaEnd(n, m); };
+  v.onerror = function () { mediaEnd(n, m); };          // 出せない URL のときも、画面で止まらない
+  mediaFit(v);
+  try { v.currentTime = 0; } catch (e) {}
+  mediaTap(n, m, false);
+  var p = null;
+  try { p = v.play(); } catch (e) { mediaTap(n, m, true); }
+  if (p && p.catch) p.catch(function () { mediaTap(n, m, true); });
+  mediaArmSkip(n, m);
+}
+/** 「タップして再生」（音声だけのノード）の出し入れ */
+function mediaTapAudio(n, m, on, whenEnd) {
+  var t = $('mdTapA');
+  if (!t) return;
+  t.hidden = !on;
+  if (on) t.onclick = function () { t.hidden = true; mediaAudioStart(n, m, whenEnd); };
+}
+/** 音声を最初から流す。断られたら鳴らさず、「もう一度音声を聞く」だけ残す。
+ *  whenEnd を渡すと、鳴り終わった（ended）ときに1回だけ呼ぶ。
+ *  音声が無い・URL が壊れている（error）ときは、待たせずにその場で呼ぶ。
+ *  自動再生を断られたときは「タップして再生」を出し、押されて鳴り終わってから呼ぶ（2026-09-18） */
+function mediaAudioStart(n, m, whenEnd) {
+  var fired = false;
+  var fin = function () { if (fired) return; fired = true; if (whenEnd) whenEnd(); };
+  var a = $('mdA');
+  if (!a) { fin(); return; }
+  a.onended = function () { a.onended = null; a.onerror = null; fin(); };
+  a.onerror = function () { a.onended = null; a.onerror = null; fin(); };   // 出せない URL のときは待たせない
+  try { a.currentTime = 0; } catch (e) {}
+  mediaTapAudio(n, m, false, whenEnd);
+  var p = null;
+  try { p = a.play(); } catch (e) { mediaTapAudio(n, m, true, whenEnd); }
+  if (p && p.catch) p.catch(function (err) {
+    /* 出せない音（404 など）は play() も断られる。自動再生を断られたのと区別して、
+       壊れているときは「タップして再生」を出さずに、その場で終わった扱いにする */
+    if (a.error || (err && err.name === 'NotSupportedError')) { fin(); return; }
+    mediaTapAudio(n, m, true, whenEnd);
+  });
+}
+/** 動画が終わった（または「とばす」）。全画面なら 0.6秒かけて消してメイン画面へ */
+function mediaEnd(n, m) {
+  if (MDSKIP) { clearTimeout(MDSKIP); MDSKIP = null; }
+  var sk = $('mdSkip');
+  if (sk) sk.hidden = true;
+  mediaTap(n, m, false);
+  var v = $('mdV');
+  if (v) { v.onended = null; v.onerror = null; try { v.pause(); } catch (e) {} }
+  var lay = $('mdLayer');
+  if (!lay) { mediaAfter(n, m); return; }
+  var gone = function () { if (lay.parentNode) lay.parentNode.removeChild(lay); mediaAfter(n, m); };
+  if (reduced()) { gone(); return; }      // 動きを減らす設定のときは、すぐ消す
+  lay.className = 'mdLayer out';
+  setTimeout(gone, 600);
+}
+/** レイヤーが消えたあと（または画面の中で終わったあと）のメイン画面 */
+function mediaAfter(n, m) {
+  if (m.videoUrl) mediaBtn('mdAgainV', true);
+  /* 全画面のときの音声は、レイヤーが消えてメイン画面が出たところで流す */
+  if (m.audioUrl && m.videoUrl && mediaMode(m) === 'overlay' && !PLAYER.mediaDone[n.id]) mediaAudioStart(n, m);
+  mediaDone(n);
+}
+/** 見終わったことにする。描き直しても流れ直さない。
+ *  quiet が真のときは、親（プレビュー）への知らせだけあとに回す（音声だけのノード。2026-09-18） */
+function mediaDone(n, quiet) {
+  PLAYER.mediaDone[n.id] = 1;
+  savePlayer();
+  if (!quiet) mediaTellDone(n);
+}
+var MDTOLD = {};         // 親に知らせたノード（二重に知らせない）
+/** プレビュー（シナリオ画面の中央）のときは、終わったことを親に伝える。
+ *  親は「問題画面」に戻す（2026-09-17）。参加者の本番の動きは変えない */
+function mediaTellDone(n) {
+  if (!EMBED) return;
+  if (MDTOLD[n.id]) return;
+  MDTOLD[n.id] = 1;
+  try { parent.postMessage({ nz: 'mediaDone', nodeId: n.id }, '*'); } catch (e) {}
+}
+
+/** ノードを描いたあとに呼ぶ。まだ見ていなければ、その場で再生を始める */
+function bindMedia(n) {
+  var m = mediaOf(n);
+  if (!m) return;
+  var bv = $('mdAgainV'), ba = $('mdAgainA');
+  if (bv) bv.onclick = function () { mediaVideoStart(n, m); };
+  if (ba) ba.onclick = function () { mediaAudioStart(n, m); };
+  var done = !!PLAYER.mediaDone[n.id];
+  var onlyAudio = !!m.audioUrl && !m.videoUrl;
+  /* 音声は、メイン画面が出たところで流す（全画面の動画があるときは mediaAfter で流す）。
+     「もう一度音声を聞く」は、メイン画面が出ているあいだ ずっと出しておく */
+  if (m.audioUrl) {
+    mediaBtn('mdAgainA', true);
+    if (!done && !(m.videoUrl && mediaMode(m) === 'overlay')) {
+      /* 音声だけのノードは、鳴り終わってから親（プレビュー）に知らせる（2026-09-18）。
+         鳴り終わる前に描き直しても流れ直さないよう、PLAYER.mediaDone は下で先に立てる */
+      mediaAudioStart(n, m, onlyAudio ? function () { mediaTellDone(n); } : null);
+    }
+  }
+  if (m.videoUrl) {
+    if (done) {
+      mediaBtn('mdAgainV', true);
+      var v0 = $('mdV');
+      if (v0) { mediaWatchSize(v0); mediaFit(v0); }
+      return;
+    }
+    mediaVideoStart(n, m);
+    return;
+  }
+  /* 音声だけのノード。流しはじめた時点で「見終わった」にするが（本番の動きは今までどおり）、
+     親に知らせるのは鳴り終わったとき（上の whenEnd） */
+  if (!done) mediaDone(n, true);
+}
+
+/* ===== play/js/blocks/move.js ===== */
+/** 移動案内 */
+function viewMove(n) {
+  var m = blk(n).move || {};
+  var cl = '';
+  (m.cautions || []).forEach(function (c) { cl += '<li>' + esc(c) + '</li>'; });
+  /* 移動案内そのものは順路の段を持たない。左の肩は「つぎに着く段」で出す */
+  var to = nzNode(String(n.nextNodeId || ''));
+  var no = to && to.routeNo !== '' && to.routeNo !== undefined && to.routeNo !== null ? num(to.routeNo) : null;
+  $('app').innerHTML =
+    '<div class="card">'
+    + '<div class="meta"><span>' + esc(no === null ? (n.title || '') : TF('move.step', { n: no }))
+    + '</span><span>' + esc(m.walk || '') + '</span></div>'
+    + routeBar(false, no)
+    /* 開始時の演出（2026-09-17）。置き場は見出し「つぎの会場」の上。ほかの種類と同じ動きにする */
+    + mediaStageHeadHtml(n)
+    + '<div class="seeline"><b>' + esc(T('move.next')) + '</b><span class="sep">／</span><span class="what">'
+    + esc(m.to || n.place || '') + '</span>' + mediaAgainHtml(n) + '</div>'
+    + (m.mapUrl ? '<img class="pic" src="' + esc(m.mapUrl) + '" alt="">'
+      : '<div class="mapbox"><span class="tag">' + esc(T('move.map')) + '</span>'
+        + '<span class="to">' + esc(m.to || n.place || '') + '</span>'
+        + '<span class="tag">' + esc(m.walk || '') + (m.tag ? ' ／ ' + esc(m.tag) : '') + '</span></div>')
+    + (n.body ? '<p class="body movebody">' + esc(n.body) + '</p>' : '')
+    + '<ul class="cautions">' + cl + '</ul>'
+    + '<button class="go" id="mvGo">' + esc(T('move.arrived')) + '</button>'
+    + (SHOWROUTE ? '<button class="go thin" data-home="1">' + esc(T('common.home')) + '</button>' : '')
+    + '</div>'
+    + mediaLayerHtml(n);
+  bindMedia(n);
+  $('mvGo').onclick = function () {
+    var next = String(n.nextNodeId || '');
+    if (!next) { say(T('err.noNext')); return; }
+    $('mvGo').disabled = true;
+    nzLog({ nodeId: n.id, choiceId: '', inputText: '', result: 'next', nextNodeId: next });
+    goTo(next);
+  };
+}
+
+/* ===== play/js/blocks/near.js ===== */
+/** 「惜しい」か。near.mode は words（並べた言葉）／ part（正解の一部）／ edit1（1文字ちがい） */
+function nearHit(node, text) {
+  var nb = blk(node).near;
+  if (!nb) return '';
+  var loose = !!blk(node).looseKana;
+  var t = nzKey(text, loose);
+  if (!t) return '';
+  var mode = String(nb.mode || 'words');
+  if (mode === 'words') {
+    var ws = nb.words || [];
+    for (var i = 0; i < ws.length; i++) if (nzKey(ws[i], loose) === t) return String(nb.msg || '');
+    return '';
+  }
+  var ok = [];
+  nzChoices(node.id).forEach(function (c) {
+    if (!yes(c.isCorrect)) return;
+    String(c.keywords || '').split(',').forEach(function (w) { var v = nzKey(w, loose); if (v) ok.push(v); });
+  });
+  for (var k = 0; k < ok.length; k++) {
+    var w2 = ok[k];
+    if (w2 === t) continue;
+    if (mode === 'part' && (w2.indexOf(t) >= 0 || t.indexOf(w2) >= 0)) return String(nb.msg || '');
+    if (mode === 'edit1' && edit1(w2, t)) return String(nb.msg || '');
+  }
+  return '';
+}
+
+/* ===== play/js/blocks/route.js ===== */
+/* ---------- 順路バー・スタンプ帳 ---------- */
+/** いまの段（ROUTE の何番目か）。routeNo が無いノードでは、最後に通った段のまま */
+function routeIdx() {
+  var no = PLAYER.routeNo;
+  if (no === '' || no === undefined || no === null) return -1;
+  for (var i = 0; i < ROUTE.length; i++) if (ROUTE[i].no === num(no)) return i;
+  return -1;
+}
+/** 順路バー。押すと進捗ホームへ。
+ *  端の場所名（受付 … 景品）は、試作と同じく**進捗ホームでだけ**出す（legend が真のとき）。 */
+/** 段の番号から、ROUTE の何番目かを引く */
+function routeIdxOf(no) {
+  for (var i = 0; i < ROUTE.length; i++) if (ROUTE[i].no === num(no)) return i;
+  return -1;
+}
+function routeBar(legend, atNo) {
+  if (!SHOWROUTE || ROUTE.length < 2) return '';
+  var idx = (atNo === undefined || atNo === null) ? routeIdx() : routeIdxOf(atNo);
+  var h = '<button class="route" type="button" data-home="1" aria-label="' + esc(T('common.home')) + '">';
+  for (var i = 0; i < ROUTE.length; i++) {
+    h += '<span class="' + (i < idx ? 'done' : (i === idx ? 'now' : '')) + '"></span>';
+  }
+  h += '</button>';
+  if (!legend) return h;
+  var a = ROUTE[0], b = ROUTE[ROUTE.length - 1];
+  h += '<div class="route-legend"><span>' + esc(T('route.first') || a.place || a.title) + '</span>'
+    + (T('route.mid') ? '<span>' + esc(T('route.mid')) + '</span>' : '')
+    + '<span>' + esc(T('route.last') || b.place || b.title) + '</span></div>';
+  return h;
+}
+/** クエスチョンの段だけ並べたもの（「謎 2 / 5」と認定証の年表に使う） */
+function qSteps() { return ROUTE.filter(function (r) { return r.kind === 'question'; }); }
+function qIndexOf(n) {
+  var qs = qSteps();
+  for (var i = 0; i < qs.length; i++) if (qs[i].no === num(n.routeNo)) return i;
+  return -1;
+}
+function slotsHtml() {
+  if (!STAMPS.length) return '';
+  var h = '<div class="slots' + (STAMPS.length === 6 ? ' n6' : '') + '">';
+  for (var i = 0; i < STAMPS.length; i++) {
+    var got = PLAYER.stamps.indexOf(STAMPS[i].key) >= 0;
+    h += '<div class="slot' + (got ? ' got' : '') + '">' + (got ? stampHtml(STAMPS[i]) : '<span class="n">' + (i + 1) + '</span>') + '</div>';
+  }
+  return h + '</div>';
+}
+function elapsed() {
+  if (!PLAYER.startMs) return '--:--';
+  var t = Math.max(0, Math.floor((Date.now() - PLAYER.startMs) / 1000));
+  var m = Math.floor(t / 60), s = t % 60;
+  if (m >= 60) return Math.floor(m / 60) + ':' + pad2(m % 60) + ':' + pad2(s);
+  return pad2(m) + ':' + pad2(s);
+}
+
+/* ---------- 進捗ホーム ---------- */
+/** つぎに解くクエスチョン。いまが移動案内などでも、先をたどって名ざす（試作と同じ） */
+function nextQuestion() {
+  var n = nzNode(PLAYER.nodeId), guard = 0;
+  while (n && guard++ < 20) {
+    if (String(n.kind) === 'question') return n;
+    var nx = String(n.correctNodeId || n.nextNodeId || '');
+    if (!nx) return null;
+    var m = nzNode(nx);
+    if (!m || m.id === n.id) return null;
+    n = m;
+  }
+  return null;
+}
+var MARU = '①②③④⑤⑥⑦⑧⑨⑩';
+/** 進捗ホーム。順路バー・スタンプ帳・つぎに行くところ・経過時間 */
+function viewHome() {
+  var n = nzNode(PLAYER.nodeId);
+  var q = nextQuestion() || n;
+  var place = q ? (q.place || '') : '';
+  var qi = q ? qIndexOf(q) : -1;
+  var ttl = q ? (q.title || '') : '';
+  if (qi >= 0) ttl = TF('home.q', { mark: MARU.charAt(qi) || (qi + 1), title: ttl });
+  var no = q && q.routeNo !== '' && q.routeNo !== undefined && q.routeNo !== null ? num(q.routeNo) : null;
+  $('app').innerHTML =
+    '<div class="card">'
+    + '<div class="meta"><span>'
+    + esc(no === null ? (place || DATA.scenario.eventName || '') : TF('q.stepPlace', { n: no, place: place }))
+    + '</span><span>' + PLAYER.stamps.length + ' / ' + (STAMPS.length || 0) + '</span></div>'
+    + routeBar(true, no)
+    + '<div class="seeline"><b>' + esc(T('home.title')) + '</b><span class="sep">／</span><span class="what">' + esc(place || '—') + '</span></div>'
+    + '<h1 class="ttl">' + esc(ttl || '—') + '</h1>'
+    + '<button class="go" id="hmGo">' + esc(T('home.resume')) + '</button>'
+    + '</div>'
+    + (STAMPS.length ? '<div class="card"><div class="meta"><span>' + esc(T('home.stamps')) + '</span>'
+      + '<span>' + PLAYER.stamps.length + ' / ' + STAMPS.length + '</span></div>' + slotsHtml() + '</div>' : '')
+    + '<div class="card">'
+    + '<div class="kv"><span class="k">' + esc(T('home.elapsed')) + '</span><span class="v big js-elapsed">--:--</span></div>'
+    + '<div class="kv"><span class="k">' + esc(T('home.name')) + '</span><span class="v">' + esc(PLAYER.name || '—') + '</span></div>'
+    + '</div>'
+    + (T('home.note') ? '<p class="proto">' + esc(T('home.note')) + '</p>' : '');
+  $('hmGo').onclick = function () { VIEW = ''; draw(); };
+  tickSec();
+}
+
+/* ---------- 順路バーを押したら進捗ホームへ ---------- */
+document.addEventListener('click', function (e) {
+  var t = e.target;
+  while (t && t !== document) {
+    if (t.getAttribute && t.getAttribute('data-home')) { VIEW = 'home'; draw(); return; }
+    t = t.parentNode;
+  }
+});
+
+/* ===== play/js/blocks/staff.js ===== */
+
+function staffHtml(n) {
+  var sp = blk(n).staffPin || {};
+  if (sp.off) return '';
+  var pin = String(sp.pin || STAFFPIN || '');
+  if (!pin) return '';
+  return '<div class="staff"><button class="open" id="stOpen">' + esc(T('staff.open')) + '</button><div id="stBox"></div></div>';
+}
+function bindStaff(n) {
+  var o = $('stOpen');
+  if (!o) return;
+  var sp = blk(n).staffPin || {};
+  var pin = String(sp.pin || STAFFPIN || '');
+  o.onclick = function () {
+    var box = $('stBox');
+    if (box.innerHTML) { box.innerHTML = ''; return; }
+    box.innerHTML = '<div class="staffbox"><p class="note tight">' + esc(T('staff.note')) + '</p>'
+      + '<input class="field mono" id="stPin" inputmode="numeric" autocomplete="off" maxlength="8" placeholder="' + esc(T('staff.pin')) + '">'
+      + '<button class="go thin" id="stGo">' + esc(T('staff.go')) + '</button></div>';
+    $('stGo').onclick = function () {
+      if ($('stPin').value.trim() !== pin) { say(T('staff.wrongPin')); return; }
+      var c = null, cs = nzChoices(n.id);
+      for (var i = 0; i < cs.length; i++) if (yes(cs[i].isCorrect)) { c = cs[i]; break; }
+      answered(n, c, T('staff.mark'), true);
+    };
+    $('stPin').onkeydown = function (e) { if (e.key === 'Enter') $('stGo').click(); };
+    $('stPin').focus();
+  };
+}
+
+/* ===== play/js/blocks/timelimit.js ===== */
+/* ---------- 制限時間 ---------- */
+function startTimer(n) {
+  var tl = blk(n).timeLimit;
+  if (!tl || !num(tl.sec)) return;
+  if (!PLAYER.openedAt[n.id]) { PLAYER.openedAt[n.id] = Date.now(); savePlayer(); }
+  tickSec();
+}
+function timeCheck(n) {
+  var tl = blk(n).timeLimit;
+  if (!tl || !num(tl.sec) || PLAYER.timeUp[n.id]) return;
+  var left = num(tl.sec) - Math.floor((Date.now() - num(PLAYER.openedAt[n.id])) / 1000);
+  var r = $('metaR');
+  if (r) r.textContent = T('q.time') + ' ' + Math.max(0, Math.floor(left / 60)) + ':' + pad2(Math.max(0, left % 60));
+  if (left > 0) return;
+  PLAYER.timeUp[n.id] = 1; savePlayer();
+  if (String(tl.then || 'next') === 'next') {
+    var nx = String(n.correctNodeId || n.nextNodeId || '');
+    nzLog({ nodeId: n.id, choiceId: '', inputText: T('q.timeUp'), result: 'next', nextNodeId: nx });
+    if (nx) { goTo(nx); return; }
+  }
+  answered(n, null, T('q.timeUp'));
+}
+
+/* ===== play/js/app.js ===== */
+/* =========================================================================
+   回答画面（参加者用）
+     画面は3つ。表紙 → ノード（はじまり・問題・説明・結末・不正解）。あいだに「一言」と「会場のQR待ち」。
+     シナリオは開いたときに1回だけ受け取り、以後はスマホの中だけで進む。
+     記録（名前・答え）は裏で apiLog にまとめ送りする。画面は待たない。
+     進み具合（いまのノード・はずれ回数・履歴）は答えるたびに localStorage に残す。
+
+   ノードの種類（nodes.kind）
+     start    はじまり。title も body も空なら出さずに nextNodeId へ素通りする
+     question 問題。進む先は「選択肢の nextNodeId → 正解なら correctNodeId →
+              wrongNodeId（それ以外）」の順に、あるものを使う。どれも無ければ今までどおり
+              （wrongText / hintAfter / hintText / wrongNextNodeId）
+     info     読むだけ。template が howto なら body を --- で区切って複数ページ、move なら移動案内
+     ending   結末
+     wrong    不正解
+
+   B案（2026-09-15 段階1）で足したもの — DESIGN_B.md
+     テーマ washi ／ 順路バー・スタンプ帳・進捗ホーム（scenario.showRoute）
+     nodes の template / place / see / routeNo / continueOnSame / blocksJson
+     blocksJson: media / figure / near / hints / after / timeLimit / staffPin / move / ending
+     answerType set（choices.group のまとまりごと。順不同）
+     文言辞書（既定値は下の TXD。scenario.textsJson で上書き）
+   ========================================================================= */
+
+/* ---------- 起動（混んでいたら 3秒・6秒・12秒・以後12秒おきにやり直す） ---------- */
+var WAITS = [3000, 6000, 12000], tryN = 0, STARTED = false, PASS = '';
+var QROK = {};        // このページの ?n= で開けてよいノード
+var NOK = false;      // ?n= が使えるかどうか
+var NEEDPASS = false; // 合言葉が要ると分かった。通るまで、写しでも控えでも始めない
+var ASKING = false;   // 合言葉の欄を出している最中（打ちかけの字を消さないため）
+
+/* ---------- 管理者モード（admin。2026-09-16） ----------
+   入場の欄に「admin」と打つ（大文字小文字・前後の空白は問わない）か、URL に ?admin=1 を付けると、
+   台帳（apiTicketState / apiActivate）も暗証番号も通さずに始まる。なまえ方式・シリアル方式・
+   聞かない方式のどれでも同じ。使えるかどうかはシナリオの adminOn が決める。
+     adminOn が偽 … 何も特別なことをしない（ふつうのなまえ／シリアルとして扱う。断り文も出さない）
+   管理者モードの間は、進み具合を端末に残さず、記録（apiLog）も台帳への送りも出さない（state.js の ADMIN）。
+   開き直せば ADMIN は落ちるので、いつも最初から。 */
+var ADMINQ = false;   // URL に ?admin=1 が付いている
+try { ADMINQ = (new URLSearchParams(location.search)).get('admin') === '1'; } catch (e) {}
+/** このシナリオで管理者モードを使ってよいか。写しや古い控えには adminOn が無いので、無ければ偽 */
+function adminAllowed() { return !!(DATA && DATA.scenario && DATA.scenario.adminOn); }
+/** 打った字が「admin」か */
+function adminWord(v) { return String(v || '').trim().toLowerCase() === 'admin'; }
+/** 入場の欄（なまえ／シリアル／スタッフ暗証）に admin と打ってあるか */
+function adminTyped() {
+  var ids = ['nm', 'sn', 'ap'];
+  for (var i = 0; i < ids.length; i++) {
+    var el = $(ids[i]);
+    if (el && adminWord(el.value)) return true;
+  }
+  return false;
+}
+/** 管理者モードで始める。台帳の api を呼ばず、暗証番号も聞かない */
+function adminBegin() {
+  ADMIN = true;
+  PLAYER = blankPlayer();
+  PLAYER.name = 'ADMIN';
+  if (ENTRY === 'serial') PLAYER.serial = 'ADMIN';
+  beginPlay();
+}
+
+/* 合言葉つきのシナリオは、この端末で合言葉が通るまで始めない（2026-09-16）。
+     となりの写し … publish.mjs が { ver:'locked', needPass:true } を置く
+     端末の控え   … 合言葉つきで取ったものには passed:true の印が付く
+   どちらも、端末に合言葉の控え（loadPass）があるときだけそのまま始める。 */
+function boot(pass) {
+  if (EMBED) { bootEmbed(); return; }
+  PASS = pass || loadPass();
+  var c = loadScen();
+  if (c && c.packed && (!c.passed || PASS)) {   // まずスマホの中のシナリオで出す（待たせない）
+    try { nzIndex(nzUnpack(c.packed)); enter(); } catch (e) {}
+  }
+  if (c && c.packed && c.passed && !PASS) {     // 合言葉つきの控えだが、合言葉の控えが無い
+    NEEDPASS = true;
+    askPass();
+  }
+  if (!STARTED && !NEEDPASS) fetchNear();    // 静的版は、画面と同じところに置いた写しを先に読む
+  fetchScen();
+}
+
+/* 静的版（お名前.com など）で、画面のとなりに置いた scen/シナリオID.json を読む。
+   GAS のコールドスタートは数秒かかるので、それを待たずに遊びはじめられるようにする。
+   写しが古いことはありうるが、GAS の返事が届いた時点で黙って最新に置き換わる。 */
+var FROMNEAR = false;
+function fetchNear() {
+  if (nzInGas()) return;                     // GAS の中なら、となりに写しは無い
+  if (PREVIEW) return;                       // 試し遊びは下書き。となりの写し（公開ぶん）は出さない
+  if (typeof fetch !== 'function') return;
+  try {
+    fetch('scen/' + encodeURIComponent(S) + '.json', { cache: 'no-cache' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (o) {
+        if (!o) return;
+        /* 合言葉つきのシナリオは写しを作れない。表紙だけ出して合言葉を聞き、通るまで始めない */
+        if (o.needPass) {
+          NEEDPASS = true;
+          if (!PASS) { STARTED = false; askPass(ASKING); }
+          return;
+        }
+        if (!o.packed || STARTED || NEEDPASS) return;
+        var d;
+        try { d = nzUnpack(o.packed); } catch (e) { return; }
+        nzIndex(d);
+        FROMNEAR = true;
+        enter();
+      })
+      .catch(function () {});
+  } catch (e) {}
+}
+/* シナリオ画面のプレビュー。親（admin）から postMessage でシナリオをもらって描くだけ。
+     { nz:'scen', packed, nodeId, name, state }  … 中身を入れ替えて、そのノードを出す
+   こちらからは { nz:'ready' } と { nz:'at', nodeId } を返す（左のフローの選択に合わせるため）。
+   state は見せかた。'normal' ふつう ／ 'ok' 正解演出 ／ 'hints' ヒント全開（シナリオ画面の中央の切り替え）。 */
+function bootEmbed() {
+  window.addEventListener('message', function (e) {
+    var m = e.data;
+    if (!m || m.nz !== 'scen') return;
+    var d;
+    try { d = nzUnpack(m.packed); } catch (err) { return; }
+    nzIndex(d);
+    STARTED = true;
+    PLAYER = blankPlayer();
+    PLAYER.name = m.name || 'preview';
+    /* プレビューは入場を済ませた扱いにする。入場のしかた（entryMode）がシリアル方式のシナリオは
+       PLAYER.serial が空だと entryDone() が偽になり、どのノードを選んでも表紙のままだった（2026-09-17）。
+       方式が増えても表紙に落ちないよう、entryDone() が見る欄はここで全部埋める。 */
+    PLAYER.serial = 'preview';
+    PLAYER.startMs = Date.now();
+    var id = m.nodeId && nzNode(m.nodeId) ? m.nodeId : String(d.scenario.startNodeId || '');
+    var n = nzNode(id);
+    if (n) {
+      PLAYER.nodeId = n.id;
+      PLAYER.openedAt[n.id] = Date.now();
+      if (n.routeNo !== '' && n.routeNo !== undefined && n.routeNo !== null) PLAYER.routeNo = num(n.routeNo);
+    }
+    FB = ''; WRONGTX = ''; NEARTX = ''; HINTTX = ''; WFB = ''; OKON = null; VIEW = ''; HOWTOI = 0;
+    embedState(n, String(m.state || 'normal'));
+    draw();
+    tell();
+  });
+  try { parent.postMessage({ nz: 'ready' }, '*'); } catch (e) {}
+}
+/** プレビューの見せかた。シナリオ画面の中央の「開始時の演出」「正解演出」「ヒント全開」を、その場で作って出す（2026-09-17）。
+ *  media … 開始時の演出（動画・音声）から始める。見終わると親に mediaDone を送る
+ *  ok    … その謎を解いた直後の画面（after ブロックのスタンプ・一言）
+ *  hints … そのノードのヒントを全部開いた画面
+ *  media 以外は「開始時の演出は見終わった」扱いにして、いきなり流れ出さないようにする */
+function embedState(n, st) {
+  if (!n) return;
+  if (st === 'media') { delete PLAYER.mediaDone[n.id]; delete MDTOLD[n.id]; return; }
+  PLAYER.mediaDone[n.id] = 1;
+  if (st === 'normal') return;
+  if (st === 'ok') { OKON = { fromId: n.id }; return; }
+  if (st === 'hints') {
+    var hs = blk(n).hints;
+    if (hs && hs.length) {
+      PLAYER.hintsOpen[n.id] = hs.length;
+      PLAYER.hintAt[n.id] = [];
+      for (var i = 0; i < hs.length; i++) PLAYER.hintAt[n.id][i] = Date.now();
+    }
+  }
+}
+/** いま出しているノードを親に伝える */
+function tell() {
+  if (!EMBED) return;
+  try { parent.postMessage({ nz: 'at', nodeId: PLAYER.nodeId }, '*'); } catch (e) {}
+}
+
+function fetchScen() {
+  /* 試し遊び（?preview=合い札）は、公開していないシナリオを合い札で取る。返る形は apiGetScenario と同じ */
+  (PREVIEW ? call('apiPreviewScenario', [S, PVTOK]) : call('apiGetScenario', [S, PASS]))
+    .then(function (r) {
+      tryN = 0; setNet('');
+      NEEDPASS = false;
+      if (PASS) savePass(PASS);                 // 通った合言葉は端末に控える（次からは黙って付ける）
+      var old = loadScen();
+      saveScen({ ver: r.ver, packed: r.packed, passed: !!PASS });
+      if (old && old.packed === r.packed && STARTED) return;   // 変わっていない
+      var d;
+      try { d = nzUnpack(r.packed); } catch (e) { return; }
+      nzIndex(d);
+      if (!STARTED) { enter(); return; }
+      /* となりの写しで出していただけなら、GAS の返事は「新しくなった」ではないので黙って置き換える */
+      var quiet = FROMNEAR;
+      FROMNEAR = false;
+      if (PLAYER.pending && !nzNode(PLAYER.pending)) PLAYER.pending = '';
+      if (PLAYER.nodeId && !nzNode(PLAYER.nodeId)) {
+        PLAYER.nodeId = ''; PLAYER.pending = ''; savePlayer();
+        FB = ''; WRONGTX = ''; NEARTX = ''; HINTTX = ''; WFB = ''; OKON = null; VIEW = '';
+        say(T('scen.reset'));
+      } else if (!quiet) say(T('scen.updated'));
+      draw();
+    })
+    .catch(function (e) {
+      var m = (e && e.message) ? String(e.message) : String(e);
+      /* 合言葉が要る。写しや控えで始まっていても、いったん止めて合言葉を聞く（通ったら続きから） */
+      if (m.indexOf('PASSCODE') >= 0) { NEEDPASS = true; STARTED = false; askPass(ASKING); return; }
+      if (STARTED) {
+        if (tryN < WAITS.length) setTimeout(fetchScen, WAITS[tryN++]);
+        else setNet(T('net.stale'));
+        return;
+      }
+      var w = WAITS[Math.min(tryN, WAITS.length - 1)]; tryN++;
+      $('app').innerHTML = '<h1 class="ttl">' + esc(T('busy.title')) + '</h1>'
+        + '<p class="body">' + esc(TF('busy.body', { sec: w / 1000 })) + '</p>'
+        + '<p class="lead">' + esc(m) + '</p>';
+      setTimeout(fetchScen, w);
+    });
+}
+
+/* ---------- 表紙だけ先に取る（合言葉つきのシナリオのため） ---------- */
+var COVER = null, COVERASKED = false;
+function fetchCover() {
+  if (COVERASKED) return;
+  COVERASKED = true;
+  if (PREVIEW) return;                       // 試し遊びは表紙を聞かない（合い札で中身がもう取れている）
+  if (nzInGas() && !google.script.run.apiCover) return;
+  call('apiCover', [S])
+    .then(function (c) {
+      /* 合言葉が要ると分かっているときは、写しや控えで中身を持っていても表紙を出す */
+      if (!c || STARTED || (DATA && !NEEDPASS)) return;
+      COVER = c;
+      document.documentElement.setAttribute('data-theme', c.theme || 'white');
+      document.body.setAttribute('data-theme', c.theme || 'white');
+      askPass(true);
+    })
+    .catch(function () {});     // 取れなくても、合言葉の画面はそのまま出る
+}
+
+/** 参加者用の合言葉。表紙を出したうえで、合言葉となまえをいっしょに聞く */
+var PWTRIED = false;
+function askPass(keep) {
+  ASKING = true;
+  fetchCover();
+  var pw = '', nm = PLAYER.name || '';
+  if (keep) { try { pw = $('pw').value; nm = $('nm').value; } catch (e) {} }
+  $('ev').textContent = ''; $('who').textContent = '';
+  var c = COVER;
+  $('app').innerHTML =
+    (c && c.logoUrl ? '<img class="logo" src="' + esc(c.logoUrl) + '" alt="">' : '')
+    + (c && c.eventName ? '<p class="lead center evname">' + esc(c.eventName) + '</p>' : '')
+    + '<h1 class="ttl' + (c ? ' cover' : '') + '">' + esc(c && c.title ? c.title : T('entry.pass')) + '</h1>'
+    + (c && c.description ? '<p class="body lead2">' + esc(c.description) + '</p>' : '')
+    + (PWTRIED ? '<p class="wrongtx tight">' + esc(T('entry.passNg')) + '</p>' : '')
+    + '<p class="lead">' + esc(T('entry.passLead')) + '</p>'
+    + '<label class="lab" for="pw">' + esc(T('entry.pass')) + '</label><input type="text" id="pw" autocomplete="off">'
+    + '<label class="lab" for="nm">' + esc(T('entry.name')) + '</label><input type="text" id="nm" autocomplete="off" maxlength="30">'
+    + '<button class="go" id="pwGo">' + esc(T('common.begin')) + '</button>';
+  $('pw').value = pw;
+  $('nm').value = nm;
+  $('pwGo').onclick = function () {
+    var nm2 = $('nm').value.trim();
+    if (!nm2) { say(T('entry.nameEmpty')); return; }
+    PLAYER.name = nm2.slice(0, 30); savePlayer();
+    tryN = 0; PWTRIED = true; PASS = $('pw').value.trim();
+    $('app').innerHTML = '<p class="body">' + esc(T('entry.checking')) + '</p>';
+    fetchScen();
+  };
+  $('pw').onkeydown = function (e) { if (e.key === 'Enter') $('nm').focus(); };
+  $('nm').onkeydown = function (e) { if (e.key === 'Enter') $('pwGo').click(); };
+}
+
+/* ---------- ?n=（現地QR）は1回だけ使う ---------- */
+function qrConsume(id) {
+  var used = nzQrUsed(id);                 // 覚えておくのは state.js の役
+  if (PLAYER.pending === id) return true;  // 待っていたノードなら、読み直しでも通す
+  return !used;
+}
+function done() {
+  var n = nzNode(PLAYER.nodeId);
+  return !!PLAYER.endingNodeId && !!n && n.kind === 'ending';
+}
+function enter() {
+  STARTED = true;
+  ASKING = false;
+  /* ?admin=1 で来た人は、入場の欄を出さずにそのまま管理者モードで始める（聞かない方式のため） */
+  if (!ADMIN && ADMINQ && adminAllowed()) { adminBegin(); return; }
+  if (N && nzNode(N) && !done()) { NOK = qrConsume(N); if (NOK) QROK[N] = true; }
+  if (entryDone() && PLAYER.nodeId && NOK) { goTo(N); return; }
+  draw();
+}
+/** 入場が済んでいるか（entryMode ごと）。none は聞くことが無いので、いつも済み */
+function entryDone() {
+  if (ENTRY === 'none') return true;
+  if (ENTRY === 'serial') return !!PLAYER.serial;
+  return !!PLAYER.name;
+}
+/* ---------- ノードを進む ---------- */
+var FB = '';        // 「一言」を出している最中
+var WRONGTX = '';   // はずれの文（その場に留まる）
+var NEARTX = '';    // 「惜しい」の文
+var HINTTX = '';    // 古い形のヒント
+var WFB = '';       // 不正解ノードの上に出す一言
+var OKON = null;    // 正解演出（スタンプ）を出している最中。{ fromId }
+var VIEW = '';      // '' ふつう ／ 'home' 進捗ホーム
+
+function skipStart(n) {
+  var guard = 0;
+  while (n && String(n.kind || '') === 'start' && guard < 50
+         && !String(n.title || '').trim() && !String(n.body || '').trim()
+         && String(n.nextNodeId || '')) {
+    guard++;
+    var nx = nzNode(String(n.nextNodeId));
+    if (!nx || nx.id === n.id) break;
+    PLAYER.score = num(PLAYER.score) + num(n.score);
+    n = nx;
+  }
+  return n;
+}
+function goTo(id) {
+  var n = nzNode(id);
+  if (!n) { say(T('err.noGo')); return; }
+  n = skipStart(n); id = n.id;
+  WRONGTX = ''; NEARTX = ''; HINTTX = ''; VIEW = '';
+  if (String(n.kind || '') !== 'wrong') WFB = '';
+  if (yes(n.qrOnly) && !QROK[id]) {
+    PLAYER.pending = id; savePlayer(); nzTouch(); nzFlush(); draw(); return;
+  }
+  PLAYER.pending = '';
+  PLAYER.nodeId = id;
+  PLAYER.hist.push(id);
+  if (PLAYER.hist.length > 200) PLAYER.hist = PLAYER.hist.slice(-200);
+  PLAYER.score = num(PLAYER.score) + num(n.score);
+  if (n.routeNo !== '' && n.routeNo !== undefined && n.routeNo !== null) PLAYER.routeNo = num(n.routeNo);
+  if (!PLAYER.openedAt[id]) PLAYER.openedAt[id] = Date.now();
+  HOWTOI = 0;
+  if (n.kind === 'ending') { PLAYER.finishedAt = nzNow(); PLAYER.endingNodeId = id; }
+  savePlayer(); nzTouch(); nzFlush(); draw(); tell();
+  try { window.scrollTo(0, 0); } catch (e) {}
+}
+
+/**
+ * 答えたあとの後始末。choice は選んだ／当てた選択肢（打つで合わなければ null）。
+ * 進む先は「選択肢の nextNodeId → 正解なら correctNodeId → wrongNodeId（それ以外）」の順。
+ * B案のノード（blocksJson に hints か near がある）は、進む先が無いとき
+ * その場に留まって「ちがうようです（n回目）」を出す（古い形と同じ仕組み）。
+ */
+function answered(node, choice, inputText, rescued) {
+  var ok = !!(choice && yes(choice.isCorrect)) || !!rescued;
+  var cid = choice ? (choice.id || '') : '';
+  var own = choice ? String(choice.nextNodeId || '') : '';
+  var next = own;
+  if (!next && ok) next = String(node.correctNodeId || '');
+  if (!next && ok) next = String(node.nextNodeId || '');
+  if (!next) {
+    var wn = String(node.wrongNodeId || '');
+    if (wn && nzNode(wn)) next = wn;
+  }
+  var dest = next ? nzNode(next) : null;
+  var toWrongNode = !!dest && String(dest.kind || '') === 'wrong';
+
+  if (ok || own) {
+    if (!next) { say(T('err.noNext')); draw(); return; }
+    if (rescued) PLAYER.rescued[node.id] = 1;
+    nzLog({ nodeId: node.id, choiceId: cid, inputText: inputText || '',
+      result: ok ? 'correct' : 'next', nextNodeId: next });
+    if (choice) PLAYER.score = num(PLAYER.score) + num(choice.score);
+    if (ok) rememberAnswer(node, choice, inputText);
+    FB = choice ? String(choice.feedback || '') : '';
+    if (toWrongNode) PLAYER.wrongFrom = '';
+    // 正解演出（スタンプ・一言・効果音）。after ブロックがあるときだけ
+    var af = blk(node).after;
+    if (ok && af) {
+      FB = '';
+      if (af.stampKey && PLAYER.stamps.indexOf(af.stampKey) < 0) PLAYER.stamps.push(af.stampKey);
+      OKON = { fromId: node.id };
+      playSound(af.soundUrl);
+    }
+    savePlayer(); nzFlush();
+    goTo(next);
+    return;
+  }
+
+  var w = num(PLAYER.wrong[node.id]) + 1;
+  PLAYER.wrong[node.id] = w;
+
+  if (next) {
+    nzLog({ nodeId: node.id, choiceId: cid, inputText: inputText || '', result: 'wrong', nextNodeId: next });
+    if (toWrongNode) {
+      PLAYER.wrongFrom = node.id;
+      WFB = String((choice && choice.feedback) || '');
+    } else {
+      FB = String((choice && choice.feedback) || '');
+    }
+    savePlayer(); nzFlush();
+    goTo(next);
+    return;
+  }
+
+  var isB = !!(blk(node).hints || blk(node).near);
+  if (!isB && !String(node.wrongText || '') && !String(node.hintText || '') && !String(node.wrongNextNodeId || '')) {
+    nzLog({ nodeId: node.id, choiceId: cid, inputText: inputText || '', result: 'wrong', nextNodeId: '' });
+    savePlayer(); nzFlush();
+    say(T('err.noNext'));
+    draw();
+    return;
+  }
+
+  var limit = num(node.hintAfter) > 0 ? num(node.hintAfter) : 3;
+  var hintTx = String(node.hintText || '');
+  var showHint = num(node.hintAfter) > 0 && w >= limit && !!hintTx;
+  var away = String(node.wrongNextNodeId || '');
+  var goAway = !!away && w >= limit + (hintTx ? 1 : 0);
+  nzLog({ nodeId: node.id, choiceId: cid, inputText: inputText || '',
+    result: 'wrong', nextNodeId: goAway ? away : '' });
+  if (showHint && !PLAYER.hinted[node.id]) {
+    PLAYER.hinted[node.id] = 1;
+    nzLog({ nodeId: node.id, choiceId: '', inputText: '', result: 'hint', nextNodeId: '' });
+  }
+  savePlayer(); nzFlush();
+  if (goAway) {
+    FB = String((choice && choice.feedback) || node.wrongText || '');
+    goTo(away);
+    return;
+  }
+  WRONGTX = String((choice && choice.feedback) || node.wrongText || T('q.wrong'))
+    + (isB ? TF('q.wrongCount', { n: w }) : '');
+  HINTTX = showHint ? hintTx : '';
+  draw();
+}
+/** 認定証（年表）に出す答えを覚えておく */
+function rememberAnswer(node, choice, inputText) {
+  // set は「まとまり」の名前を全部つないだものを答えとして残す（選択肢1つ分では足りない）
+  var t = String(node.answerType) === 'set'
+    ? setGroups(node).map(function (g) { return g.label; }).join(' ／ ') : '';
+  if (!t) t = choice ? String(choice.label || '') : '';
+  if (!t) t = String(inputText || '');
+  if (!t) return;
+  PLAYER.ansText[node.id] = t;
+  PLAYER.lastAns = { nodeId: node.id, title: String(node.title || ''), see: String(node.see || ''), text: t };
+}
+/* ---------- 画面 ---------- */
+/** いま出している画面の合い札。画面が変わったかどうかを、これ1つで見分ける（2026-09-17） */
+var SCRKEY = '';
+/** いちばん上へ戻す。**2回戻す。**
+ *  iOS Safari は、中身を入れ替えた直後の1回だけだと、そのあとの高さの変わり方や
+ *  スクロールの固定（scroll anchoring）で押し戻されることがある（2026-09-17 中地さんの写し。
+ *  正解演出のカードの上がアドレスバーの下に隠れていた）。次の描画のときにもう一度戻す。
+ *  対になる決まりとして base.css に `html{ overflow-anchor:none }` を置いてある。 */
+function scrollTop() {
+  /* 答えの欄を押したときに足した空き（answer.js の ansRoom）は、画面が変わったら片づける */
+  try { if (typeof ansRoomClear === 'function') ansRoomClear(); } catch (e) {}
+  try { window.scrollTo(0, 0); } catch (e) {}
+  try {
+    if (window.requestAnimationFrame) {
+      window.requestAnimationFrame(function () { try { window.scrollTo(0, 0); } catch (e) {} });
+    }
+  } catch (e) {}
+}
+function draw() {
+  if (!DATA) return;
+  var sc = DATA.scenario;
+  $('ev').textContent = sc.eventName || sc.title || '';
+  /* 上の帯。管理者モードのときは、どの画面でも右の札が ADMIN になり、帯が薄い金色になる（base.css） */
+  $('who').textContent = ADMIN ? T('bar.admin') : (PLAYER.name ? TF('bar.who', { name: PLAYER.name }) : '');
+  var bar = document.querySelector('.bar');
+  if (bar) { if (ADMIN) bar.setAttribute('data-admin', '1'); else bar.removeAttribute('data-admin'); }
+  /* 描き直しのあいだ、ページが一瞬縮んでブラウザにスクロールを押し戻されないよう、
+     いまの高さを下支えしておく（絵を入れ替えると、読み直しのあいだ高さが 0 になる）。
+     2026-09-17。答えの欄を押したときの寄せ直しで、下まで送った状態で
+     「こたえあわせ」を押すと、いちばん上に跳ねていた。 */
+  var y0 = window.scrollY !== undefined ? window.scrollY : (window.pageYOffset || 0);
+  if (y0) drawFloor(Math.ceil(document.documentElement.scrollHeight));
+  var key = drawView();
+  /* 画面が変わったら、いちばん上へ戻す（2026-09-17 中地さんの指示）。
+     長い謎を下まで読んでから次へ進むと、前の位置のまま次の画面が出ていた。
+     戻すのは「別の画面になったとき」だけ。はずれの文（WRONGTX / NEARTX）のような
+     **同じ画面の描き直し**では動かさない（合い札が変わらない）。 */
+  if (key && key !== SCRKEY) { SCRKEY = key; drawFloor(0); scrollTop(); return; }
+  if (!y0) return;
+  /* 同じ画面の描き直し。押し戻されていたら、元の位置に戻す */
+  var back = function () {
+    var now = window.scrollY !== undefined ? window.scrollY : (window.pageYOffset || 0);
+    if (Math.abs(now - y0) > 1) { try { window.scrollTo(0, y0); } catch (e) {} }
+  };
+  back();
+  try { if (window.requestAnimationFrame) window.requestAnimationFrame(back); } catch (e) {}
+  setTimeout(function () { back(); drawFloor(0); }, 300);
+}
+/** 描き直しのあいだだけ、ページの高さの下支えを置く（0 で外す） */
+function drawFloor(px) {
+  try { document.body.style.minHeight = px ? px + 'px' : ''; } catch (e) {}
+}
+/** 中身を描いて、その画面の合い札を返す。**draw() だけが呼ぶ。**
+ *  空文字を返した画面は「同じ画面の描き直し」の扱いで、スクロールを動かさない。 */
+function drawView() {
+  if (VIEW === 'home') { viewHome(); return 'home'; }
+  if (OKON) { viewOk(); return 'ok'; }
+  if (FB) { viewFb(); return 'fb'; }
+  if (!entryDone() || !PLAYER.nodeId) { viewCover(); return 'cover'; }
+  if (PLAYER.pending) { viewQr(); return ''; }
+  var n = nzNode(PLAYER.nodeId);
+  if (!n) { PLAYER.nodeId = ''; savePlayer(); viewCover(); return 'cover'; }
+  viewNode(n);
+  return 'node:' + n.id;
+}
+/* 入場のしかた（entryMode）ごとの描き分け。**方式を足すときはここに1つ関数を足して ENTRIES に載せるだけ**
+   （DESIGN_B「広がりを見越した約束」。serial は段階3、将来 決済リンクなど）。
+   どの関数も「表紙の下に出す入力欄のHTML」を返し、begin() が押されたときの前さばきをする。 */
+var ENTRIES = {
+  none: { html: function () { return ''; }, ok: function () { return true; } },
+  name: {
+    html: function () {
+      return '<label class="lab" for="nm">' + esc(T('entry.name')) + '</label>'
+        + '<input type="text" id="nm" autocomplete="off" maxlength="30">';
+    },
+    after: function () {
+      $('nm').value = PLAYER.name || '';
+      $('nm').onkeydown = function (e) { if (e.key === 'Enter') $('goStart').click(); };
+    },
+    ok: function () {
+      var nm = $('nm').value.trim();
+      if (!nm) { say(T('entry.nameEmpty')); return false; }
+      PLAYER.name = nm.slice(0, 30);
+      return true;
+    },
+  },
+  /* シリアル＋暗証番号（台帳 tickets）。段階3。
+     はじめての人 … シリアルを入れて、暗証番号を自分で決める → 控えを見せてから始める
+     別の端末の人 … 同じシリアルと暗証番号を入れると、この端末のものになる
+     サーバの返事を待つので、ok() ではなく go() を使う（viewCover を見ること）。 */
+  serial: {
+    html: function () { return serHtml(); },
+    after: function () { serAfter(); },
+    go: function (done) { serGo(done); },
+  },
+};
+
+/* ---------- シリアル入場（段階3・3b） ----------
+   渡し方（シナリオの assignMode）で、はじめの画面が変わる。
+     manual   … シリアルと暗証番号を打つ（紙を見ながら）
+     qr       … ?t=シリアル で来る。使えるなら、そのままコードの画面へ
+     staff    … スタッフ用の暗証番号を打つと、未使用のコードが1枚出る
+     rotating … 受付の画面の ?k=鍵 で来る。鍵が生きていれば1枚出る
+   コードが手に入ったら「あなたのコード」の画面。そこで4桁を決めて始める。
+   どの方式でも「コードを持っている方はこちら」で手入力に落ちられる。 */
+var SER = { step: '', serial: '', pin: '', busy: false };
+
+/** いまの渡し方（シナリオが決める。空なら manual） */
+function serMode() {
+  var m = String((DATA.scenario && DATA.scenario.assignMode) || 'manual');
+  return (m === 'qr' || m === 'staff' || m === 'rotating') ? m : 'manual';
+}
+/** 見せるときだけ 4文字ずつ区切る（K7M2-XH9Q）。送るときは区切りを外す */
+function serPretty(x) {
+  var v = String(x || '').toUpperCase().replace(/[^0-9A-Z]/g, '');
+  return v.length > 4 ? v.slice(0, 4) + '-' + v.slice(4) : v;
+}
+/** 入口のはじめの段を決める */
+function serStart() {
+  if (SER.step) return;
+  var m = serMode();
+  if (m === 'manual') { SER.step = 'in'; return; }
+  if (m === 'qr') { SER.step = TSER ? 'qr' : 'in'; return; }
+  if (m === 'staff') { SER.step = 'staff'; return; }
+  SER.step = AKEY ? 'k' : 'in';        /* rotating。鍵が無ければ手入力に落とす */
+}
+function serHtml() {
+  serStart();
+  if (SER.step === 'code') {
+    return '<div class="codebox">'
+      + '<div class="lab2">' + esc(T('code.title')) + '</div>'
+      + '<div class="code" id="serCode">' + esc(serPretty(SER.serial)) + '</div>'
+      + '<div class="coderow">'
+      + '<button type="button" class="btn thin" id="serCopy">' + esc(T('code.copy')) + '</button>'
+      + '<button type="button" class="btn thin" id="serMail">' + esc(T('code.mail')) + '</button></div>'
+      + '<p class="note codenote">' + esc(T('code.save')) + '</p></div>'
+      + '<label class="lab" for="pn">' + esc(T('pin.label')) + '</label>'
+      + '<input type="tel" id="pn" autocomplete="off" maxlength="4" inputmode="numeric" class="mono">'
+      + '<p class="note serialhelp">' + esc(T('code.setPin')) + '</p>';
+  }
+  if (SER.step === 'staff') {
+    return '<p class="note serialhelp">' + esc(T('staff.assignLead')) + '</p>'
+      + '<label class="lab" for="ap">' + esc(T('staff.assign')) + '</label>'
+      + '<input type="tel" id="ap" autocomplete="off" maxlength="8" inputmode="numeric" class="mono">'
+      + '<p class="note serialhelp"><a href="#" id="serManual">' + esc(T('code.have')) + '</a></p>';
+  }
+  if (SER.step === 'qr' || SER.step === 'k') {
+    return '<p class="note serialhelp">' + esc(T('entry.checking')) + '</p>';
+  }
+  return '<label class="lab" for="sn">' + esc(T('entry.serial')) + '</label>'
+    + '<input type="text" id="sn" autocomplete="off" maxlength="16" class="mono">'
+    + '<label class="lab" for="pn">' + esc(T('pin.label')) + '</label>'
+    + '<input type="tel" id="pn" autocomplete="off" maxlength="4" inputmode="numeric" class="mono">'
+    + (serMode() === 'manual' ? ''
+      : '<p class="note serialhelp"><a href="#" id="serBack">' + esc(T('code.back')) + '</a></p>');
+}
+function serAfter() {
+  if (SER.step === 'code') {
+    $('serCopy').onclick = function () { serCopy(); };
+    $('serMail').onclick = function () { serMail(); };
+    $('pn').onkeydown = function (e) { if (e.key === 'Enter') $('goStart').click(); };
+    return;
+  }
+  if (SER.step === 'staff') {
+    if ($('serManual')) $('serManual').onclick = function (e) { e.preventDefault(); SER.step = 'in'; viewCover(); };
+    $('ap').onkeydown = function (e) { if (e.key === 'Enter') $('goStart').click(); };
+    $('goStart').textContent = T('staff.assignGo');
+    return;
+  }
+  if (SER.step === 'qr' || SER.step === 'k') {
+    $('goStart').disabled = true;
+    if (!SER.busy) { SER.busy = true; setTimeout(serAuto, 60); }
+    return;
+  }
+  if ($('sn')) $('sn').value = SER.serial || '';
+  if ($('serBack')) $('serBack').onclick = function (e) { e.preventDefault(); SER.step = ''; serStart(); viewCover(); };
+  if ($('pn')) $('pn').onkeydown = function (e) { if (e.key === 'Enter') $('goStart').click(); };
+}
+/** ?t= と ?k= は、画面を出したらすぐサーバに聞きにいく */
+function serAuto() {
+  if (SER.step === 'qr') {
+    call('apiTicketState', [S, TSER, nzDeviceId()])
+      .then(function (r) {
+        SER.busy = false;
+        if (r.state === 'ready' || r.state === 'mine') { SER.serial = r.serial; SER.step = 'code'; viewCover(); return; }
+        say(T('assign.used'));
+        SER.step = 'in'; viewCover();
+      })
+      .catch(function (e) { SER.busy = false; say(serMsg(e)); SER.step = 'in'; viewCover(); });
+    return;
+  }
+  call('apiAllocate', [S, '', nzDeviceId(), AKEY])
+    .then(function (r) { SER.busy = false; SER.serial = r.serial; SER.step = 'code'; viewCover(); })
+    .catch(function (e) { SER.busy = false; say(serMsg(e)); SER.step = 'in'; viewCover(); });
+}
+/** サーバの断り文。頭の印（PIN / LOCKED / EXPIRED / EMPTY）は外して出す */
+function serMsg(e) {
+  var m = String((e && e.message) || e);
+  if (m.indexOf('EXPIRED') === 0) return T('assign.expired');
+  if (m.indexOf('EMPTY') === 0) return T('assign.empty');
+  return m.replace(/^(PIN|LOCKED)\s*/, '');
+}
+function serCopy() {
+  var v = serPretty(SER.serial);
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(v); say(T('code.copied')); return; }
+  } catch (e) {}
+  var ta = document.createElement('textarea');
+  ta.value = v; document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); say(T('code.copied')); } catch (e2) {}
+  document.body.removeChild(ta);
+}
+function serMail() {
+  var sub = encodeURIComponent(T('code.mailSub'));
+  var body = encodeURIComponent(T('code.title') + ' ' + serPretty(SER.serial) + '\n' + location.href.split('#')[0]);
+  try { location.href = 'mailto:?subject=' + sub + '&body=' + body; } catch (e) {}
+}
+/** 「はじめる」を押したとき */
+function serGo(done) {
+  /* コードの画面で、もう有効化が済んでいるとき（手で打った人の控え）は、そのまま始める */
+  if (SER.step === 'code' && PLAYER.serial && PLAYER.serial === SER.serial) { done(); return; }
+  if (SER.step === 'staff') {
+    var ap = $('ap').value.trim();
+    if (!ap) { say(T('staff.assign')); return; }
+    $('goStart').disabled = true;
+    say(T('entry.checking'));
+    call('apiAllocate', [S, ap, nzDeviceId(), ''])
+      .then(function (r) { SER.serial = r.serial; SER.step = 'code'; viewCover(); })
+      .catch(function (e) { $('goStart').disabled = false; say(serMsg(e)); });
+    return;
+  }
+  var sn = (SER.step === 'code') ? SER.serial : $('sn').value.trim().toUpperCase().replace(/[\s\-]/g, '');
+  var pn = $('pn').value.trim();
+  if (!sn) { say(T('entry.serialEmpty')); return; }
+  if (!/^[0-9]{4}$/.test(pn)) { say(T('pin.bad')); return; }
+  $('goStart').disabled = true;
+  say(T('entry.checking'));
+  call('apiActivate', [sn, pn, nzDeviceId()])
+    .then(function (r) {
+      PLAYER.serial = r.serial || sn;
+      PLAYER.name = PLAYER.name || r.serial || sn;   /* 見守りの一覧に出す名はシリアル */
+      savePlayer();
+      setNet('');
+      if (r.mode === 'new' && SER.step !== 'code') {  /* 手で打った人にも控えを見せてから始める */
+        SER.step = 'code'; SER.serial = r.serial || sn; SER.pin = pn;
+        viewCover();      /* つぎに「はじめる」を押すと、上の1行目で done() に入る */
+        return;
+      }
+      done();
+    })
+    .catch(function (e) { $('goStart').disabled = false; say(serMsg(e)); });
+}
+
+/** 表紙。入場のしかたは entryMode で決まる */
+function viewCover() {
+  var sc = DATA.scenario;
+  var mode = ENTRIES[ENTRY] ? ENTRY : 'name';
+  var e = ENTRIES[mode];
+  var lead = sc.description ? String(sc.description) : T('entry.lead');
+  /* 表紙は1枚のカード。裾の帯（.band）はテーマ側で色が付く（和紙は朱） */
+  $('app').innerHTML =
+    '<div class="card cover-card">'
+    + (sc.logoUrl ? '<img class="logo" src="' + esc(sc.logoUrl) + '" alt="">' : '')
+    + '<h1 class="ttl cover">' + esc(T('entry.title') || sc.title || T('entry.fallback')) + '</h1>'
+    + '<p class="body lead2">' + esc(lead) + '</p>'
+    + '<div class="ans">' + e.html()
+    + '<button class="go" id="goStart">' + esc(T('common.begin')) + '</button></div>'
+    + '<div class="band"></div></div>';
+  if (e.after) e.after();
+  $('goStart').onclick = function () {
+    /* 入場の欄に admin と打ってあれば、台帳も暗証番号も通さずに始める（シナリオの adminOn が真のときだけ） */
+    if (adminAllowed() && adminTyped()) { $('goStart').disabled = true; adminBegin(); return; }
+    /* go() があるものは、サーバの返事を待ってから始める（シリアル入場） */
+    if (e.go) { e.go(function () { $('goStart').disabled = true; beginPlay(); }); return; }
+    if (!e.ok()) return;
+    $('goStart').disabled = true;
+    beginPlay();
+  };
+}
+/** はじめる。進み具合をまっさらにして、はじめのノードへ */
+function beginPlay() {
+  if (!PLAYER.startedAt) PLAYER.startedAt = nzNow();
+  PLAYER.startMs = Date.now();
+  PLAYER.wrong = {}; PLAYER.hinted = {}; PLAYER.hist = []; PLAYER.score = 0;
+  PLAYER.finishedAt = ''; PLAYER.endingNodeId = '';
+  PLAYER.openedAt = {}; PLAYER.hintsOpen = {}; PLAYER.hintAt = {}; PLAYER.setOk = {};
+  PLAYER.rescued = {}; PLAYER.ansText = {}; PLAYER.stamps = []; PLAYER.timeUp = {}; PLAYER.mediaDone = {};
+  PLAYER.routeNo = ''; PLAYER.prizeAt = 0; PLAYER.lastAns = null;
+  savePlayer(); nzTouch(); nzFlush();
+  goTo(NOK && nzNode(N) ? N : DATA.scenario.startNodeId);
+}
+
+/** 一言（feedback）。読んでから「つぎへ」 */
+function viewFb() {
+  $('app').innerHTML = '<div class="fb">' + esc(FB) + '</div><button class="go" id="fbGo">' + esc(T('common.next')) + '</button>';
+  $('fbGo').onclick = function () { FB = ''; draw(); try { window.scrollTo(0, 0); } catch (e) {} };
+}
+
+/** 会場のQR待ち */
+function viewQr() {
+  $('app').innerHTML = '<div class="qr">'
+    + '<div class="big">' + esc(T('qr.title')) + '</div>'
+    + '<div class="body qrbody">' + esc(T('qr.body')) + '</div>'
+    + '</div>'
+    + '<p class="lead qrnote">' + esc(T('qr.note')) + '</p>';
+}
+
+/* ---------- ノードの振り分け ---------- */
+function viewNode(n) {
+  var kind = String(n.kind || 'question');
+  if (kind === 'wrong') { viewWrong(n); return; }
+  // ending ブロック（認定証・景品確認）は、エンドでないノードにも置ける。
+  // エンドには出口が無いので、認定証は info に置いて「景品」のエンドへつなぐ形にする
+  if (kind === 'ending' || blk(n).ending) { viewEnding(n); return; }
+  if (kind === 'info' && String(n.template || '') === 'howto') { viewHowto(n); return; }
+  if (kind === 'info' && String(n.template || '') === 'move') { viewMove(n); return; }
+  if (kind === 'question') { viewQuestion(n); return; }
+  viewPlain(n);
+}
+
+/** 題名の行（2026-09-17）。左に見出し、右に「もう一度動画を見る」などの小さな文字リンク。
+ *  ttl … 見出しの HTML（空でもよい）／ag … mediaAgainHtml の返り。どちらも空なら何も出さない。
+ *  どの種類のノード（謎・読むだけ・遊び方・移動案内・結末）でも、ここに同じ形で並べる。 */
+function ttlRowHtml(ttl, ag) {
+  if (!ttl && !ag) return '';
+  return '<div class="ttlrow">' + (ttl || '<span></span>') + (ag || '') + '</div>';
+}
+
+/** ノードの頭（等幅ラベル・順路バー・題名・本文・補助解説） */
+function headHtml(n, right) {
+  var qi = qIndexOf(n), qs = qSteps();
+  var hasNo = n.routeNo !== '' && n.routeNo !== undefined && n.routeNo !== null;
+  var left = hasNo
+    ? (n.place ? TF('q.stepPlace', { n: num(n.routeNo), place: n.place }) : TF('q.step', { n: num(n.routeNo) }))
+    : String(n.place || '');
+  var r = right !== undefined ? right : (qi >= 0 ? TF('q.n', { i: qi + 1, t: qs.length }) : '');
+  var h = '';
+  if (left || r) h += '<div class="meta"><span>' + esc(left) + '</span><span id="metaR">' + esc(r) + '</span></div>';
+  h += routeBar();
+  /* 題名の行。右はしに「もう一度動画を見る」などの小さな文字リンクを並べる（2026-09-17） */
+  h += ttlRowHtml(n.title ? '<h1 class="ttl">' + esc(n.title) + '</h1>' : '', mediaAgainHtml(n));
+  h += mediaStageHeadHtml(n);             // 画面の中の動画（inline）と音声は、題名の行と問題文のあいだ
+  if (n.body) h += '<p class="body qtext">' + esc(n.body) + '</p>';
+  if (n.see) h += '<p class="subnote">' + esc(n.see) + '</p>';   // 補助解説（列は see のまま）
+  return h;
+}
+/** 読むだけのノード（はじまり・ふつうの説明） */
+function viewPlain(n) {
+  $('app').innerHTML = '<div class="card">' + headHtml(n, '') + mediaHtml(n)
+    + '<div class="ans"><button class="go" id="nx">' + esc(T('common.next')) + '</button></div></div>'
+    + mediaLayerHtml(n);
+  bindMedia(n);
+  $('nx').onclick = function () {
+    var next = String(n.nextNodeId || '');
+    if (!next) { say(T('err.noNext')); return; }
+    $('nx').disabled = true;
+    nzLog({ nodeId: n.id, choiceId: '', inputText: '', result: 'next', nextNodeId: next });
+    goTo(next);
+  };
+}
+
+/* ---------- 1秒ごと（経過時間・時計・ヒントの残り・制限時間） ---------- */
+function tickSec() {
+  var e = document.querySelector('.js-elapsed');
+  if (e) e.textContent = elapsed();
+  var c = document.querySelector('.js-clock');
+  if (c) { var d = new Date(); c.textContent = pad2(d.getHours()) + ':' + pad2(d.getMinutes()) + ':' + pad2(d.getSeconds()); }
+  if (!DATA || VIEW === 'home' || OKON || FB) return;
+  var n = nzNode(PLAYER.nodeId);
+  if (!n || String(n.kind) !== 'question') return;
+  var w = document.querySelector('.js-wait');
+  var p = hintPlan(n);
+  if (p && p.next >= 0) {
+    if (p.ok && document.querySelector('.hint-locked')) redrawHints(n);
+    else if (!p.ok) { var lk = document.querySelector('.hint-locked'); if (lk) lk.textContent = waitText(p); }
+  }
+  timeCheck(n);
+}
+setInterval(tickSec, 1000);
+/* ---------- 隠しの「やり直す」（名前を5秒長押し。運営がスマホを渡し直すとき用） ---------- */
+(function () {
+  var t = null, who = $('who');
+  function clear() { if (t) { clearTimeout(t); t = null; } }
+  function down() { clear(); t = setTimeout(reveal, 5000); }
+  function reveal() {
+    clear();
+    var b = document.createElement('button');
+    b.className = 'go thin'; b.textContent = T('reset.button');
+    b.onclick = function () {
+      if (!window.confirm(T('reset.confirm'))) { netDraw(); return; }
+      nzFlush();
+      setTimeout(function () {
+        nzWipeDevice();                  // 消し込みは state.js の役
+        FB = ''; WRONGTX = ''; NEARTX = ''; HINTTX = ''; WFB = ''; OKON = null; VIEW = '';
+        QROK = {}; NOK = false;
+        setNet(''); draw();
+      }, 800);
+    };
+    $('net').textContent = ''; $('net').appendChild(b);
+  }
+  who.addEventListener('pointerdown', down);
+  ['pointerup', 'pointerleave', 'pointercancel'].forEach(function (nm) { who.addEventListener(nm, clear); });
+  who.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+})();
+
+/* 下書きの試し遊び（?preview=合い札）。いつも最初から始めて、跡を残さない。
+   帯を出すのはここだけ（2026-09-16 まで GAS の PREVIEW_JS が入れていた）。 */
+if (PREVIEW) {
+  try { localStorage.removeItem(PKEY); localStorage.removeItem(OKEY); localStorage.removeItem(SKEY); } catch (e) {}
+  (function () {
+    var b = document.createElement('div');
+    b.setAttribute('style', 'background:#fff3bf;color:#7a5b00;font:12px sans-serif;padding:5px 10px;text-align:center');
+    b.textContent = '試し遊び（下書き）。ここでの記録は残りません。';
+    var put = function () { if (document.body) document.body.insertBefore(b, document.body.firstChild); };
+    if (document.body) put(); else window.addEventListener('DOMContentLoaded', put);
+  })();
+}
+
+nzStgTag();   /* 試験環境なら上の帯に「試験」の札（2026-09-18） */
+loadPlayer(); loadOut(); netDraw();
+boot('');
+</script>
