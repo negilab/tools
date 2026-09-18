@@ -8,7 +8,7 @@
   var PKEY = 'demo_nazo_players_v2';
   var SKEY = 'demo_nazo_scen_v2';
   var PASS_OK = 'demo';
-  var NG = '合言葉が違います。';
+  var NG = '合言葉が違います。運営に聞いた合言葉を、もう一度入れてください。';
 
   /* ---------- 架空のシナリオ（謎は5問） ---------- */
   /* スタンプ。参加者が問いに答えると、朱の丸印が押される。
@@ -150,7 +150,7 @@
     /* --- 参加者の画面 --- */
     apiGetScenario: function (id, pass) {
       var d = scen();
-      if (String(id) !== d.scenario.id) throw new Error('このなぞときは見つかりません。');
+      if (String(id) !== d.scenario.id) throw new Error('この謎ときは見つかりません。受付でもらったリンクを、もう一度ひらいてください。');
       return { ver: String(d.scenario.updatedAt || '1'), packed: pack(d) };
     },
     apiPreviewScenario: function (id, tok) { return API.apiGetScenario(id); },
@@ -191,7 +191,7 @@
     apiGetScenarioAdmin: function (pass, id) {
       gate(pass);
       var d = scen();
-      if (String(id) !== d.scenario.id) throw new Error('このなぞときは見つかりません。');
+      if (String(id) !== d.scenario.id) throw new Error('この謎ときは見つかりません。受付でもらったリンクを、もう一度ひらいてください。');
       return clone(d);
     },
     apiSaveScenario: function (pass, sc) {
@@ -225,15 +225,15 @@
       return { ok: true, list: scenList(), adminOn: !!to };
     },
     apiDuplicateScenario: function (pass) { gate(pass); return { ok: true, list: scenList() }; },
-    apiDeleteScenario: function (pass) { gate(pass); throw new Error('体験版では、なぞときを消すことはできません。'); },
-    apiImportScenario: function (pass) { gate(pass); throw new Error('体験版では、読み込みはできません。'); },
+    apiDeleteScenario: function (pass) { gate(pass); throw new Error('体験版では、謎ときを消せません。はじめの状態に戻すときは、上の帯の「はじめに戻す」を押してください。'); },
+    apiImportScenario: function (pass) { gate(pass); throw new Error('体験版では、謎ときの読み込みはできません。本番の画面でお試しください。'); },
     apiExportScenario: function (pass) {
       gate(pass);
       return { name: 'demo-scenario.json', text: JSON.stringify(clone(scen()), null, 2) };
     },
-    apiImportSheetRows: function (pass) { gate(pass); throw new Error('体験版では、表からの読み込みはできません。'); },
+    apiImportSheetRows: function (pass) { gate(pass); throw new Error('体験版では、表からの読み込みはできません。本番の画面でお試しください。'); },
     apiExportSheetTable: function (pass) { gate(pass); return { rows: [], name: 'demo.csv' }; },
-    apiUploadImage: function (pass) { gate(pass); throw new Error('体験版では、絵を入れることはできません。'); },
+    apiUploadImage: function (pass) { gate(pass); throw new Error('体験版では、絵を入れられません。本番の画面でお試しください。'); },
     apiPreviewToken: function (pass, id, nodeId) {
       gate(pass);
       return { token: 'demo', url: (function () { try { return new URL('../play/?s=' + id, location.href).href; } catch (e) { return '../play/?s=' + id; } })() };
@@ -275,7 +275,7 @@
           medianMin: cleared ? 32 : 0, prize: cleared },
         nodes: nodes };
     },
-    apiIssueTickets: function (pass) { gate(pass); throw new Error('体験版では、QRの発行はできません。'); },
+    apiIssueTickets: function (pass) { gate(pass); throw new Error('体験版では、QRを発行できません。本番の画面でお試しください。'); },
     apiListTickets: function (pass) { gate(pass); return { tickets: [], list: [] }; },
     apiUnlockTicket: function (pass) { gate(pass); return { ok: true }; },
     apiAssignKey: function () { return { key: 'demo' }; }
