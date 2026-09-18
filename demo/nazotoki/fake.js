@@ -11,12 +11,23 @@
   var NG = '合言葉が違います。';
 
   /* ---------- 架空のシナリオ（謎は5問） ---------- */
+  /* スタンプ。参加者が問いに答えると、朱の丸印が押される。
+     絵は回答画面が描く（朱の二重丸＋中の字）。chars がその字。 */
+  var ASSETS = {
+    stamps: [
+      { key: 'st1', name: '門のスタンプ', chars: '門' },
+      { key: 'st2', name: '花時計のスタンプ', chars: '時' },
+      { key: 'st3', name: 'ベンチのスタンプ', chars: '座' },
+      { key: 'st4', name: '花だんのスタンプ', chars: '花' },
+      { key: 'st5', name: '分かれ道のスタンプ', chars: '道' }
+    ]
+  };
   function seedScenario() {
     var S = 'D001';
     var scenario = {
-      id: S, title: 'みどり公園の たからさがし', eventName: 'たからさがし（体験版）', theme: 'green',
+      id: S, title: 'みどり公園の たからさがし', eventName: 'たからさがし（体験版）', theme: 'washi',
       logoUrl: '', startNodeId: S + '-n00', description: '公園をひとまわりしながら、5つの謎をとく 40分ほどのあそびです。',
-      entryMode: 'name', staffPin: '', showRoute: false, textsJson: '', assetsJson: '',
+      entryMode: 'name', staffPin: '', showRoute: true, textsJson: '', assetsJson: JSON.stringify(ASSETS),
       assignMode: 'manual', assignPin: '', assignMax: '', adminOn: false,
       status: 'published', passcode: '', updatedAt: '2026-09-15 11:20'
     };
@@ -27,35 +38,46 @@
         hintAfter: o.hintAfter || 0, hintText: o.hintText || '',
         wrongNextNodeId: '', endingCode: o.endingCode || '', qrOnly: false, score: o.score || 0,
         correctNodeId: o.correct ? S + '-' + o.correct : '', wrongNodeId: o.wrong ? S + '-' + o.wrong : '',
-        mode: '', giveUpAfter: o.giveUpAfter || 0 };
+        mode: '', giveUpAfter: o.giveUpAfter || 0,
+        routeNo: (o.routeNo === undefined ? '' : o.routeNo), place: o.place || '',
+        blocksJson: o.blocks ? JSON.stringify(o.blocks) : '' };
     };
+    /* 正解したときに押されるスタンプと、そのあとに出る一文 */
+    var ok = function (key, story) { return { after: { stampKey: key, story: story } }; };
     var nodes = [
       n('n00', 'start', 'none', '', '', { order: 1, next: 'n01' }),
       n('n01', 'info', 'none', 'みどり公園へ ようこそ',
         '受付でもらった地図には、公園の絵と、こんな一文が書いてある。\n\n「たからは、いちばん長く日の当たる場所で待っている」\n\nまずは正面の門から入ろう。',
-        { order: 2, next: 'n02' }),
+        { order: 2, next: 'n02', routeNo: 0, place: '受付' }),
       n('n02', 'question', 'choice', '【1】三つの門',
         '公園には門が三つある。地図のすみに、こう書きそえてあった。\n\n「朝いちばんに ひらく門から入ること」\n\nどの門から入る？',
-        { order: 3, correct: 'n03', wrong: 'w1', hintAfter: 90, hintText: '朝日はどちらからのぼる？' }),
+        { order: 3, correct: 'n03', wrong: 'w1', hintAfter: 90, hintText: '朝日はどちらからのぼる？',
+          routeNo: 1, place: '正面の門', blocks: ok('st1', 'かんぬきが外れ、朝の光が道をまっすぐ照らした。') }),
       n('n03', 'question', 'text', '【2】時計の針',
         '花時計の前に立った。針は 3時40分 を指したまま止まっている。\n台座に小さな字で「針のあいだの角度を こたえよ（数字だけ）」とある。',
         { order: 4, correct: 'n04', wrong: 'w2', hintAfter: 120,
-          hintText: '長針は 8 の位置。短針は 3 と 4 のあいだ、3 から 3分の2 のところ。' }),
+          hintText: '長針は 8 の位置。短針は 3 と 4 のあいだ、3 から 3分の2 のところ。',
+          routeNo: 2, place: '花時計', blocks: ok('st2', '台座の引き出しがひらき、色のあせた公園の図が出てきた。') }),
       n('n04', 'question', 'choice', '【3】ベンチのならび',
         '池のまわりに、ベンチが 赤・青・赤・青・赤 とならんでいる。\nその先、木のかげにもう一つベンチがある。何色？',
-        { order: 5, correct: 'n05', hintAfter: 60, hintText: 'ならびをそのまま先へのばしてみる。' }),
+        { order: 5, correct: 'n05', hintAfter: 60, hintText: 'ならびをそのまま先へのばしてみる。',
+          routeNo: 3, place: '池のほとり', blocks: ok('st3', '色のならびを見ぬいたとたん、池の面がすっと静かになった。') }),
       n('n05', 'question', 'text', '【4】花だんの札',
         'いちばん大きな花だんに、札が四つ立っている。\n\n　「み」「ど」「り」「？」\n\n公園の名前を思い出そう。「？」に入る一字は？',
-        { order: 6, correct: 'n06', wrong: 'w3', hintAfter: 90, hintText: 'この公園の名前を、声に出して言ってみる。' }),
+        { order: 6, correct: 'n06', wrong: 'w3', hintAfter: 90, hintText: 'この公園の名前を、声に出して言ってみる。',
+          routeNo: 4, place: '花だん', blocks: ok('st4', '花だんの土がすこし盛り上がり、石の矢印が顔を出した。') }),
       n('n06', 'question', 'choice', '【5】さいごの分かれ道',
         '道が二つに分かれた。はじめの一文を思い出す。\n\n「たからは、いちばん長く日の当たる場所で待っている」\n\nどちらへ行く？',
-        { order: 7, hintAfter: 60, hintText: '木のしげった道と、ひらけた道。日が当たるのは？' }),
+        { order: 7, hintAfter: 60, hintText: '木のしげった道と、ひらけた道。日が当たるのは？',
+          routeNo: 5, place: '分かれ道', blocks: ok('st5', '選んだ道の先から、かすかに水の音が聞こえてくる。') }),
       n('e1', 'ending', 'none', '泉の結末',
         'ひらけた道の先、丸い泉のまんなかに 小さな石の箱があった。\nふたを開けると、金色の札が一枚。\n\n「よくここまで来た。たからは、歩いた道のりそのものだ」\n\nおつかれさまでした。受付に戻って、この画面を見せてください。',
-        { order: 8, endingCode: 'MIZU-01' }),
+        { order: 8, endingCode: 'MIZU-01', routeNo: 6, place: '泉',
+          blocks: { ending: { certificate: true } } }),
       n('e2', 'ending', 'none', '木かげの結末',
         '木かげの道は、古い東屋にたどり着いた。\n柱に彫られた文字がある。\n\n「急がぬ者よ、ここで休め。たからは また明日」\n\nこれはこれで、悪くない終わりかた。おつかれさまでした。',
-        { order: 9, endingCode: 'KAGE-02' }),
+        { order: 9, endingCode: 'KAGE-02', routeNo: 6, place: '東屋',
+          blocks: { ending: { certificate: true } } }),
       n('w1', 'wrong', 'none', '門はかたく閉じている', 'かぎがかかっていて開かない。\n地図をもう一度見よう。', { order: 10, next: 'n02' }),
       n('w2', 'wrong', 'none', '花時計は動かない', '針はぴくりともしない。\n数えかたを、もう一度。', { order: 11, next: 'n03' }),
       n('w3', 'wrong', 'none', '札がかたむいた', '風で札がかたむいただけだった。\nもう一度、四つならべて読んでみよう。', { order: 12, next: 'n05' })

@@ -16,29 +16,34 @@
    - 旧フロー画面（canvas）の CSS は admin.flow.css に隔離する。ここには持ち込まない */
 
 :root {
-  --bg: #f4f5f2;          /* 画面の地 */
-  --paper: #ffffff;       /* 列・カードの面 */
-  --ink: #1c2120;
-  --ink-2: #4d5551;
-  --muted: #7f8883;
-  --line: #d8ddd8;
-  --line-2: #eceeea;
-  --accent: #1f7a4d;      /* 主ボタン・選択中 */
-  --accent-soft: #e2efe6;
+  /* 和紙のトーン（2026-09-18）。参加者の画面と同じ紙・紺墨・黄土・朱の値をつかう。
+     役わり（地／面／主ボタン／惜しい／注意／飛び先）はそのままで、色だけ入れ替えた。 */
+  --bg: #f3efe6;          /* 画面の地（生成りの紙） */
+  --paper: #fbf9f4;       /* 列・カードの面 */
+  --ink: #2b3244;         /* 紺墨 */
+  --ink-2: #5a6070;
+  --muted: #8d8776;
+  --line: #d9d2c3;
+  --line-2: #ece6d9;
+  --accent: #3b4a6b;      /* 主ボタン・選択中（紺） */
+  --accent-soft: #e5e8ef;
   --gold: #8c6b1e;        /* 惜しい・順路 */
   --gold-soft: #f1e9d2;
-  --warn: #b3261e;
-  --warn-soft: #fbe9e7;
-  --blue: #2f5d9e;        /* 飛び先チップ */
-  --blue-soft: #e3ebf7;
+  --warn: #a8402c;        /* 朱 */
+  --warn-soft: #f7e6e0;
+  --blue: #4f6b4a;        /* 飛び先チップ（苔） */
+  --blue-soft: #e8efe4;
   --sans: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", Meiryo, sans-serif;
+  --mincho: "Zen Old Mincho", "Hiragino Mincho ProN", "Yu Mincho", serif;
   --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
-  --r: 6px;
+  --r: 8px;
   --top: 48px;            /* 上の帯の高さ */
+  /* 紙の地合い。参加者の画面の theme-washi と同じ作り */
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='256'%3E%3Cfilter id='g' x='0' y='0' width='256' height='256' filterUnits='userSpaceOnUse'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' seed='5' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.75 0 0 0 -0.42'/%3E%3C/filter%3E%3Crect width='256' height='256' filter='url(%23g)' opacity='0.18'/%3E%3C/svg%3E");
 }
 * { box-sizing: border-box; }
 html, body { height: 100%; }
-body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--sans); font-size: 14px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+body { margin: 0; background-color: var(--bg); background-image: var(--grain); background-size: 256px 256px; color: var(--ink); font-family: var(--sans); font-size: 14px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
 button, input, select, textarea { font: inherit; color: inherit; }
 button { cursor: pointer; }
 .sp { flex: 1; }
@@ -91,7 +96,7 @@ textarea.f { min-height: 64px; resize: vertical; }
 /* 戻す・やり直す（2026-09-17）。狭い画面では字を隠して矢印だけにする */
 .top .hist { padding: 6px 10px; }
 .top .hist + .hist { margin-left: -5px; }
-.top .brand { font-weight: 700; }
+.top .brand { font-weight: 700; font-family: var(--mincho); letter-spacing: .06em; }
 /* 試験環境の札（2026-09-18）。base が /stg のときだけ call.js の nzStgTag が hidden を外す。
    本番と間違えないための印なので、テーマの変数を使わず決め打ちの赤にする */
 .top .stgtag { flex: none; background: #d7263d; color: #fff; font-family: var(--mono); font-size: 10.5px;
