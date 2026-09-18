@@ -447,9 +447,9 @@ html[data-pretheme="white"], html[data-pretheme="white"] body{ background-color:
   body[data-theme="washi"] .mapbox .to, body[data-theme="washi"] .gotprize .t{ font-family:var(--mincho) }
   body[data-theme="washi"] .wrap{ max-width:480px }
 
-/* ===== 試作（kintaro タグ v3）に合わせる土台 =====
+/* ===== 試作（タグ v3）に合わせる土台 =====
    base.css は白・黒・緑と共通なので、和紙のときだけここで上書きする。
-   ../../../../kintaro/index.html（タグ v3）の値をそのまま写したもの。 */
+   試作の index.html（タグ v3）の値をそのまま写したもの。 */
 body[data-theme="washi"]{ font-size:15px; line-height:1.7; min-height:100vh; min-height:100dvh }
 body[data-theme="washi"] .wrap{ max-width:480px; padding:0 16px 64px }
 
@@ -546,7 +546,7 @@ body[data-theme="washi"] .bar[data-admin="1"] .who{
 /* ===== play/css/theme-white.css ===== */
   /* ===== 基調色。シナリオの theme（white / black / green / washi）で切り替える =====
      色を足すときはここに変数を増やす。画面の中では var(--…) だけを使うこと。
-     washi は 2026-09-15（B案 段階1）に足した。../kintaro/index.html（タグ v3）から移した。 */
+     washi は 2026-09-15（B案 段階1）に足した。試作の index.html（タグ v3）から移した。 */
   :root{
     --bg:#ffffff; --card:#ffffff; --ink:#16202a; --sub:#6b7c86; --line:#e2e8ec;
     --accent:#2a8761; --accentInk:#ffffff; --wrong:#c0392b; --hint:#7a5b00; --hintBg:#fff3bf;
@@ -858,7 +858,7 @@ function nzNorm(s) {
   t = t.replace(/[、。，．・「」『』（）()!！?？"'’”]/g, '');
   return t;
 }
-/* もっと緩く寄せる（../kintaro/index.html から移した）。
+/* もっと緩く寄せる（試作の index.html から移した）。
    長音符を落とし、小書きを大書きにし、お段・う段のあとの「う」を吸う。
    nzNorm は README のとおり長音符を落とさないので、これは
    blocksJson の looseKana が true のノードだけで使う（「キンタロー」を通すため）。 */
