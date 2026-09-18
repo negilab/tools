@@ -156,7 +156,7 @@ canvas.wave.drag{cursor:grabbing}
 @media (max-width:900px){
   #tabs{display:block}
   #main{flex-direction:column}
-  #edit,#stt{min-height:0}
+  #edit,#stt{min-height:0;flex:1 1 auto}
   #stt{width:auto;border-left:none;border-top:none;background:var(--bg)}
   #edit.hide,#stt.hide{display:none}
   #scroll{padding:0 12px 12px}
@@ -164,6 +164,7 @@ canvas.wave.drag{cursor:grabbing}
   .thead .meta{display:none}
   .track.sel .thead .meta{display:block}
   #zoomWrap{display:none}
+  #stt h2{display:none}
   #time{min-width:92px}
   #time b{font-size:17px}
   #bar{gap:9px;padding:9px 12px calc(var(--safeB) + 9px)}
@@ -503,9 +504,8 @@ function updateUI(){
   $("#saveSheet").querySelector('[data-out="srt"]').disabled = !hc;
   $("#cueBadge").textContent = hc ? S.cues.length : "";
   elDrop.classList.toggle("slim", has);
-  elDrop.querySelector(".big").textContent = has
-    ? (S.tracks.length >= 2 ? "トラックは2本まで入っています" : "もう1本 足す")
-    : "動画・音声を選ぶ";
+  elDrop.hidden = S.tracks.length >= 2;
+  elDrop.querySelector(".big").textContent = has ? "もう1本 足す" : "動画・音声を選ぶ";
   S.tracks.forEach(t => t.dom.classList.toggle("sel", t.id === S.sel));
 }
 
@@ -636,7 +636,7 @@ function showTime(){
 function fitZoom(){
   const d = totalDur();
   if(d <= 0) return;
-  const w = Math.max(220, elScroll.clientWidth - 30);
+  const w = Math.max(220, elScroll.clientWidth - 54);   // fullWidth の右余白ぶん
   S.pps = Math.max(8, Math.min(400, w / d));
   $("#zoom").value = Math.round(S.pps);
 }
