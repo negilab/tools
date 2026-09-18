@@ -212,7 +212,7 @@ h2, h3 { text-wrap: balance; }
 </style>
 <div class="demo">
   <span class="badge">体験版</span>
-  <span class="msg">図面はブラウザの中だけで処理され、外には送られません。サンプル図面は架空の建物です。</span>
+  <span class="msg">図面はブラウザの中だけで処理され、外には送られません。サンプル図面は架空の物件です。</span>
   <button id="demo-sample" class="primary" disabled>準備中…</button>
 </div>
 <!-- ここまで体験版だけの追加 -->
@@ -2751,7 +2751,7 @@ globalThis.__app = { S, core, go, addWord, waitWords, addArea, setWhole, onBoxDr
       if (!res.ok) throw new Error('HTTP ' + res.status);
       return res.blob();
     }).then(function (blob) {
-      var file = new File([blob], '図面_sumitsuboストア_建築図.pdf', { type: 'application/pdf' });
+      var file = new File([blob], '図面_ハルカゼストア白鷺緑丘店_建築図.pdf', { type: 'application/pdf' });
       return globalThis.__app.openFile(file);
     }).catch(function (e) {
       alert('サンプル図面を開けませんでした。' + (e && e.message ? e.message : e));
