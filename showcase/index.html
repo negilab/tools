@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>KTOK 作ったもの</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@500;700&family=BIZ+UDPGothic:wght@400;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --ground:#F5F7F9; --surface:#FFFFFF; --surface-2:#EAEFF4; --line:#D5DDE6;
+  --ink:#1B2530; --ink-2:#4A5865; --ink-3:#7B8794;
+  --accent:#2B4C7E; --accent-ink:#FFFFFF; --accent-soft:#E3EAF4;
+  --touch:#C8742A; --touch-ink:#FFFFFF; --touch-soft:#F8E9DC;
+  --video:#243447; --video-ink:#B9C6D4;
+  --radius:10px; --gutter:clamp(16px,4vw,40px);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#12181F; --surface:#1A222B; --surface-2:#232D38; --line:#33404D;
+    --ink:#E8EDF2; --ink-2:#B4BFCB; --ink-3:#8593A1;
+    --accent:#8FB0E0; --accent-ink:#0F1A2A; --accent-soft:#25344A;
+    --touch:#E0904C; --touch-ink:#1E1208; --touch-soft:#3B2A1A;
+    --video:#0C1219; --video-ink:#7E8FA1;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#12181F; --surface:#1A222B; --surface-2:#232D38; --line:#33404D;
+  --ink:#E8EDF2; --ink-2:#B4BFCB; --ink-3:#8593A1;
+  --accent:#8FB0E0; --accent-ink:#0F1A2A; --accent-soft:#25344A;
+  --touch:#E0904C; --touch-ink:#1E1208; --touch-soft:#3B2A1A;
+  --video:#0C1219; --video-ink:#7E8FA1;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:"BIZ UDPGothic","Hiragino Sans","Yu Gothic",system-ui,sans-serif;font-size:15px;line-height:1.75;-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",system-ui,sans-serif;text-wrap:balance;margin:0;line-height:1.35}
+a{color:var(--accent)}
+.wrap{max-width:1120px;margin:0 auto;padding-inline:var(--gutter);padding-block:32px 64px}
+
+/* 頭 */
+.head{display:grid;gap:14px;padding-block:8px 36px;border-bottom:1px solid var(--line);margin-bottom:28px}
+.brand{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:12px;letter-spacing:.14em;color:var(--ink-3);text-transform:uppercase}
+.head h1{font-size:clamp(26px,4.2vw,40px);font-weight:700}
+.head .lead{max-width:38em;color:var(--ink-2);font-size:16px}
+.head .lead strong{color:var(--ink);font-weight:700}
+.legend{display:flex;flex-wrap:wrap;gap:10px 18px;font-size:13px;color:var(--ink-2);margin-top:4px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+.dot.t{background:var(--touch)}.dot.v{background:var(--accent)}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px}
+
+/* カード */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);display:grid;grid-template-rows:auto 1fr auto;overflow:hidden}
+.video{position:relative;aspect-ratio:16/9;max-width:100%;background:var(--video);color:var(--video-ink);display:grid;place-items:center;font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:12px;letter-spacing:.08em}
+.video iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.video .ph{display:grid;justify-items:center;gap:8px}
+.video .ph svg{width:36px;height:36px;opacity:.7}
+.body{padding:16px 18px 6px;display:grid;gap:10px;align-content:start}
+.id{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:11px;color:var(--ink-3);letter-spacing:.08em}
+.card h3{font-size:18px;font-weight:700}
+.quote{margin:0;padding-left:12px;border-left:3px solid var(--accent-soft);color:var(--ink-2);font-size:14px}
+.quote::before{content:"「"}.quote::after{content:"」"}
+.what{margin:0;font-size:14px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}
+.chip{font-size:12px;padding:2px 9px;border-radius:999px;background:var(--surface-2);color:var(--ink-2);white-space:nowrap}
+.foot{display:flex;flex-wrap:wrap;gap:8px;padding:12px 18px 18px;align-items:center}
+.btn{display:inline-flex;align-items:center;gap:6px;font-family:"Zen Kaku Gothic New",system-ui,sans-serif;font-weight:700;font-size:14px;padding:9px 16px;border-radius:8px;text-decoration:none;border:1px solid transparent;line-height:1.2}
+.btn:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.btn.touch{background:var(--touch);color:var(--touch-ink)}
+.btn.touch:hover{filter:brightness(1.06)}
+.btn.soon{background:var(--touch-soft);color:var(--ink-2);border-color:var(--line);cursor:default}
+.btn.more{background:transparent;color:var(--accent);border-color:var(--line)}
+.btn.more:hover{background:var(--accent-soft)}
+.note{font-size:12px;color:var(--ink-3);width:100%}
+
+/* 結び */
+.close{margin-top:48px;padding:28px;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);display:grid;gap:10px}
+.close h2{font-size:20px}
+.close p{margin:0;color:var(--ink-2);max-width:42em}
+.close .row{display:flex;flex-wrap:wrap;gap:10px;margin-top:6px}
+.fine{margin-top:28px;font-size:12px;color:var(--ink-3);display:grid;gap:4px}
+
+@media (prefers-reduced-motion: no-preference){
+  .btn{transition:filter .15s,background .15s}
+}
+@media (max-width:420px){
+  .grid{grid-template-columns:1fr}
+  .foot{padding-inline:14px}.body{padding-inline:14px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="head">
+    <div class="brand">KTOK / made by hand</div>
+    <h1>業務に合わせて、自動化や支援アプリを作っています。</h1>
+    <p class="lead">既製のツールが合わないと、みんな仕事のほうを曲げます。曲げた分だけ手作業が増えます。<strong>ここにあるのは、その「曲げていたところ」に合わせて作った実物です。</strong>1分の動画で流れを見て、触れるものはそのまま触ってみてください。</p>
+    <div class="legend">
+      <span><i class="dot t"></i>その場で触れます</span>
+      <span><i class="dot v"></i>動画でご覧ください(手元のPCや本番データが要るもの)</span>
+    </div>
+  </header>
+
+  <div class="grid">
+
+    <article class="card" data-video="">
+      <div class="video"><div class="ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg><span>動画 準備中</span></div></div>
+      <div class="body">
+        <div class="id">AP006 / 建設</div>
+        <h3>PDFマスクツール</h3>
+        <p class="quote">図面には個人情報が全部入っているので、渡す前に1頁ずつ消していました</p>
+        <p class="what">図面PDFの中の名前・住所・建物名を、手元のブラウザだけで探して伏せます。通信は一切しないので、図面が外に出ません。候補を出して、囲って、書き出すまで数分です。</p>
+        <div class="chips"><span class="chip">PCで使う</span><span class="chip">HTML1枚・通信なし</span></div>
+      </div>
+      <div class="foot"><a class="btn touch" href="https://akiranakachi-eng.github.io/tools/pdfmask/" target="_blank" rel="noopener">触ってみる(サンプル図面つき)</a><a class="btn more" href="#">事例を読む</a></div>
+    </article>
+
+    <article class="card" data-video="">
+      <div class="video"><div class="ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg><span>動画 準備中</span></div></div>
+      <div class="body">
+        <div class="id">AP003 / イベント運営</div>
+        <h3>街歩き謎解き</h3>
+        <p class="quote">謎解き挑戦者用アプリと謎解きクリエイター用アプリをワンパッケージで開発</p>
+        <p class="what">クリエイター画面では、フレキシブルなシナリオ作成、動画や音声の挿入、ヒントの設定ができます。挑戦者は携帯電話からサイトを開くだけで謎解きに参加できます。</p>
+        <div class="chips"><span class="chip">クリエイターはPC</span><span class="chip">挑戦者は携帯</span></div>
+      </div>
+      <div class="foot"><a class="btn touch" href="https://akiranakachi-eng.github.io/tools/demo/nazotoki/" target="_blank" rel="noopener">触ってみる</a></div>
+    </article>
+
+    <article class="card" data-video="">
+      <div class="video"><div class="ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg><span>動画 準備中</span></div></div>
+      <div class="body">
+        <div class="id">AP011 / 自分の道具</div>
+        <h3>Swing Clipper</h3>
+        <p class="quote">練習場の長い動画から、スイングの瞬間だけ見返したい</p>
+        <p class="what">ゴルフのスイング動画を上げると、振っている区間を自動で切り出します。切り出した分を並べて見比べ、まとめて保存できます。</p>
+        <div class="chips"><span class="chip">携帯でもPCでも</span><span class="chip">ブラウザだけで動く</span></div>
+      </div>
+      <div class="foot"><a class="btn touch" href="https://akiranakachi-eng.github.io/swing-clipper/" target="_blank" rel="noopener">触ってみる</a></div>
+    </article>
+
+    <article class="card" data-video="">
+      <div class="video"><div class="ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg><span>動画 準備中</span></div></div>
+      <div class="body">
+        <div class="id">AP001 / イベント運営</div>
+        <h3>出店申し込みフォーム</h3>
+        <p class="quote">出店管理に4つのツールを行き来していました</p>
+        <p class="what">出店者はログインなしで申し込み、写真もその場で上げられます。運営側は合言葉ひとつで管理画面に入り、消防への提出PDF・保健所の一覧表・一斉メールをボタンで作ります。</p>
+        <div class="chips"><span class="chip">PCで使う</span><span class="chip">Googleのしくみの上で動く</span></div>
+      </div>
+      <div class="foot"><a class="btn touch" href="https://akiranakachi-eng.github.io/tools/demo/shutten/" target="_blank" rel="noopener">触ってみる</a><a class="btn more" href="#">事例を読む</a></div>
+    </article>
+
+    <article class="card" data-video="">
+      <div class="video"><div class="ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg><span>動画 準備中</span></div></div>
+      <div class="body">
+        <div class="id">AP002 / イベント運営</div>
+        <h3>バイト管理</h3>
+        <p class="quote">誰にいくら渡すか、毎回いちいち計算し直していました</p>
+        <p class="what">案件・出る人・支払いを1つの表で持ちます。日ごとの出勤から支払額が自動で出て、明細のPDFもその場で。携帯の画面からも見られます。</p>
+        <div class="chips"><span class="chip">PCでも携帯でも</span><span class="chip">Googleのしくみの上で動く</span></div>
+      </div>
+      <div class="foot"><a class="btn touch" href="https://akiranakachi-eng.github.io/tools/demo/baito/" target="_blank" rel="noopener">触ってみる</a><a class="btn more" href="#">事例を読む</a></div>
+    </article>
+
+    <article class="card" data-video="">
+      <div class="video"><div class="ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg><span>動画 準備中</span></div></div>
+      <div class="body">
+        <div class="id">AP004 / 建設</div>
+        <h3>ainote(積算ポータル)</h3>
+        <p class="quote">図面から数量を拾う作業に、毎回ひとが何日も張り付いていました</p>
+        <p class="what">図面PDFを上げると、機械が壁や開口を拾って数量を出します。決められない箇所だけ人に問いが返り、答えると赤塗りの図と数量表が納品されます。判定は人が持ち、計算は機械が持つ分担です。</p>
+        <div class="chips"><span class="chip">PCで使う</span></div>
+      </div>
+      <div class="foot"><span class="note">図面と手元のPCが要るため、動画でご覧ください。</span></div>
+    </article>
+
+    <article class="card" data-video="">
+      <div class="video"><div class="ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg><span>動画 準備中</span></div></div>
+      <div class="body">
+        <div class="id">AP005 / 建設</div>
+        <h3>sumitsubo</h3>
+        <p class="quote">数量表を見ても、どこをどう数えたのかが分からない</p>
+        <p class="what">積算の本体です。図面を3色に塗り分け、拾った面と開口を全部赤で示し、数量表と確認リストを書き出します。数字の根拠が図の上でそのまま見えます。</p>
+        <div class="chips"><span class="chip">PCで使う</span><span class="chip">ainoteの中で動く</span></div>
+      </div>
+      <div class="foot"><span class="note">ainoteと同じ動画の中でご覧いただけます。</span></div>
+    </article>
+
+    <article class="card" data-video="">
+      <div class="video"><div class="ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg><span>動画 準備中</span></div></div>
+      <div class="body">
+        <div class="id">AP013 / 自分の道具</div>
+        <h3>動画編集</h3>
+        <p class="quote">打ち合わせの録画から、音声と文字起こしだけ欲しい</p>
+        <p class="what">動画を入れると音声だけ取り出し、波形の両端をつまんで切れます。2本まで重ねられ、WAVとMP3で書き出し。文字起こしは時刻つきで、SRTでも保存できます。</p>
+        <div class="chips"><span class="chip">PCでも携帯でも</span><span class="chip">ブラウザだけで動く</span></div>
+      </div>
+      <div class="foot"><a class="btn touch" href="https://akiranakachi-eng.github.io/tools/douga/" target="_blank" rel="noopener">触ってみる</a></div>
+    </article>
+
+    <article class="card" data-video="">
+      <div class="video"><div class="ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg><span>動画 準備中</span></div></div>
+      <div class="body">
+        <div class="id">AP012 / 家族</div>
+        <h3>ひらがじゃん たすけ</h3>
+        <p class="quote">子供とひらがな麻雀をすると、役の確認で手が止まる</p>
+        <p class="what">手元の札を入れると、できる役を作るアシストをしながら、ひらがなの意味を覚えられます。</p>
+        <div class="chips"><span class="chip">携帯でもPCでも</span><span class="chip">ブラウザだけで動く</span></div>
+      </div>
+      <div class="foot"><a class="btn touch" href="https://akiranakachi-eng.github.io/hiragajong-helper/" target="_blank" rel="noopener">触ってみる</a></div>
+    </article>
+
+    <article class="card" data-video="">
+      <div class="video"><div class="ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg><span>動画 準備中</span></div></div>
+      <div class="body">
+        <div class="id">AP014 / 自分の道具</div>
+        <h3>iPhoneリモコン</h3>
+        <p class="quote">手元のiPhoneが高機能トラックパッドマウスに早変わり</p>
+        <p class="what">ショートカット8個登録、音声入力・フリック入力も対応。親指一本で自由に操作！</p>
+        <div class="chips"><span class="chip">iPhoneとPC</span></div>
+      </div>
+      <div class="foot"><span class="note">自分のPCとの組み合わせなので、動画でご覧ください。</span></div>
+    </article>
+
+  </div>
+
+  <section class="close">
+    <h2>「うちの、あの手作業」に心当たりがあれば</h2>
+    <p>いまのフローや考え方の邪魔はしません。そのままでも、新しくしても。まず困りごとを聞かせてください。見るのも、直すのも、作るのも、同じ人がやります。</p>
+    <div class="row"><a class="btn touch" href="#">お問い合わせ</a></div>
+  </section>
+
+  <div class="fine">
+    <span>動画は順に足していきます。体験版のデータはすべて架空のもので、閉じると消えます。</span>
+    <span>プログラムの中ではAIを使っていません。</span>
+  </div>
+</div>
+
+<script>
+// data-video に YouTube の動画IDを入れると、その枠が動画になる(空なら「準備中」のまま)
+document.querySelectorAll('.card[data-video]').forEach(function(card){
+  var id = card.getAttribute('data-video');
+  if(!id) return;
+  var box = card.querySelector('.video');
+  box.innerHTML = '<iframe src="https://www.youtube.com/embed/' + id + '?rel=0" title="' + card.querySelector('h3').textContent + '" loading="lazy" allow="accelerometer; encrypted-media; picture-in-picture" allowfullscreen></iframe>';
+});
+</script>
+<script>try{new Image().src='https://script.google.com/macros/s/AKfycbx60H_bXkfaEXrwhLvp4MOIH6wmtw414pembss8iu5VVb5_UAE3AmOnyIRk5Y4ak02Ouw/exec?app=SHOWCASE&k=page';}catch(e){}</script>
+</body>
+</html>
