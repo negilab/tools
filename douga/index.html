@@ -79,8 +79,9 @@ canvas.wave.drag{cursor:grabbing}
 
 @media (max-width:900px){
   #main{flex-direction:column}
-  #right{width:auto;border-left:none;border-top:1px solid var(--line);max-height:46vh;flex:none}
-  #sttList{max-height:34vh}
+  #left{min-height:0;flex:1 1 auto}
+  #right{width:auto;border-left:none;border-top:1px solid var(--line);height:46vh;flex:none}
+  #sttList{flex:1;min-height:0}
   header{flex-wrap:wrap}
   #drop{padding:16px;margin:10px}
   #timelineWrap{padding:0 10px 10px}
