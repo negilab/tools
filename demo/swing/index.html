@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Swing Clipper（見るだけのデモ）</title>
+<style>
+:root{--bg:#0c100e;--panel:#141b18;--panel-2:#1b231f;--line:#28332d;--ink:#e9efeb;--muted:#8a968f;--impact:#b8ff3c;--armed:#f5a623;--danger:#ff6b5e;--radius:16px;}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:Inter,-apple-system,"Hiragino Kaku Gothic ProN",sans-serif;overscroll-behavior:none;overflow:hidden;}
+body{display:flex;flex-direction:column;height:100dvh;-webkit-user-select:none;user-select:none;}
+/* 見るだけ：画面全体で操作を受け付けない */
+body *{pointer-events:none !important;}
+.hidden{display:none !important;}
+button{font-family:inherit;font-weight:600;border-radius:var(--radius);color:var(--ink);background:var(--panel-2);border:1px solid var(--line);padding:13px 14px;font-size:15px;display:flex;align-items:center;justify-content:center;gap:8px;flex:1;-webkit-user-select:none;user-select:none;}
+button:disabled{opacity:.4;}
+input[type=range]{-webkit-appearance:none;appearance:none;height:4px;border-radius:999px;background:var(--line);flex:1;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--impact);border:3px solid var(--bg);}
+/* デモの枠 */
+.demo-note{padding:max(7px,env(safe-area-inset-top)) 14px 7px;background:#090c0a;border-bottom:1px solid var(--line);font-size:12px;font-weight:700;color:var(--muted);text-align:center;}
+.demo-note b{color:var(--impact);}
+.cap{padding:9px 14px max(9px,env(safe-area-inset-bottom));background:#090c0a;border-top:1px solid var(--line);font-size:13px;font-weight:700;color:var(--ink);text-align:center;transition:opacity .3s;}
+.cap.fade{opacity:0;}
+.app{flex:1;min-height:0;display:flex;flex-direction:column;transition:filter .55s ease,opacity .55s ease;}
+.app.blurred{filter:blur(14px);opacity:.3;}
+@media (prefers-reduced-motion:reduce){.app.blurred{filter:none;opacity:0;}}
+/* 押されたボタンの目印 */
+.press{box-shadow:0 0 0 3px rgba(184,255,60,.5);transform:scale(.97);}
+/* ===== 本体から引き写し ===== */
+header{display:flex;align-items:center;justify-content:space-between;padding:8px 14px 0;background:var(--panel);border-bottom:1px solid var(--line);}
+.brand{display:flex;align-items:center;gap:8px;font-weight:700;font-size:15px;padding-bottom:9px;}
+.brand .dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex:none;}
+.brand .dot.live{background:var(--impact);animation:pulse 1.6s infinite;}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(184,255,60,.45)}70%{box-shadow:0 0 0 10px rgba(184,255,60,0)}100%{box-shadow:0 0 0 0 rgba(184,255,60,0)}}
+.tabs{display:flex;gap:2px;}
+.tab-btn{font-family:inherit;font-weight:600;font-size:13px;background:transparent;border:none;color:var(--muted);padding:9px 14px;border-bottom:2px solid transparent;flex:none;border-radius:0;}
+.tab-btn.active{color:var(--impact);border-bottom-color:var(--impact);}
+.pane{display:flex;flex-direction:column;flex:1;min-height:0;}
+/* 録画 */
+.stage{position:relative;flex:1;min-height:150px;background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+#video{width:100%;height:100%;object-fit:cover;background:#000;display:block;}
+.stage.empty #video{display:none;}
+.placeholder{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:20px;color:var(--muted);font-size:13px;line-height:1.6;}
+.stage:not(.empty) .placeholder{display:none;}
+.sts{position:absolute;top:10px;left:10px;display:flex;align-items:center;gap:8px;background:rgba(8,12,10,.65);backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:999px;padding:6px 12px 6px 10px;font-size:12px;font-weight:600;}
+.sts .sd{width:8px;height:8px;border-radius:50%;background:var(--muted);}
+.sts.armed .sd{background:var(--armed);}
+.sts.rec .sd{background:var(--impact);animation:pulse 1s infinite;}
+.gauge{position:absolute;right:10px;top:10px;bottom:10px;width:14px;background:rgba(8,12,10,.5);border:1px solid var(--line);border-radius:999px;overflow:hidden;display:flex;flex-direction:column-reverse;}
+.gauge .fill{width:100%;background:linear-gradient(180deg,var(--impact),#5fae1e);height:0%;}
+.gauge .mark{position:absolute;left:-5px;right:-5px;height:2px;background:var(--armed);box-shadow:0 0 6px var(--armed);bottom:70%;}
+.flash{position:absolute;inset:0;background:var(--impact);opacity:0;}
+.flash.on{animation:fls .35s ease-out;}
+@keyframes fls{0%{opacity:.32}100%{opacity:0}}
+.controls{display:flex;flex-direction:column;gap:10px;padding:11px 14px;background:var(--panel);border-top:1px solid var(--line);}
+.row{display:flex;gap:9px;}
+.controls button{padding:11px 12px;font-size:14px;}
+.btn-primary{background:var(--impact);color:#0c1407;border-color:var(--impact);font-weight:700;flex:2;}
+.btn-cap{background:transparent;border-color:var(--line);}
+.icon{width:17px;height:17px;flex:none;}
+.opts{display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--muted);}
+.toggle{display:flex;align-items:center;gap:8px;}
+.switch{width:38px;height:22px;border-radius:999px;background:var(--panel-2);border:1px solid var(--line);position:relative;flex:none;}
+.switch::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:var(--muted);}
+.toggle.on .switch{background:rgba(184,255,60,.25);border-color:var(--impact);}
+.toggle.on .switch::after{transform:translateX(17px);background:var(--impact);}
+.toggle.on span{color:var(--ink);}
+.slider-wrap{display:flex;align-items:center;gap:9px;flex:1;min-width:150px;}
+.slider-wrap label{font-size:12px;color:var(--muted);white-space:nowrap;}
+.val{font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--ink);width:26px;text-align:right;}
+.clips{padding:6px 14px 10px;background:var(--bg);}
+.clips-head{display:flex;align-items:center;justify-content:space-between;padding:6px 2px 8px;}
+.clips-head h2{margin:0;font-size:13px;font-weight:700;}
+.clips-head .count{font-family:"JetBrains Mono",monospace;color:var(--muted);font-size:12px;}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;}
+.clip{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;}
+.clip .thumb{position:relative;aspect-ratio:1/1;background:#000;overflow:hidden;}
+.clip .thumb video{width:100%;height:100%;object-fit:cover;}
+.clip .meta{display:flex;align-items:center;justify-content:space-between;padding:6px 9px;font-size:11px;}
+.clip .meta .t{font-family:"JetBrains Mono",monospace;color:var(--muted);}
+.clip .acts{display:flex;gap:5px;padding:0 7px 7px;}
+.clip .acts button{flex:1;padding:6px 5px;font-size:11px;border-radius:10px;}
+.clip .acts .save{background:var(--impact);color:#0c1407;border-color:var(--impact);font-weight:700;}
+.clip .acts .analyze{background:rgba(184,255,60,.12);color:var(--impact);border-color:rgba(184,255,60,.3);}
+.clip .acts .del{background:transparent;color:var(--muted);border-color:var(--line);flex:0 0 34px;}
+.empty-clips{color:var(--muted);font-size:12px;text-align:center;padding:16px 0 18px;line-height:1.6;}
+/* 比較 */
+.cmp-main{display:flex;flex-direction:column;flex:1;min-height:0;}
+.cmp-stage{position:relative;background:#000;overflow:hidden;flex:1;min-height:38vh;display:flex;}
+.cmp-cell{position:relative;flex:1;min-width:0;background:#000;overflow:hidden;display:flex;align-items:center;justify-content:center;}
+.cmp-cell video{width:100%;height:100%;object-fit:contain;display:block;}
+.cell-bar{position:absolute;top:6px;left:6px;right:6px;z-index:4;display:flex;align-items:center;gap:6px;}
+.cmp-cell .cell-lbl{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;background:rgba(8,12,10,.7);backdrop-filter:blur(6px);border:1px solid var(--line);flex:0 0 auto;}
+.cmp-cell.self .cell-lbl{color:var(--impact);border-color:rgba(184,255,60,.4);}
+.cmp-cell.ref .cell-lbl{color:var(--armed);border-color:rgba(245,166,35,.4);}
+.cmp-stage.split .cmp-cell.ref{border-left:1px solid var(--line);}
+.cmp-viewbar{display:flex;align-items:center;gap:6px;padding:8px 11px;background:var(--panel);border-top:1px solid var(--line);flex-wrap:wrap;}
+.seg{display:flex;background:var(--panel-2);border:1px solid var(--line);border-radius:10px;overflow:hidden;flex:none;}
+.seg button{border:none;border-radius:0;background:transparent;padding:8px 13px;font-size:12px;color:var(--muted);flex:none;font-family:inherit;font-weight:600;}
+.seg button.active{background:rgba(184,255,60,.18);color:var(--impact);}
+.mini{background:var(--panel-2);border:1px solid var(--line);color:var(--ink);}
+.cmp-viewbar .mini{flex:0 0 auto;padding:8px 11px;font-size:12px;border-radius:10px;}
+.cmp-spacer{flex:1;}
+.cmp-ctrl{display:flex;flex-direction:column;gap:6px;padding:7px 11px 9px;background:var(--panel);border-top:1px solid var(--line);}
+.cmp-target{display:flex;gap:4px;}
+.cmp-target button{flex:1;padding:7px;font-size:12px;font-weight:600;border-radius:9px;background:var(--panel-2);border:1px solid var(--line);color:var(--muted);font-family:inherit;}
+.cmp-target button[data-tgt="sync"].active{background:rgba(184,255,60,.14);color:var(--impact);border-color:rgba(184,255,60,.35);}
+.cmp-seek-row{display:flex;align-items:center;gap:8px;}
+.cmp-seek-row input{flex:1;min-width:0;}
+.cmp-seek-lbl{font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--ink);white-space:nowrap;min-width:58px;text-align:right;}
+.cmp-play-row{display:flex;gap:4px;align-items:center;}
+.play-pause,.frame-nav,.speed-btn{background:var(--panel-2);border:1px solid var(--line);color:var(--ink);border-radius:9px;}
+.cmp-play-row .play-pause{flex:0 0 40px;font-size:15px;padding:7px;}
+.cmp-play-row .frame-nav{flex:0 0 34px;padding:7px;font-size:14px;border-radius:8px;}
+.cmp-play-row .speed-btn{flex:1;padding:7px 2px;font-size:11px;border-radius:8px;color:var(--muted);}
+.cmp-play-row .speed-btn.active{background:rgba(184,255,60,.18);color:var(--impact);border-color:rgba(184,255,60,.4);}
+.cmp-node-row{display:flex;gap:4px;}
+.cmp-node{flex:1;padding:6px 2px;font-size:11px;border-radius:8px;display:flex;flex-direction:column;align-items:center;gap:3px;line-height:1.05;background:var(--panel-2);border:1px solid var(--line);color:var(--muted);font-family:inherit;font-weight:600;}
+.cmp-node>span:first-child{white-space:nowrap;}
+.cmp-node .dots{display:flex;gap:3px;}
+.cmp-node .dots i{width:5px;height:5px;border-radius:50%;background:var(--line);display:block;}
+.cmp-node .dots i.a.on{background:var(--impact);}
+.cmp-node .dots i.b.on{background:var(--armed);}
+.cmp-node.marked{background:rgba(184,255,60,.16);color:var(--impact);border-color:rgba(184,255,60,.4);}
+@media (max-width:420px){
+  .cmp-play-row .speed-btn{font-size:10px;padding:7px 1px;}
+  .cmp-node{font-size:9px;}
+  .cmp-viewbar{padding:7px 9px;}
+  .cmp-ctrl{padding:7px 9px 9px;}
+  .tab-btn{padding:9px 11px;}
+}
+</style>
+</head>
+<body>
+
+<p class="demo-note">Swing Clipper（<b>見るだけのデモ</b>）</p>
+
+<div class="app" id="app">
+  <header>
+    <div class="brand"><span class="dot" id="liveDot"></span>Swing Clipper</div>
+    <nav class="tabs" aria-hidden="true">
+      <button class="tab-btn active" id="tabRec" disabled tabindex="-1">録画</button>
+      <button class="tab-btn" disabled tabindex="-1">分析</button>
+      <button class="tab-btn" id="tabCmp" disabled tabindex="-1">比較</button>
+    </nav>
+  </header>
+
+  <!-- 録画 -->
+  <div class="pane" id="paneRec">
+    <div class="stage empty" id="stage">
+      <video id="video" src="swing-a.mp4" playsinline muted preload="auto" disablepictureinpicture></video>
+      <div class="placeholder">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M14 6l7-3v15l-7-3"/><circle cx="8.5" cy="13.5" r="6.5"/></svg>
+        <div>三脚にセットして<br><b style="color:var(--ink)">カメラを開始</b>を押してください</div>
+      </div>
+      <div class="sts" id="sts"><span class="sd"></span><span id="stsText">停止中</span></div>
+      <div class="gauge hidden" id="gauge"><div class="fill" id="gaugeFill"></div><div class="mark"></div></div>
+      <div class="flash" id="flash"></div>
+    </div>
+    <div class="controls" aria-hidden="true">
+      <div class="row">
+        <button class="btn-primary" id="startBtn" disabled tabindex="-1"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>カメラを開始</button>
+        <button class="btn-cap" disabled tabindex="-1"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.5 9a9 9 0 0114.9-3.4L23 10M1 14l4.6 4.4A9 9 0 0020.5 15"/></svg>切替</button>
+      </div>
+      <div class="row">
+        <button class="btn-cap" id="manualBtn" disabled tabindex="-1"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.5" fill="currentColor" stroke="none"/></svg>今のスイングを切り出す</button>
+      </div>
+      <div class="opts">
+        <div class="toggle on"><span class="switch"></span><span>自動検知</span></div>
+        <div class="slider-wrap"><label>感度</label><input type="range" min="1" max="10" value="6" disabled tabindex="-1"><span class="val">6</span></div>
+      </div>
+    </div>
+    <div class="clips">
+      <div class="clips-head"><h2>スイング</h2><span class="count" id="clipCount">0</span></div>
+      <div class="grid hidden" id="grid">
+        <div class="clip">
+          <div class="thumb"><video id="thumbVid" src="swing-a.mp4" muted playsinline preload="auto" disablepictureinpicture></video></div>
+          <div class="meta"><span>#1</span><span class="t" id="clipLen"></span></div>
+          <div class="acts" aria-hidden="true"><button class="save" disabled tabindex="-1">保存</button><button class="analyze" disabled tabindex="-1">分析</button><button class="del" disabled tabindex="-1">✕</button></div>
+        </div>
+      </div>
+      <div class="empty-clips" id="emptyClips">スイングを検知すると、ここに1本ずつたまります。</div>
+    </div>
+  </div>
+
+  <!-- 比較 -->
+  <div class="pane cmp-main hidden" id="paneCmp">
+    <div class="cmp-stage split">
+      <div class="cmp-cell self">
+        <video id="vidA" src="swing-a.mp4" muted playsinline preload="auto" disablepictureinpicture></video>
+        <div class="cell-bar"><span class="cell-lbl">自分</span></div>
+      </div>
+      <div class="cmp-cell ref">
+        <video id="vidB" src="swing-b.mp4" muted playsinline preload="auto" disablepictureinpicture></video>
+        <div class="cell-bar"><span class="cell-lbl">お手本</span></div>
+      </div>
+    </div>
+    <div class="cmp-viewbar" aria-hidden="true">
+      <div class="seg"><button class="active" disabled tabindex="-1">左右</button><button disabled tabindex="-1">重ね</button></div>
+      <button class="mini" disabled tabindex="-1">⇄ 入替</button>
+      <button class="mini" disabled tabindex="-1">✏︎ 線画</button>
+      <div class="cmp-spacer"></div>
+    </div>
+    <div class="cmp-ctrl" aria-hidden="true">
+      <div class="cmp-target">
+        <button class="self" disabled tabindex="-1">自分</button>
+        <button class="ref" disabled tabindex="-1">お手本</button>
+        <button data-tgt="sync" class="active" disabled tabindex="-1">同期</button>
+      </div>
+      <div class="cmp-seek-row">
+        <input type="range" id="seek" min="0" max="1000" value="0" disabled tabindex="-1">
+        <span class="cmp-seek-lbl" id="time">0:00.0</span>
+      </div>
+      <div class="cmp-play-row">
+        <button class="play-pause" disabled tabindex="-1">❚❚</button>
+        <button class="frame-nav" disabled tabindex="-1">◀</button>
+        <button class="frame-nav" disabled tabindex="-1">▶</button>
+        <button class="speed-btn active" disabled tabindex="-1">1x</button>
+        <button class="speed-btn" disabled tabindex="-1">½</button>
+        <button class="speed-btn" disabled tabindex="-1">⅓</button>
+        <button class="speed-btn" disabled tabindex="-1">⅕</button>
+        <button class="speed-btn" disabled tabindex="-1">1/10</button>
+      </div>
+      <div class="cmp-node-row" id="nodes"></div>
+    </div>
+  </div>
+</div>
+
+<p class="cap" id="cap">録画画面で撮る</p>
+
+<script>
+(function(){
+  "use strict";
+  try{ new Image().src='https://script.google.com/macros/s/AKfycbx60H_bXkfaEXrwhLvp4MOIH6wmtw414pembss8iu5VVb5_UAE3AmOnyIRk5Y4ak02Ouw/exec?app=AP011&k=demo'; }catch(e){}
+
+  var $=function(id){return document.getElementById(id);};
+  var app=$('app'), cap=$('cap');
+  var prev=$('video'), A=$('vidA'), B=$('vidB'), thumb=$('thumbVid');
+  var stage=$('stage'), sts=$('sts'), stsText=$('stsText'), gauge=$('gauge'), fill=$('gaugeFill'), flash=$('flash');
+  var startBtn=$('startBtn'), manualBtn=$('manualBtn'), grid=$('grid'), emptyClips=$('emptyClips'), clipCount=$('clipCount');
+  var tabRec=$('tabRec'), tabCmp=$('tabCmp'), paneRec=$('paneRec'), paneCmp=$('paneCmp');
+  var seek=$('seek'), timeLbl=$('time'), liveDot=$('liveDot');
+
+  var MARKS=[["アドレス",1.02769],["トップ",2.2222129],["インパクト",2.6381183],["フォロー",2.8381179],["フィニッシュ",3.5381171]];
+  var CMP_END=3.80;      // 比較で先頭に戻す位置
+  var IMPACT=2.6381183;  // 撮っている動画のインパクト
+
+  // 段取り（ミリ秒）
+  var T_PRESS=900, T_CAM=1400, T_FLASH=T_CAM+IMPACT*1000, T_CLIP=T_FLASH+900,
+      T_BLUR=T_CLIP+1300, T_SWAP=T_BLUR+600, T_OUT=T_SWAP+7700, T_END=T_OUT+600;
+
+  $('nodes').innerHTML=MARKS.map(function(m){
+    return '<button class="cmp-node" disabled tabindex="-1"><span>'+m[0]+'</span>'
+      +'<span class="dots"><i class="a"></i><i class="b"></i></span></button>';
+  }).join('');
+  var nodeEls=[].slice.call(document.querySelectorAll('.cmp-node'));
+
+  function fmt(t){var m=Math.floor(t/60),s=t-m*60;return m+':'+(s<10?'0':'')+s.toFixed(1);}
+  function play(v){var p=v.play();if(p&&p.catch)p.catch(function(){});}
+  function seekTo(v,t){try{v.currentTime=t;}catch(e){}}
+  function setCap(txt){
+    if(cap.textContent===txt) return;
+    cap.classList.add('fade');
+    setTimeout(function(){cap.textContent=txt;cap.classList.remove('fade');},260);
+  }
+
+  var start=0, phase='';
+  function reset(){
+    start=performance.now();
+    prev.pause(); seekTo(prev,0);
+    A.pause(); seekTo(A,0);
+    B.pause(); seekTo(B,0);
+    thumb.pause(); seekTo(thumb,0);
+    stage.classList.add('empty');
+    gauge.classList.add('hidden');
+    grid.classList.add('hidden'); emptyClips.classList.remove('hidden');
+    clipCount.textContent='0';
+    sts.className='sts'; stsText.textContent='停止中';
+    liveDot.classList.remove('live');
+    startBtn.classList.remove('press'); manualBtn.classList.remove('press');
+    flash.classList.remove('on');
+    paneRec.classList.remove('hidden'); paneCmp.classList.add('hidden');
+    tabRec.classList.add('active'); tabCmp.classList.remove('active');
+    app.classList.remove('blurred');
+    fill.style.height='0%';
+    seek.value=0; timeLbl.textContent='0:00.0';
+    setCap('録画画面で撮る');
+    phase='rec';
+  }
+
+  function frame(now){
+    var t=now-start;
+
+    if(t>=T_END){ reset(); requestAnimationFrame(frame); return; }
+
+    // 押されたボタンの目印
+    startBtn.classList.toggle('press', t>=T_PRESS && t<T_PRESS+380);
+    manualBtn.classList.toggle('press', t>=T_FLASH-260 && t<T_FLASH+120);
+
+    // 録画の段
+    if(t<T_SWAP){
+      if(phase!=='rec'){ phase='rec'; }
+      if(t>=T_CAM){
+        if(stage.classList.contains('empty')){
+          stage.classList.remove('empty');
+          gauge.classList.remove('hidden');
+          liveDot.classList.add('live');
+          seekTo(prev,0); play(prev);
+        }
+        var pt=prev.currentTime||0;
+        // 動きの強さ（インパクト前後で山になる）
+        var d=Math.abs(pt-IMPACT);
+        var lvl=Math.max(0, 100*Math.exp(-(d*d)/0.16));
+        fill.style.height=lvl.toFixed(0)+'%';
+        if(t<T_FLASH){ sts.className='sts armed'; stsText.textContent='検知待機'; }
+        else if(t<T_FLASH+900){ sts.className='sts rec'; stsText.textContent='切り出し中'; }
+        else { sts.className='sts armed'; stsText.textContent='検知待機'; }
+      }
+      if(t>=T_FLASH && t<T_FLASH+400){ flash.classList.add('on'); }
+      else if(t>=T_FLASH+400){ flash.classList.remove('on'); }
+      if(t>=T_FLASH){ setCap('スイングを自動で切り出す'); }
+      if(t>=T_CLIP && grid.classList.contains('hidden')){
+        grid.classList.remove('hidden'); emptyClips.classList.add('hidden');
+        clipCount.textContent='1';
+        seekTo(thumb,IMPACT);
+        $('clipLen').textContent=(thumb.duration?thumb.duration.toFixed(1):'4.0')+'s';
+      }
+      // ぼかして次へ
+      app.classList.toggle('blurred', t>=T_BLUR);
+    }
+    // 比較の段
+    else {
+      if(phase!=='cmp'){
+        phase='cmp';
+        paneRec.classList.add('hidden'); paneCmp.classList.remove('hidden');
+        tabRec.classList.remove('active'); tabCmp.classList.add('active');
+        prev.pause();
+        seekTo(A,0); seekTo(B,0); play(A); play(B);
+        setCap('自分とお手本を見比べる');
+        app.classList.remove('blurred');
+      }
+      if(A.paused) play(A);
+      if(B.paused) play(B);
+      var at=A.currentTime||0;
+      if(Math.abs((B.currentTime||0)-at)>0.06 && !B.seeking) seekTo(B,at);
+      if(at>=CMP_END || A.ended){ seekTo(A,0); seekTo(B,0); play(A); play(B); at=0; }
+      seek.value=Math.max(0,Math.min(1000,Math.round(at/CMP_END*1000)));
+      timeLbl.textContent=fmt(at);
+      for(var i=0;i<nodeEls.length;i++){
+        var from=MARKS[i][1], to=(i+1<MARKS.length)?MARKS[i+1][1]:CMP_END;
+        var on=(at>=from && at<to);
+        nodeEls[i].classList.toggle('marked',on);
+        var dts=nodeEls[i].querySelectorAll('.dots i');
+        dts[0].classList.toggle('on',on); dts[1].classList.toggle('on',on);
+      }
+      // 終わりをぼかして先頭へ
+      app.classList.toggle('blurred', t>=T_OUT);
+    }
+    requestAnimationFrame(frame);
+  }
+
+  document.addEventListener('visibilitychange',function(){ if(!document.hidden) reset(); });
+  reset();
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
