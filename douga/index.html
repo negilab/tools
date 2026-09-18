@@ -17,6 +17,7 @@
   --barH:74px;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
 html,body{margin:0;height:100%;overscroll-behavior:none}
 body{
   background:var(--bg);color:var(--tx);
@@ -429,8 +430,7 @@ function addTrack(name, buffer){
   S.tracks.push(t);
   buildTrack(t);
   S.sel = t.id;
-  if(S.tracks.length === 1) S.pps = Math.max(10, Math.min(120, (elScroll.clientWidth - 40) / Math.max(buffer.duration, 1)));
-  $("#zoom").value = Math.round(S.pps);
+  fitZoom();
 }
 
 /* ══ トラックの見た目 ══ */
@@ -632,6 +632,14 @@ function showTime(){
   elTime.innerHTML = "<b>" + fmt(S.cursor) + "</b>ぜんぶで " + fmt(totalDur());
 }
 
+// 全体がちょうど画面に収まる拡大率にする
+function fitZoom(){
+  const d = totalDur();
+  if(d <= 0) return;
+  const w = Math.max(220, elScroll.clientWidth - 30);
+  S.pps = Math.max(8, Math.min(400, w / d));
+  $("#zoom").value = Math.round(S.pps);
+}
 $("#zoom").addEventListener("input", e => { S.pps = +e.target.value; redrawAll(); });
 
 /* ══ 指・マウスでつまむ ══ */
