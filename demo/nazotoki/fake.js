@@ -5,8 +5,8 @@
 (function () {
   'use strict';
 
-  var PKEY = 'demo_nazo_players_v1';
-  var SKEY = 'demo_nazo_scen_v1';
+  var PKEY = 'demo_nazo_players_v2';
+  var SKEY = 'demo_nazo_scen_v2';
   var PASS_OK = 'demo';
   var NG = '合言葉が違います。';
 
