@@ -26,7 +26,7 @@
     var S = 'D001';
     var scenario = {
       id: S, title: 'みどり公園の たからさがし', eventName: 'たからさがし（体験版）', theme: 'washi',
-      logoUrl: '', startNodeId: S + '-n00', description: '公園をひとまわりしながら、5つの謎をとく 40分ほどのあそびです。',
+      logoUrl: '', startNodeId: S + '-n00', description: '公園をひとまわりしながら、5つの謎をとく 40分ほどのなぞときです。',
       entryMode: 'name', staffPin: '', showRoute: true, textsJson: '', assetsJson: JSON.stringify(ASSETS),
       assignMode: 'manual', assignPin: '', assignMax: '', adminOn: false,
       status: 'published', passcode: '', updatedAt: '2026-09-15 11:20'
@@ -150,7 +150,7 @@
     /* --- 参加者の画面 --- */
     apiGetScenario: function (id, pass) {
       var d = scen();
-      if (String(id) !== d.scenario.id) throw new Error('この謎ときは見つかりません。受付でもらったリンクを、もう一度ひらいてください。');
+      if (String(id) !== d.scenario.id) throw new Error('このなぞときは見つかりません。受付でもらったリンクを、もう一度ひらいてください。');
       return { ver: String(d.scenario.updatedAt || '1'), packed: pack(d) };
     },
     apiPreviewScenario: function (id, tok) { return API.apiGetScenario(id); },
@@ -191,7 +191,7 @@
     apiGetScenarioAdmin: function (pass, id) {
       gate(pass);
       var d = scen();
-      if (String(id) !== d.scenario.id) throw new Error('この謎ときは見つかりません。受付でもらったリンクを、もう一度ひらいてください。');
+      if (String(id) !== d.scenario.id) throw new Error('このなぞときは見つかりません。受付でもらったリンクを、もう一度ひらいてください。');
       return clone(d);
     },
     apiSaveScenario: function (pass, sc) {
@@ -225,15 +225,15 @@
       return { ok: true, list: scenList(), adminOn: !!to };
     },
     apiDuplicateScenario: function (pass) { gate(pass); return { ok: true, list: scenList() }; },
-    apiDeleteScenario: function (pass) { gate(pass); throw new Error('体験版では、謎ときを消せません。はじめの状態に戻すときは、上の帯の「はじめに戻す」を押してください。'); },
-    apiImportScenario: function (pass) { gate(pass); throw new Error('体験版では、謎ときの読み込みはできません。本番の画面でお試しください。'); },
+    apiDeleteScenario: function (pass) { gate(pass); throw new Error('体験版では、なぞときを消せません。はじめの状態に戻すときは、上の帯の「はじめに戻す」を押してください。'); },
+    apiImportScenario: function (pass) { gate(pass); throw new Error('体験版では、ファイルから読み込めません。用意してある「みどり公園の たからさがし」で、ひととおり試せます。'); },
     apiExportScenario: function (pass) {
       gate(pass);
       return { name: 'demo-scenario.json', text: JSON.stringify(clone(scen()), null, 2) };
     },
-    apiImportSheetRows: function (pass) { gate(pass); throw new Error('体験版では、表からの読み込みはできません。本番の画面でお試しください。'); },
+    apiImportSheetRows: function (pass) { gate(pass); throw new Error('体験版では、表から読み込めません。用意してある「みどり公園の たからさがし」で、ひととおり試せます。'); },
     apiExportSheetTable: function (pass) { gate(pass); return { rows: [], name: 'demo.csv' }; },
-    apiUploadImage: function (pass) { gate(pass); throw new Error('体験版では、絵を入れられません。本番の画面でお試しください。'); },
+    apiUploadImage: function (pass) { gate(pass); throw new Error('体験版では、絵を入れられません。絵のないまま、謎の作りかたを試せます。'); },
     apiPreviewToken: function (pass, id, nodeId) {
       gate(pass);
       return { token: 'demo', url: (function () { try { return new URL('../play/?s=' + id, location.href).href; } catch (e) { return '../play/?s=' + id; } })() };
@@ -275,7 +275,7 @@
           medianMin: cleared ? 32 : 0, prize: cleared },
         nodes: nodes };
     },
-    apiIssueTickets: function (pass) { gate(pass); throw new Error('体験版では、QRを発行できません。本番の画面でお試しください。'); },
+    apiIssueTickets: function (pass) { gate(pass); throw new Error('体験版では、QRを発行できません。参加者の画面は、上の帯の「参加者の画面（携帯）」で見られます。'); },
     apiListTickets: function (pass) { gate(pass); return { tickets: [], list: [] }; },
     apiUnlockTicket: function (pass) { gate(pass); return { ok: true }; },
     apiAssignKey: function () { return { key: 'demo' }; }
