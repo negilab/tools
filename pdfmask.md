@@ -2,7 +2,7 @@
 
 図面PDFの中の名前・住所・会社名・工事名・印などを、先方に渡す前に黒く伏せるための道具です。
 
-公開URL: https://akiranakachi-eng.github.io/tools/pdfmask/
+公開URL: https://negilab.github.io/tools/pdfmask/
 
 ## 通信について
 

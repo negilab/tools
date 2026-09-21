@@ -2,7 +2,7 @@
 
 ブラウザだけで動く小さな道具を置いている場所です。
 
-公開URL: https://akiranakachi-eng.github.io/tools/
+公開URL: https://negilab.github.io/tools/
 
 ## いま置いてあるもの
 
@@ -29,8 +29,8 @@ tools/
 
 | ツール | URL | 説明 |
 |---|---|---|
-| 動画編集 | [/douga/](https://akiranakachi-eng.github.io/tools/douga/) | 音声を取り出す・切る・重ねる・文字起こし |
-| PDFマスクツール 体験版 | [/pdfmask/](https://akiranakachi-eng.github.io/tools/pdfmask/) | 図面PDFの個人情報を伏せる。詳しくは [pdfmask.md](pdfmask.md) |
+| 動画編集 | [/douga/](https://negilab.github.io/tools/douga/) | 音声を取り出す・切る・重ねる・文字起こし |
+| PDFマスクツール 体験版 | [/pdfmask/](https://negilab.github.io/tools/pdfmask/) | 図面PDFの個人情報を伏せる。詳しくは [pdfmask.md](pdfmask.md) |
 
 外部と通信するかどうかは道具ごとに違うので、**そのツール自身の説明に書いてください。**
 リポジトリ全体で一律にこうだ、とは書かないようにします。
