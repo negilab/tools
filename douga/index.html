@@ -82,9 +82,11 @@ header .sp{flex:1}
 #ruler{display:block;height:26px;border-radius:6px;background:var(--surface2);touch-action:none}
 #head{position:absolute;top:0;width:2px;background:var(--ng);pointer-events:none;border-radius:1px;box-shadow:0 0 8px rgba(255,107,107,.7)}
 
-.track{margin-top:12px;background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+/* overflow:hidden を付けると .thead の position:sticky の基準がこの行になり、
+   画面に貼り付かなくなる。だから角の丸めは中身側に持たせる */
+.track{margin-top:12px;background:var(--surface);border:1px solid var(--line);border-radius:14px}
 .track.sel{border-color:var(--a1)}
-.thead{display:flex;align-items:center;gap:9px;padding:9px 12px;background:var(--surface2);position:sticky;left:0}
+.thead{display:flex;align-items:center;gap:9px;padding:9px 12px;background:var(--surface2);position:sticky;left:0;border-radius:14px 14px 0 0}
 .thead .dot{width:9px;height:9px;border-radius:3px;flex:none}
 .thead .nm{font-weight:700;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:44vw}
 .thead .meta{font-size:11.5px;color:var(--tx3);font-variant-numeric:tabular-nums;white-space:nowrap}
@@ -92,10 +94,11 @@ header .sp{flex:1}
 .tbtn{width:34px;height:34px;padding:0;display:grid;place-items:center;border-radius:9px;background:transparent;border-color:transparent;color:var(--tx2);font-size:12px;font-weight:700}
 .tbtn:hover{background:#2b3246}
 .tbtn.on{background:var(--a2);border-color:var(--a2);color:#241704}
-canvas.wave{display:block;touch-action:none;cursor:grab}
+.tbtn.bSolo{width:auto;padding:0 8px;font-size:12px}
+canvas.wave{display:block;touch-action:none;cursor:grab;border-radius:0 0 14px 14px}
 canvas.wave.drag{cursor:grabbing}
 
-.vol{display:none;align-items:center;gap:10px;padding:10px 12px;border-top:1px solid var(--line)}
+.vol{display:none;align-items:center;gap:10px;padding:10px 12px;border-top:1px solid var(--line);border-radius:0 0 14px 14px}
 .vol.show{display:flex}
 .vol input{flex:1}
 .vol span{font-size:12px;color:var(--tx3);width:38px;text-align:right;font-variant-numeric:tabular-nums}
@@ -112,6 +115,8 @@ canvas.wave.drag{cursor:grabbing}
 .round{width:54px;height:54px;border-radius:27px;padding:0;display:grid;place-items:center;background:var(--a1);border:none;color:#08121f;flex:none}
 .round:active{transform:scale(.94)}
 .round.sm{width:42px;height:42px;background:var(--surface2);color:var(--tx);border:1px solid var(--line)}
+/* 切り抜きの範囲を決めている間、再生を目立たせない（大きさは変えない） */
+.round.quiet{background:var(--surface2);color:var(--tx);border:1px solid var(--line)}
 #zoomWrap{display:flex;align-items:center;gap:8px;color:var(--tx3);font-size:12px}
 #zoom{width:120px}
 
@@ -136,9 +141,10 @@ canvas.wave.drag{cursor:grabbing}
   position:fixed;left:0;right:0;bottom:0;z-index:41;
   background:var(--surface);border-top:1px solid var(--line);
   border-radius:18px 18px 0 0;padding:10px 16px calc(var(--safeB) + 16px);
-  transform:translateY(100%);transition:transform .22s ease;
+  transform:translateY(100%);transition:transform .22s ease,visibility 0s linear .22s;
+  visibility:hidden;pointer-events:none;   /* 閉じているシートは、透明でも押せないようにする */
 }
-.sheet.show{transform:translateY(0)}
+.sheet.show{transform:translateY(0);visibility:visible;pointer-events:auto;transition-delay:0s}
 .sheet .grab{width:38px;height:4px;border-radius:2px;background:var(--line);margin:0 auto 14px}
 .sheet h3{margin:0 0 4px;font-size:16px}
 .sheet p{margin:0 0 14px;font-size:13px;color:var(--tx2);line-height:1.7}
@@ -148,8 +154,8 @@ canvas.wave.drag{cursor:grabbing}
 .sheet .btns{display:flex;gap:9px;margin-top:14px}
 .sheet .btns button{flex:1;padding:13px}
 @media (min-width:901px){
-  .sheet{left:50%;right:auto;bottom:auto;top:50%;width:440px;transform:translate(-50%,-46%) scale(.96);opacity:0;border-radius:16px;border:1px solid var(--line);transition:opacity .16s,transform .16s}
-  .sheet.show{transform:translate(-50%,-50%);opacity:1}
+  .sheet{left:50%;right:auto;bottom:auto;top:50%;width:440px;transform:translate(-50%,-46%) scale(.96);opacity:0;border-radius:16px;border:1px solid var(--line);transition:opacity .16s,transform .16s,visibility 0s linear .16s}
+  .sheet.show{transform:translate(-50%,-50%);opacity:1;transition-delay:0s}
 }
 
 /* ── 狭い画面 ── */
@@ -161,6 +167,11 @@ canvas.wave.drag{cursor:grabbing}
   #edit.hide,#stt.hide{display:none}
   #scroll{padding:0 12px 12px}
   #drop{margin:12px}
+  /* 帯の見出しは、横にスクロールしても画面の幅に留める（動画の面と同じ詰め） */
+  .track .thead{gap:5px;padding:9px 8px;width:calc(100vw - 24px);max-width:100vw}
+  .track .thead .nm{max-width:30vw}
+  .track .tbtn{width:30px;height:30px}
+  .track .tbtn.bSolo{width:auto;padding:0 6px}
   .thead .meta{display:none}
   .track.sel .thead .meta{display:block}
   #zoomWrap{display:none}
@@ -169,6 +180,105 @@ canvas.wave.drag{cursor:grabbing}
   #time b{font-size:17px}
   #bar{gap:9px;padding:9px 12px calc(var(--safeB) + 9px)}
   #sttFoot{padding:12px}
+}
+
+/* ── モード切替（音声／動画） ── */
+#modes{flex:none;padding:8px 14px;background:var(--surface);border-bottom:1px solid var(--line)}
+#modes .seg{display:flex;background:var(--bg);border-radius:10px;padding:3px;gap:3px;max-width:320px}
+#modes .seg button{flex:1;border:none;background:transparent;color:var(--tx2);border-radius:8px;padding:9px 0;font-weight:600}
+#modes .seg button.on{background:var(--surface2);color:var(--tx)}
+#main.hide,#vmain.hide{display:none!important}
+body.mode-video #tabs{display:none!important}
+
+/* ── 動画（そのまま編集） ── */
+#vmain{flex:1;display:flex;flex-direction:column;min-height:0}
+
+/* ── 上の枠（動画を足す・目かくしを足す） ── */
+#vtop{flex:none;display:flex;align-items:center;gap:10px;padding:10px 14px}
+#vdrop{
+  flex:1;min-width:0;padding:11px 12px;border:1.5px dashed #39405a;border-radius:12px;
+  text-align:center;color:var(--tx2);cursor:pointer;background:#141821;
+}
+#vdrop.over{border-color:var(--a1);background:#16233a;color:var(--tx)}
+#vdrop.off{opacity:.4;pointer-events:none}
+#vdrop .big{display:block;font-size:14px;font-weight:700;color:var(--tx)}
+#vdrop .sub{display:block;font-size:11.5px;color:var(--tx3)}
+#vMask{flex:none;white-space:nowrap}
+
+/* 台紙の入れ物。台紙の見た目の大きさは CSS ではなく vLayoutStage() が px で入れる */
+#vstage{flex:1 1 0;display:flex;align-items:center;justify-content:center;min-height:150px;padding:12px 14px;background:#0b0e14;overflow:hidden}
+#vstage.over{box-shadow:inset 0 0 0 2px var(--a1)}
+#stage{display:block;touch-action:none;border-radius:8px;box-shadow:0 0 0 1px var(--line)}
+
+/* ── いま選んでいるものの手元 ── */
+#vsel{flex:none;padding:8px 14px;background:var(--surface);border-top:1px solid var(--line);overflow-x:auto}
+#vsel > div{display:flex;align-items:center;gap:8px}
+#vsel .who{font-size:12.5px;color:var(--tx2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}
+#vsel button{padding:8px 12px;font-size:13px;white-space:nowrap;flex:none}
+.kinds{display:flex;gap:6px;flex:none}
+.kinds button.on{background:var(--a1);border-color:var(--a1);color:#08121f;font-weight:700}
+#granWrap{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--tx3);flex:none}
+#granWrap input{width:112px}
+.clip.mrow{border-style:dashed}
+.clip.mrow.sel{border-style:solid}
+#vempty{padding:30px 24px;text-align:center;color:var(--tx3);font-size:13.5px;line-height:1.9}
+
+#vscroll{flex:0 1 auto;max-height:38%;overflow:auto;padding:0 14px 12px;min-height:96px;-webkit-overflow-scrolling:touch}
+#vtl{position:relative;min-width:100%}
+#vruler{display:block;height:26px;border-radius:6px;background:var(--surface2);touch-action:none}
+#vhead{position:absolute;top:0;width:2px;background:var(--ng);pointer-events:none;border-radius:1px;box-shadow:0 0 8px rgba(255,107,107,.7)}
+.clip{margin-top:10px;background:var(--surface);border:1px solid var(--line);border-radius:12px}
+.clip .thead{border-radius:12px 12px 0 0}
+.clip .vol{border-radius:0 0 12px 12px}
+.clip.sel{border-color:var(--a1)}
+.clip canvas{display:block;touch-action:none;cursor:grab;border-radius:0 0 12px 12px}
+.clip canvas.drag{cursor:grabbing}
+
+#vbar{flex:none;display:flex;align-items:center;gap:12px;padding:10px 14px calc(var(--safeB) + 10px);background:var(--surface);border-top:1px solid var(--line)}
+#vtime{font-variant-numeric:tabular-nums;font-size:13px;color:var(--tx3);min-width:106px}
+#vtime b{display:block;font-size:19px;color:var(--tx);font-weight:700;letter-spacing:.01em}
+#vbar .sp{flex:1}
+#vzoomWrap{display:flex;align-items:center;gap:8px;color:var(--tx3);font-size:12px}
+#vzoom{width:120px}
+
+/* ── 台紙・書き出しのシート ── */
+.sizes{display:flex;gap:8px;margin-bottom:12px}
+.sizes button{flex:1;min-width:0;text-align:center;padding:12px 4px;font-size:13.5px;font-weight:600}
+.sizes button small{display:block;font-size:11px;color:var(--tx3);font-weight:400;margin-top:3px}
+.sizes button.on{background:var(--a1);border-color:var(--a1);color:#08121f}
+.sizes button.on small{color:#0d2340}
+.sizerow{display:flex;gap:8px;align-items:center;margin-bottom:16px}
+.sizerow input{flex:1;text-align:center;padding:11px 6px}
+.sizerow span{color:var(--tx3);font-size:14px}
+.sizerow button{flex:none;white-space:nowrap}
+.bgpick{display:flex;gap:8px}
+.bgpick button{flex:1;padding:13px}
+.bgpick button.on{border-color:var(--a1);color:var(--a1);font-weight:700}
+.lbl{margin:0 0 8px;font-size:13px;color:var(--tx2)}
+.prog{height:7px;border-radius:4px;background:var(--surface2);overflow:hidden;margin:2px 0 4px}
+.prog i{display:block;height:100%;width:0;background:var(--a1);border-radius:4px;transition:width .2s linear}
+
+@media (max-width:900px){
+  #modes{padding:8px 12px}
+  #modes .seg{max-width:none}
+  #vtop{padding:9px 12px;gap:8px;flex-wrap:wrap}
+  #vMask{padding:9px 10px;font-size:13px}
+  #vstage{padding:10px 12px}
+  #vscroll{max-height:40%;padding:0 12px 10px}
+  #vzoomWrap{display:none}
+  #vtime{min-width:88px}
+  #vtime b{font-size:17px}
+  #vbar{gap:8px;padding:9px 12px calc(var(--safeB) + 9px)}
+  #vbar #vTop{display:none}
+  #vbar #vStage{padding:9px 10px;font-size:13px;white-space:nowrap}
+  #vsel{padding:8px 12px}
+  #vsel button{padding:8px 10px;font-size:12.5px}
+  #granWrap input{width:76px}
+  /* 帯の見出しの幅は vRedraw() が px で入れる（どの画面幅でも） */
+  .clip .thead{gap:5px;padding:9px 8px}
+  .clip .thead .nm{max-width:30vw}
+  .clip .tbtn{width:30px;height:30px}
+  .clip .tbtn.bSolo{width:auto;padding:0 6px}
 }
 </style>
 </head>
@@ -185,14 +295,21 @@ canvas.wave.drag{cursor:grabbing}
     動画編集
   </span>
   <span class="sp"></span>
-  <button class="iconbtn" id="btnKey" title="APIキー" aria-label="APIキー">
+  <button class="iconbtn" id="btnKey" title="APIキーを入れる" aria-label="APIキーを入れる">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
   </button>
 </header>
+<div id="modes">
+  <div class="seg">
+    <button id="modeAudio" class="on">音声</button>
+    <button id="modeVideo">動画</button>
+  </div>
+</div>
+
 
 <div id="tabs">
   <div class="seg">
-    <button id="tabEdit" class="on">編集</button>
+    <button id="tabEdit" class="on">波形</button>
     <button id="tabStt">文字起こし<span class="badge" id="cueBadge"></span></button>
   </div>
 </div>
@@ -202,7 +319,7 @@ canvas.wave.drag{cursor:grabbing}
 <div id="main">
   <div id="edit">
     <div id="drop">
-      <span class="big">動画・音声を選ぶ</span>
+      <span class="big">動画・音声を足す</span>
       <span class="sub">動画は音声だけ取り出します。2本まで重ねられます。</span>
     </div>
     <input type="file" id="file" accept="video/*,audio/*" multiple hidden>
@@ -225,7 +342,7 @@ canvas.wave.drag{cursor:grabbing}
       </button>
       <div id="time"><b>0:00.0</b>ぜんぶで 0:00.0</div>
       <span class="sp"></span>
-      <div id="zoomWrap"><span>拡大</span><input type="range" id="zoom" min="8" max="400" value="46"></div>
+      <div id="zoomWrap"><span>拡大</span><input type="range" id="zoom" min="8" max="400" value="46" aria-label="拡大"></div>
       <button class="round sm" id="btnSave" disabled aria-label="書き出す">
         <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       </button>
@@ -235,16 +352,83 @@ canvas.wave.drag{cursor:grabbing}
   <div id="stt" class="hide">
     <h2>文字起こし</h2>
     <div id="sttTop">
-      <button id="btnStt" class="p" disabled>文字起こしする</button>
+      <button id="btnStt" disabled>文字起こしを始める</button>
       <span id="sttState"></span>
     </div>
-    <div id="cues"><div class="empty">まだありません。<br>音声を入れて、ボタンを押してください。</div></div>
+    <div id="cues"><div class="empty">文字起こしはまだありません。<br>音声を足してから「文字起こしを始める」を押してください。</div></div>
     <div id="sttFoot">
-      <button id="btnTxt" disabled>テキスト</button>
-      <button id="btnSrt" disabled>SRT</button>
+      <button id="btnTxt" disabled>テキストで保存</button>
+      <button id="btnSrt" disabled>SRTで保存</button>
       <button id="btnCopy" disabled>コピー</button>
     </div>
   </div>
+</div>
+
+
+<div id="vmain" class="hide">
+  <div id="vtop">
+    <div id="vdrop">
+      <span class="big">動画を足す</span>
+      <span class="sub">ここに落とすか、押して選ぶ</span>
+    </div>
+    <button id="vMask">目かくしを足す</button>
+  </div>
+
+  <div id="vstage">
+    <canvas id="stage" hidden></canvas>
+    <div id="vempty">動画がまだありません。<br>上の「動画を足す」から選ぶか、そこに落としてください。</div>
+  </div>
+
+  <div id="vsel" hidden>
+    <div id="selClip" hidden>
+      <span class="who"></span>
+      <button id="vFront">前に出す</button>
+      <button id="cropStart">切り抜く</button>
+      <button id="cropReset" hidden>切り抜きを戻す</button>
+    </div>
+    <div id="selMask" hidden>
+      <span class="who">目かくし</span>
+      <div class="kinds">
+        <button data-kind="black">黒</button>
+        <button data-kind="white">白</button>
+        <button data-kind="mosaic">モザイク</button>
+      </div>
+      <span id="granWrap" hidden><span>粗さ</span><input type="range" id="gran" min="6" max="140" value="40" aria-label="粗さ"></span>
+    </div>
+    <div id="selCrop" hidden>
+      <span class="who">残す範囲を四角で囲んでください</span>
+      <button id="cropAll">全体にする</button>
+      <button id="cropCancel">やめる</button>
+      <button id="cropOk" class="p">切り抜く</button>
+    </div>
+  </div>
+
+  <div id="vscroll">
+    <div id="vtl">
+      <canvas id="vruler"></canvas>
+      <div id="vclips"></div>
+      <div id="vhead" hidden></div>
+    </div>
+  </div>
+
+  <div id="vbar">
+    <button class="round sm" id="vTop" disabled aria-label="先頭へ">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2.6v12H6zm3.6 6 9-6v12z"/></svg>
+    </button>
+    <button class="round" id="vPlay" disabled aria-label="再生">
+      <svg id="vicPlay" width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+      <svg id="vicStop" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" hidden><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+    </button>
+    <div id="vtime"><b>0:00.0</b>ぜんぶで 0:00.0</div>
+    <span class="sp"></span>
+    <div id="vzoomWrap"><span>拡大</span><input type="range" id="vzoom" min="8" max="400" value="46" aria-label="拡大"></div>
+    <button id="vStage">台紙を変える</button>
+    <button class="round sm" id="vSave" disabled aria-label="書き出す">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    </button>
+  </div>
+
+  <input type="file" id="vfile" accept="video/*" multiple hidden>
 </div>
 
 <div class="scrim" id="scrim"></div>
@@ -254,12 +438,12 @@ canvas.wave.drag{cursor:grabbing}
   <h3>書き出す</h3>
   <p>いま並べてある通りに1本にまとめます。</p>
   <div class="row">
-    <button data-out="mp3">MP3<small>軽い。ふつうはこちら</small></button>
+    <button data-out="mp3">MP3<small>軽くて、たいていの機器で鳴る</small></button>
     <button data-out="wav">WAV<small>音がそのまま。重い</small></button>
-    <button data-out="txt" disabled>文字起こし（テキスト）<small></small></button>
-    <button data-out="srt" disabled>字幕（SRT）<small></small></button>
+    <button data-out="txt" disabled>テキストで保存<small>文字起こしを文章のまま</small></button>
+    <button data-out="srt" disabled>SRTで保存<small>時刻つきの字幕</small></button>
   </div>
-  <div class="btns"><button id="saveCancel">やめる</button></div>
+  <div class="btns"><button id="saveCancel">閉じる</button></div>
 </div>
 
 <div class="sheet" id="keySheet">
@@ -269,9 +453,38 @@ canvas.wave.drag{cursor:grabbing}
      取り直すときは aistudio.google.com/apikey です。</p>
   <input type="text" id="keyInput" placeholder="AQ... または AIza..." autocomplete="off" autocapitalize="off" spellcheck="false">
   <div class="btns">
-    <button id="keyCancel">やめる</button>
+    <button id="keyCancel">閉じる</button>
     <button id="keySave" class="p">保存</button>
   </div>
+</div>
+
+<div class="sheet" id="stageSheet">
+  <div class="grab"></div>
+  <h3>台紙</h3>
+  <p>動画を並べる紙の大きさと、余りを塗る色を決めます。大きさを変えると、動画をいったん均等に並べ直します。</p>
+  <div class="sizes">
+    <button data-size="1920x1080">横長<small>1920×1080</small></button>
+    <button data-size="1080x1920">縦長<small>1080×1920</small></button>
+    <button data-size="1080x1080">正方形<small>1080×1080</small></button>
+  </div>
+  <div class="sizerow">
+    <input type="text" id="stW" inputmode="numeric" aria-label="台紙の横"><span>×</span><input type="text" id="stH" inputmode="numeric" aria-label="台紙の縦"><button id="stApply">この大きさにする</button>
+  </div>
+  <p class="lbl">余りの色</p>
+  <div class="bgpick">
+    <button data-bg="#000000">黒</button>
+    <button data-bg="#ffffff">白</button>
+  </div>
+  <div class="btns"><button id="vArrange">均等に並べる</button><button id="stageClose" class="p">閉じる</button></div>
+</div>
+
+<div class="sheet" id="expSheet">
+  <div class="grab"></div>
+  <h3>動画を書き出しています</h3>
+  <p id="expNote"></p>
+  <div class="prog"><i id="expBar"></i></div>
+  <p class="lbl" id="expPct">0%</p>
+  <div class="btns"><button id="expCancel">やめる</button></div>
 </div>
 
 <script>
@@ -307,6 +520,8 @@ function msg(text, kind, hold){
   if(!hold && kind !== "info") msgTimer = setTimeout(clearMsg, 4200);
 }
 function clearMsg(){ elMsg.className = ""; }
+// そのまま画面に出してよい文のエラー（例外名やコードは出さない）
+function uerr(text){ const e = new Error(text); e.shown = true; return e; }
 
 function fmt(sec, ms){
   if(!isFinite(sec) || sec < 0) sec = 0;
@@ -343,21 +558,31 @@ addEventListener("resize", () => {
 /* ══ シート ══ */
 function openSheet(id){ $("#scrim").classList.add("show"); $(id).classList.add("show"); }
 function closeSheets(){ $("#scrim").classList.remove("show"); document.querySelectorAll(".sheet").forEach(s => s.classList.remove("show")); }
-$("#scrim").addEventListener("click", closeSheets);
+$("#scrim").addEventListener("click", () => { if(!V.exporting) closeSheets(); });
 
 /* ══ 取り込み ══ */
 elDrop.addEventListener("click", () => $("#file").click());
 $("#file").addEventListener("change", e => { addFiles([...e.target.files]); e.target.value = ""; });
-["dragenter","dragover"].forEach(ev => addEventListener(ev, e => { e.preventDefault(); elDrop.classList.add("over"); }));
-addEventListener("dragleave", e => { if(e.target === elDrop) elDrop.classList.remove("over"); });
+["dragenter","dragover"].forEach(ev => addEventListener(ev, e => {
+  e.preventDefault();
+  if(V.on) vDropGlow(true); else elDrop.classList.add("over");
+}));
+addEventListener("dragleave", e => {
+  if(e.target === elDrop) elDrop.classList.remove("over");
+  if(e.target === elVDrop || e.target === elVStageBox) vDropGlow(false);
+});
 addEventListener("drop", e => {
-  e.preventDefault(); elDrop.classList.remove("over");
-  if(e.dataTransfer.files.length) addFiles([...e.dataTransfer.files]);
+  e.preventDefault(); elDrop.classList.remove("over"); vDropGlow(false);
+  if(e.dataTransfer && e.dataTransfer.files.length){
+    const fs = [...e.dataTransfer.files];
+    if(V.on){ if(!V.crop && !V.exporting) vAddFiles(fs); }
+    else addFiles(fs);
+  }
 });
 
 async function addFiles(files){
   for(const f of files){
-    if(S.tracks.length >= 2){ msg("トラックは2本までです。要らないほうを消してから入れてください。", "err"); break; }
+    if(S.tracks.length >= 2){ msg("重ねられるのは2本までです。要らないほうを削除してから足してください。", "err"); break; }
     try{
       msg("「" + f.name + "」から音声を取り出しています…", "info", true);
       const buf = await decode(f);
@@ -365,7 +590,7 @@ async function addFiles(files){
       clearMsg();
     }catch(err){
       console.error(err);
-      msg("「" + f.name + "」の音声を取り出せませんでした。" + (err && err.message ? "（" + err.message + "）" : ""), "err");
+      msg("この形式からは音声を取り出せません。mp3かm4aに変えてから足してください。「" + f.name + "」は足していません。", "err");
     }
   }
   redrawAll(); updateUI();
@@ -401,7 +626,7 @@ function captureRealtime(file){
           L.push(new Float32Array(ev.inputBuffer.getChannelData(0)));
           R.push(new Float32Array(ev.inputBuffer.getChannelData(1)));
           const p = el.duration ? Math.floor(el.currentTime / el.duration * 100) : 0;
-          msg("「" + file.name + "」を実時間で読み取っています… " + p + "%", "info", true);
+          msg("「" + file.name + "」を読んでいます… " + p + "%", "info", true);
         };
         const mute = ac.createGain(); mute.gain.value = 0;
         src.connect(sp); sp.connect(mute); mute.connect(ac.destination);
@@ -451,14 +676,14 @@ function buildTrack(t){
       '<span class="nm"></span>' +
       '<span class="meta"></span>' +
       '<span class="sp"></span>' +
-      '<button class="tbtn bVol" title="音量">' + ICO.vol + '</button>' +
-      '<button class="tbtn bMute" title="ミュート">' + ICO.mute + '</button>' +
-      '<button class="tbtn bSolo" title="ソロ">S</button>' +
-      '<button class="tbtn bUndo" title="切ったのを戻す">' + ICO.undo + '</button>' +
-      '<button class="tbtn bDel" title="削除">' + ICO.del + '</button>' +
+      '<button class="tbtn bVol" title="音量" aria-label="音量">' + ICO.vol + '</button>' +
+      '<button class="tbtn bMute" title="ミュート" aria-label="ミュート">' + ICO.mute + '</button>' +
+      '<button class="tbtn bSolo" title="ソロ" aria-label="ソロ">ソロ</button>' +
+      '<button class="tbtn bUndo" title="切ったのを戻す" aria-label="切ったのを戻す">' + ICO.undo + '</button>' +
+      '<button class="tbtn bDel" title="削除" aria-label="削除">' + ICO.del + '</button>' +
     '</div>' +
     '<canvas class="wave"></canvas>' +
-    '<div class="vol"><input type="range" min="0" max="150" value="100"><span>100%</span></div>';
+    '<div class="vol"><input type="range" min="0" max="150" value="100" aria-label="音量"><span>100%</span></div>';
   elTracks.appendChild(box);
   t.dom = box; t.canvas = box.querySelector("canvas");
   box.querySelector(".nm").textContent = t.name;
@@ -505,7 +730,7 @@ function updateUI(){
   $("#cueBadge").textContent = hc ? S.cues.length : "";
   elDrop.classList.toggle("slim", has);
   elDrop.hidden = S.tracks.length >= 2;
-  elDrop.querySelector(".big").textContent = has ? "もう1本 足す" : "動画・音声を選ぶ";
+  elDrop.querySelector(".big").textContent = has ? "もう1本足す" : "動画・音声を足す";
   S.tracks.forEach(t => t.dom.classList.toggle("sel", t.id === S.sel));
 }
 
@@ -733,12 +958,14 @@ function play(){
   });
   S.t0 = now; S.c0 = S.cursor; S.playing = true;
   $("#icPlay").hidden = true; $("#icStop").hidden = false;
+  $("#btnPlay").setAttribute("aria-label", "停止");
   requestAnimationFrame(tick);
 }
 function stop(){
   S.tracks.forEach(t => { if(t._src){ try{ t._src.stop(); }catch(e){} t._src = null; t._g = null; } });
   S.playing = false;
   $("#icPlay").hidden = false; $("#icStop").hidden = true;
+  $("#btnPlay").setAttribute("aria-label", "再生");
 }
 function tick(){
   if(!S.playing) return;
@@ -755,14 +982,14 @@ $("#btnPlay").addEventListener("click", () => S.playing ? stop() : play());
 $("#btnTop").addEventListener("click", () => seek(0));
 addEventListener("keydown", e => {
   if(e.target.tagName === "INPUT") return;
-  if(e.code === "Space"){ e.preventDefault(); S.playing ? stop() : play(); }
-  if(e.code === "Home") seek(0);
+  if(e.code === "Space"){ e.preventDefault(); if(V.on){ V.playing ? vStop() : vPlay(); } else { S.playing ? stop() : play(); } }
+  if(e.code === "Home"){ if(V.on) vSeek(0); else seek(0); }
 });
 
 /* ══ 書き出し ══ */
 async function renderMix(rate, channels){
   const total = totalDur();
-  if(total <= 0) throw new Error("中身がありません");
+  if(total <= 0) throw uerr("音声がまだありません。音声を足してから、もう一度押してください。");
   const OC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
   let oc;
   try{ oc = new OC(channels, Math.ceil(total * rate), rate); }
@@ -802,7 +1029,7 @@ function toI16(f){
   return a;
 }
 function mp3Blob(buf, kbps){
-  if(!window.lamejs) throw new Error("MP3の部品が読めていません");
+  if(!window.lamejs) throw uerr("MP3を作る部品が読み込めていません。ネットにつないでページを開き直すか、WAVを選んでください。");
   const ch = Math.min(2, buf.numberOfChannels);
   const enc = new lamejs.Mp3Encoder(ch, buf.sampleRate, kbps || 192);
   const L = toI16(buf.getChannelData(0));
@@ -836,7 +1063,8 @@ async function withBusy(label, fn){
   try{ await fn(); }
   catch(err){
     console.error(err);
-    msg("うまくいきませんでした。" + (err && err.message ? "（" + err.message + "）" : ""), "err");
+    msg(err && err.shown ? err.message
+      : "うまくいきませんでした。もう一度押してください。それでも変わらないときは、ページを開き直してください。", "err");
   }
   finally{ S.busy = false; updateUI(); }
 }
@@ -898,23 +1126,30 @@ async function askGemini(blob, mime, label){
   for(let i = 0; i < 5; i++){
     if(i){
       const w = 3 * Math.pow(2, i-1);
-      msg("Geminiが混み合っています。" + w + "秒待って送り直します（" + i + "回目）" + (label||""), "info", true);
+      msg("Geminiが混み合っています。" + w + "秒待って送り直します。" + (i+1) + "回目です" + (label||"") + "。", "info", true);
       await new Promise(r => setTimeout(r, w*1000));
     }
     let res;
     try{
       res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + MODEL + ":generateContent",
         { method:"POST", headers:{ "x-goog-api-key":getKey(), "Content-Type":"application/json" }, body });
-    }catch(e){ last = new Error("通信できませんでした。ネットにつながっているか確かめてください。"); continue; }
+    }catch(e){ last = uerr("ネットにつながっていません。つながりを確かめてから、もう一度押してください。"); continue; }
     if(res.ok){
       const j = await res.json();
       const c = j.candidates && j.candidates[0];
       const txt = c && c.content && c.content.parts ? c.content.parts.map(p => p.text || "").join("") : "";
-      if(!txt){ last = new Error("空の返事が来ました" + (c && c.finishReason ? "（"+c.finishReason+"）" : "")); continue; }
+      if(!txt){
+        console.warn("empty reply", c && c.finishReason);
+        last = uerr("Geminiから文字が返ってきませんでした。少し待ってから、もう一度押してください。");
+        continue;
+      }
       return JSON.parse(txt);
     }
     let d = ""; try{ d = (await res.json()).error.message; }catch(e){ d = res.statusText; }
-    last = new Error("Gemini " + res.status + "：" + d);
+    console.error("Gemini " + res.status + "：" + d);
+    last = (res.status === 400 || res.status === 401 || res.status === 403)
+      ? uerr("APIキーが使えませんでした。右上のAPIキーのボタンからキーを入れ直して、もう一度押してください。")
+      : uerr("Geminiが受け付けてくれませんでした。少し待ってから、もう一度押してください。");
     if([429,500,502,503,504].indexOf(res.status) < 0) throw last;
   }
   throw last;
@@ -941,7 +1176,7 @@ function runStt(){
     for(let i = 0; i < n; i++){
       const from = i * CHUNK_SEC, to = Math.min(total, (i+1) * CHUNK_SEC);
       elState.textContent = n > 1 ? (i+1) + " / " + n : "送っています…";
-      msg("文字起こし中です" + (n > 1 ? "（" + (i+1) + "/" + n + "）" : "") + "。少しかかります。", "info", true);
+      msg("文字起こしをしています" + (n > 1 ? "（" + (i+1) + "/" + n + "）" : "") + "。少しかかります。", "info", true);
       const part = sliceMono(mono, from, to);
       const blob = useMp3 ? mp3Blob(part, 64) : wavBlob(part);
       const cues = await askGemini(blob, useMp3 ? "audio/mpeg" : "audio/wav", n > 1 ? "／" + (i+1) + "本目" : "");
@@ -950,14 +1185,16 @@ function runStt(){
       renderCues(); updateUI();
     }
     elState.textContent = S.cues.length + " 行";
-    msg(S.cues.length ? "文字起こしが終わりました。" : "言葉は入っていませんでした。", "ok");
+    msg(S.cues.length
+      ? "文字起こしが終わりました。"
+      : "言葉が聞き取れませんでした。音の大きさを確かめてから、もう一度押してください。", "ok");
     if(S.cues.length && innerWidth <= 900) showTab("stt");
   });
 }
 
 function renderCues(){
   if(!S.cues.length){
-    elCues.innerHTML = '<div class="empty">まだありません。<br>音声を入れて、ボタンを押してください。</div>';
+    elCues.innerHTML = '<div class="empty">文字起こしはまだありません。<br>音声を足してから「文字起こしを始める」を押してください。</div>';
     return;
   }
   elCues.innerHTML = "";
@@ -997,7 +1234,7 @@ $("#btnSrt").addEventListener("click", async () => {
 });
 $("#btnCopy").addEventListener("click", async () => {
   try{ await navigator.clipboard.writeText(asText()); msg("コピーしました。", "ok"); }
-  catch(e){ msg("コピーできませんでした。テキストで保存してください。", "err"); }
+  catch(e){ msg("このブラウザではコピーできませんでした。「テキストで保存」を押して、ファイルにしてください。", "err"); }
 });
 
 /* ══ APIキー ══ */
@@ -1010,6 +1247,1009 @@ $("#keySave").addEventListener("click", () => {
   else if(k) msg("APIキーを保存しました。", "ok");
 });
 $("#keyInput").addEventListener("keydown", e => { if(e.key === "Enter") $("#keySave").click(); });
+
+/* ══════════════════════════════════════════
+   動画（そのまま並べて、合わせて、書き出す）
+   ══════════════════════════════════════════ */
+
+const VCOLORS = ["#4e9bff", "#ffa94d", "#4fd1a1", "#c08bff"];
+const MCOLOR  = "#8b93a8";               // 目かくしの帯の色
+const VMAX    = 4;                       // 同時に扱う動画の本数
+const VGRAB   = isTouch ? 22 : 12;       // 台紙の角つまみの当たり幅（画面px）
+const CLIP_H  = isTouch ? 62 : 54;       // 帯の高さ
+const PREVIEW_W = 960;                   // 画面に描くときの横幅の上限
+
+const V = {
+  on: false, clips: [], masks: [], pps: 46, cursor: 0, playing: false,
+  t0: 0, c0: 0, sel: null,
+  exporting: false, cancel: false, dirtyUntil: 0, target: null,
+  crop: null,                            // 切り抜き中 { id, x, y, w, h }（元動画の画素）
+  stage: { w: 1920, h: 1080, bg: "#000000" }
+};
+let vNextId = 1, vMixDest = null;
+
+const elStage  = $("#stage"),  elVClips  = $("#vclips"), elVRuler = $("#vruler"),
+      elVHead  = $("#vhead"),  elVScroll = $("#vscroll"), elVTime = $("#vtime"),
+      elVEmpty = $("#vempty"), elVTl     = $("#vtl"),     elVSel   = $("#vsel");
+const elVDrop = $("#vdrop"), elVStageBox = $("#vstage");
+const sg = elStage.getContext("2d");
+
+const vnow = () => performance.now() / 1000;   // 動画の時計（音声文脈に頼らない）
+const vTouchDraw = () => { V.dirtyUntil = performance.now() + 600; };
+const clen = c => c.trimEnd - c.trimStart;
+
+// 奥から手前の順。目かくしは必ず動画より手前
+const vItems = () => V.clips.concat(V.masks);
+const vFind  = id => vItems().find(o => o.id === id);
+const vSelected = () => vFind(V.sel);
+
+// 切り抜いたあとの、見た目の大きさ
+const srcW = c => c.mask ? c.w : c.cropW;
+const srcH = c => c.mask ? c.h : c.cropH;
+const isCropped = c => !c.mask && (c.cropX > 0 || c.cropY > 0 || c.cropW < c.vw || c.cropH < c.vh);
+
+function vtotal(){ let d = 0; V.clips.forEach(c => d = Math.max(d, c.offset + clen(c))); return d; }
+function vSpan(){ let d = vtotal(); V.masks.forEach(m => d = Math.max(d, m.offset + clen(m))); return d; }
+const vAnySolo = () => V.clips.some(c => c.solo);
+const vAudible = c => c.mute ? 0 : (vAnySolo() && !c.solo ? 0 : c.gain);
+const vIn = o => V.cursor >= o.offset && V.cursor < o.offset + clen(o);
+function vBaseName(){ return V.clips.length ? V.clips[0].name.replace(/\.[^.]+$/, "") : "動画"; }
+function vSize(n){ return n >= 1048576 ? (n / 1048576).toFixed(1) + "MB" : Math.round(n / 1024) + "KB"; }
+
+/* ══ 音声／動画の切り替え ══ */
+function setMode(m){
+  V.on = (m === "video");
+  document.body.classList.toggle("mode-video", V.on);
+  $("#modeAudio").classList.toggle("on", !V.on);
+  $("#modeVideo").classList.toggle("on", V.on);
+  $("#main").classList.toggle("hide", V.on);
+  $("#vmain").classList.toggle("hide", !V.on);
+  if(V.on){
+    stop();
+    vFitStageCanvas(); vLayoutStage();
+    requestAnimationFrame(() => { vFitStageCanvas(); vLayoutStage(); vFitZoom(); vRedraw(); });
+  }else{
+    vStop(); vCropEnd(false);
+    requestAnimationFrame(redrawAll);
+  }
+}
+$("#modeAudio").addEventListener("click", () => setMode("audio"));
+$("#modeVideo").addEventListener("click", () => setMode("video"));
+
+/* ══ 動画を足す・目かくしを足す（上の枠） ══ */
+let vDropTimer = null;
+function vDropGlow(on){
+  const ok = on && V.on && !V.crop && !V.exporting;
+  elVDrop.classList.toggle("over", ok);
+  elVStageBox.classList.toggle("over", ok);
+  clearTimeout(vDropTimer);
+  // dragover が途切れたら自分で消す。窓の外へ出たときは dragleave の相手が
+  // 指の下の要素（#stage など）になるので、それだけを当てにしない
+  if(ok) vDropTimer = setTimeout(() => vDropGlow(false), 150);
+}
+elVDrop.addEventListener("click", () => { if(V.crop || V.exporting) return; $("#vfile").click(); });
+$("#vMask").addEventListener("click", vAddMask);
+$("#vfile").addEventListener("change", e => { vAddFiles([...e.target.files]); e.target.value = ""; });
+
+async function vAddFiles(files){
+  for(const f of files){
+    if(V.clips.length >= VMAX){ msg("台紙に置ける動画は" + VMAX + "本までです。要らないものを削除してから足してください。", "err"); break; }
+    const looksVideo = /^video\//.test(f.type || "") || /\.(mp4|mov|m4v|webm|mkv|avi|ts)$/i.test(f.name);
+    if(!looksVideo){ msg("動画のファイルではありません。mp4やmovを選んでください。「" + f.name + "」は足していません。", "err"); continue; }
+    try{
+      msg("「" + f.name + "」を読んでいます…", "info", true);
+      await vAddClip(f);
+      clearMsg();
+    }catch(err){
+      console.error(err);
+      msg("この形式はこのブラウザでは開けません。mp4かmovに変えてから足してください。「" + f.name + "」は足していません。", "err");
+    }
+  }
+  vArrange(); vFitZoom(); vRedraw(); vUpdateUI();
+}
+
+function vAddClip(file){
+  return new Promise((resolve, reject) => {
+    const el = document.createElement("video");
+    el.playsInline = true; el.preload = "auto"; el.volume = 1;
+    el.src = URL.createObjectURL(file);
+    const fail = () => reject(new Error("この形式は読めません"));
+    el.addEventListener("error", fail, { once: true });
+    el.addEventListener("loadedmetadata", () => {
+      const dur = isFinite(el.duration) ? el.duration : 0;
+      if(dur <= 0) return fail();
+      const vw = el.videoWidth || 1280, vh = el.videoHeight || 720;
+      const c = {
+        id: vNextId++, name: file.name, el: el, dur: dur, vw: vw, vh: vh,
+        cropX: 0, cropY: 0, cropW: vw, cropH: vh,
+        trimStart: 0, trimEnd: dur, offset: 0,
+        gain: 1, mute: false, solo: false,
+        x: 0, y: 0, w: 0, h: 0,
+        color: VCOLORS[V.clips.length % VCOLORS.length]
+      };
+      V.clips.push(c);
+      vBuildRow(c);
+      vAudioGraph(c);
+      V.sel = c.id;
+      // 画素の大きさは、こまが届いてから確かめ直す（metadata では取れないことがある）
+      // 並びは直さない。その動画だけ、まん中を保って、いまの枠に収まる形に合わせ直す
+      el.addEventListener("loadeddata", () => {
+        if(!el.videoWidth || (el.videoWidth === c.vw && el.videoHeight === c.vh)) return;
+        const kw = el.videoWidth / c.vw, kh = el.videoHeight / c.vh;
+        c.vw = el.videoWidth; c.vh = el.videoHeight;
+        c.cropX *= kw; c.cropY *= kh; c.cropW *= kw; c.cropH *= kh;
+        if(c.w > 0 && c.h > 0){
+          const ox = c.x + c.w / 2, oy = c.y + c.h / 2;
+          const k = Math.min(c.w / srcW(c), c.h / srcH(c));
+          c.w = srcW(c) * k; c.h = srcH(c) * k;
+          c.x = ox - c.w / 2; c.y = oy - c.h / 2;
+        }
+        vTouchDraw();
+      }, { once: true });
+      try{ el.currentTime = 0.05; }catch(e){}
+      vTouchDraw();
+      resolve(c);
+    }, { once: true });
+  });
+}
+
+// 動画の音は要素から取って、音量つまみを通してから鳴らす（書き出しにも同じ音を流す）
+function vAudioGraph(c){
+  try{
+    if(!vMixDest) vMixDest = ac.createMediaStreamDestination();
+    const src = ac.createMediaElementSource(c.el);
+    const g = ac.createGain(); g.gain.value = vAudible(c);
+    src.connect(g); g.connect(ac.destination); g.connect(vMixDest);
+    c._src = src; c._g = g;
+  }catch(e){ console.warn("音を通せませんでした", e); }
+}
+function vRefreshGains(){ V.clips.forEach(c => { if(c._g) c._g.gain.value = vAudible(c); }); }
+
+/* ══ 目かくし ══ */
+const KIND = { black: "黒", white: "白", mosaic: "モザイク" };
+function vAddMask(){
+  const len = Math.max(1, vtotal() || 5);
+  const m = {
+    id: vNextId++, mask: true, kind: "black",
+    gran: Math.max(10, Math.round(V.stage.w * 0.02)),
+    x: V.stage.w * 0.28, y: V.stage.h * 0.38,
+    w: V.stage.w * 0.44, h: V.stage.h * 0.24,
+    offset: 0, trimStart: 0, trimEnd: len, dur: len,
+    color: MCOLOR
+  };
+  m.name = "目かくし（" + KIND[m.kind] + "）";
+  V.masks.push(m);
+  vBuildRow(m);
+  V.sel = m.id;
+  vFitZoom(); vRedraw(); vUpdateUI();
+  msg("目かくしを台紙に置きました。台紙の上でつかんで、置く場所と大きさを決めてください。", "ok");
+}
+
+/* ══ 台紙に均等に並べる ══ */
+function vArrange(){
+  const n = V.clips.length;
+  if(!n) return;
+  const SW = V.stage.w, SH = V.stage.h, cw = SW / n;
+  V.clips.forEach((c, i) => {
+    const k = Math.min(cw / srcW(c), SH / srcH(c));
+    c.w = srcW(c) * k; c.h = srcH(c) * k;
+    c.x = i * cw + (cw - c.w) / 2;
+    c.y = (SH - c.h) / 2;
+  });
+  vTouchDraw();
+}
+
+/* ══ 帯の行 ══ */
+function vBuildRow(o){
+  const box = document.createElement("div");
+  box.className = "clip" + (o.mask ? " mrow" : "");
+  box.innerHTML =
+    '<div class="thead">' +
+      '<span class="dot"></span>' +
+      '<span class="nm"></span>' +
+      '<span class="meta"></span>' +
+      '<span class="sp"></span>' +
+      (o.mask ? "" :
+        '<button class="tbtn bVol" title="音量" aria-label="音量">' + ICO.vol + '</button>' +
+        '<button class="tbtn bMute" title="ミュート" aria-label="ミュート">' + ICO.mute + '</button>' +
+        '<button class="tbtn bSolo" title="ソロ" aria-label="ソロ">ソロ</button>') +
+      '<button class="tbtn bUndo" title="' + (o.mask ? "長さを戻す" : "切ったのを戻す") + '"' +
+        ' aria-label="' + (o.mask ? "長さを戻す" : "切ったのを戻す") + '">' + ICO.undo + '</button>' +
+      '<button class="tbtn bDel" title="削除" aria-label="削除">' + ICO.del + '</button>' +
+    '</div>' +
+    '<canvas class="bar"></canvas>' +
+    (o.mask ? "" : '<div class="vol"><input type="range" min="0" max="150" value="100" aria-label="音量"><span>100%</span></div>');
+  elVClips.appendChild(box);
+  o.dom = box; o.canvas = box.querySelector("canvas");
+  box.querySelector(".nm").textContent = o.name;
+  box.querySelector(".dot").style.background = o.color;
+
+  if(!o.mask){
+    const volBox = box.querySelector(".vol");
+    box.querySelector(".bVol").addEventListener("click", () => volBox.classList.toggle("show"));
+    volBox.querySelector("input").addEventListener("input", e => {
+      o.gain = e.target.value / 100;
+      volBox.querySelector("span").textContent = e.target.value + "%";
+      if(o._g) o._g.gain.value = vAudible(o);
+    });
+    box.querySelector(".bMute").addEventListener("click", e => {
+      o.mute = !o.mute; e.currentTarget.classList.toggle("on", o.mute); vRefreshGains();
+    });
+    box.querySelector(".bSolo").addEventListener("click", e => {
+      o.solo = !o.solo; e.currentTarget.classList.toggle("on", o.solo); vRefreshGains();
+    });
+  }
+  box.querySelector(".bUndo").addEventListener("click", () => {
+    o.trimStart = 0; o.trimEnd = o.mask ? Math.max(1, vtotal() || o.dur) : o.dur;
+    if(o.mask) o.dur = o.trimEnd;
+    vRedraw();
+  });
+  box.querySelector(".bDel").addEventListener("click", () => {
+    vStop(); vCropEnd(false);
+    if(o.mask) V.masks = V.masks.filter(x => x.id !== o.id);
+    else{
+      try{ o.el.pause(); }catch(e){}
+      try{ o._g.disconnect(); o._src.disconnect(); }catch(e){}
+      try{ URL.revokeObjectURL(o.el.src); }catch(e){}
+      V.clips = V.clips.filter(x => x.id !== o.id);
+    }
+    box.remove();
+    if(V.sel === o.id){ const rest = vItems(); V.sel = rest.length ? rest[rest.length - 1].id : null; }
+    vRedraw(); vUpdateUI();
+  });
+  vBindRowDrag(o);
+}
+
+// 動画の行が先、目かくしの行があと
+function vOrderRows(){ vItems().forEach(o => { if(o.dom) elVClips.appendChild(o.dom); }); }
+
+function vFullWidth(){
+  return Math.max(Math.ceil(Math.max(vSpan(), 8) * V.pps) + 40, elVScroll.clientWidth - 28);
+}
+
+function vDrawBar(o, W){
+  const cv = o.canvas, dpr = Math.min(window.devicePixelRatio || 1, 2);
+  cv.width = W * dpr; cv.height = CLIP_H * dpr;
+  cv.style.width = W + "px"; cv.style.height = CLIP_H + "px";
+  const g = cv.getContext("2d");
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  g.clearRect(0, 0, W, CLIP_H);
+
+  const x0 = o.offset * V.pps, x1 = (o.offset + clen(o)) * V.pps;
+
+  if(!o.mask){   // 切り落とした分をうっすら
+    const fx = (o.offset - o.trimStart) * V.pps, fw = Math.max(2, o.dur * V.pps);
+    g.globalAlpha = .16; g.fillStyle = o.color;
+    roundRect(g, fx, 12, fw, CLIP_H - 24, 5); g.fill();
+    g.globalAlpha = 1;
+  }
+
+  const w = Math.max(3, x1 - x0);
+  g.fillStyle = o.color;
+  roundRect(g, x0, 4, w, CLIP_H - 8, 8); g.fill();
+
+  g.save();
+  roundRect(g, x0, 4, w, CLIP_H - 8, 8); g.clip();
+  g.fillStyle = "rgba(9,18,31,.82)";
+  g.font = "700 12px -apple-system, system-ui, sans-serif";
+  g.textBaseline = "middle";
+  g.fillText(o.name, x0 + 12, CLIP_H / 2);
+  g.restore();
+
+  // つまみ
+  const hw = isTouch ? 11 : 8, mid = CLIP_H / 2;
+  g.fillStyle = "rgba(9,18,31,.5)";
+  roundRect(g, x0, 4, hw, CLIP_H - 8, 5); g.fill();
+  roundRect(g, x1 - hw, 4, hw, CLIP_H - 8, 5); g.fill();
+  g.fillStyle = "rgba(255,255,255,.85)";
+  for(let i = 0; i < 3; i++){
+    g.fillRect(x0 + hw/2 - 1, mid - 9 + i*7, 2, 4);
+    g.fillRect(x1 - hw/2 - 1, mid - 9 + i*7, 2, 4);
+  }
+
+  o.dom.classList.toggle("sel", V.sel === o.id);
+  o.dom.querySelector(".meta").textContent = fmt(clen(o)) + "／位置 " + fmt(o.offset);
+}
+
+function vDrawRuler(W){
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  elVRuler.width = W * dpr; elVRuler.height = 26 * dpr;
+  elVRuler.style.width = W + "px";
+  const g = elVRuler.getContext("2d");
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  g.clearRect(0, 0, W, 26);
+  const steps = [0.1,0.25,0.5,1,2,5,10,15,30,60,120,300,600];
+  const step = steps.find(s => s * V.pps >= (isTouch ? 76 : 62)) || 600;
+  g.font = "11px system-ui"; g.textBaseline = "middle";
+  for(let s = 0; s * V.pps <= W; s += step){
+    const x = Math.round(s * V.pps) + .5;
+    g.strokeStyle = "#4a5368";
+    g.beginPath(); g.moveTo(x, 16); g.lineTo(x, 26); g.stroke();
+    g.fillStyle = "#98a1b5";
+    g.fillText(fmt(s, step < 1), x + 5, 9);
+  }
+}
+
+// 帯の見出しは、横にスクロールしても画面から出ていかないように、入れ物の内幅に合わせる
+function vHeadWidth(){
+  const cs = getComputedStyle(elVScroll);
+  const w = elVScroll.clientWidth - (parseFloat(cs.paddingLeft) || 0) - (parseFloat(cs.paddingRight) || 0);
+  return Math.max(120, Math.round(w));
+}
+
+function vRedraw(){
+  const W = vFullWidth();
+  const hw = vHeadWidth();
+  elVTl.style.width = W + "px";
+  vDrawRuler(W);
+  vItems().forEach(o => {
+    vDrawBar(o, W);
+    const th = o.dom && o.dom.querySelector(".thead");
+    if(th) th.style.width = hw + "px";
+  });
+  elVHead.hidden = !vItems().length;
+  elVHead.style.height = elVTl.scrollHeight + "px";
+  vMoveHead(); vShowTime(); vSyncSel(); vTouchDraw();
+}
+function vMoveHead(){ elVHead.style.left = (V.cursor * V.pps) + "px"; }
+function vShowTime(){ elVTime.innerHTML = "<b>" + fmt(V.cursor) + "</b>ぜんぶで " + fmt(vtotal()); }
+
+function vFitZoom(){
+  const d = vSpan();
+  if(d <= 0) return;
+  const w = Math.max(220, elVScroll.clientWidth - 54);
+  V.pps = Math.max(8, Math.min(400, w / d));
+  $("#vzoom").value = Math.round(V.pps);
+}
+$("#vzoom").addEventListener("input", e => { V.pps = +e.target.value; vRedraw(); });
+addEventListener("resize", () => { if(V.on){ vFitStageCanvas(); vLayoutStage(); vRedraw(); } });
+
+/* ══ 帯をつまむ（位置と、頭・尻） ══ */
+function vBindRowDrag(o){
+  const cv = o.canvas;
+  let mode = null, sx = 0, base = 0, base2 = 0, pid = null, moved = false, pinch = null;
+
+  cv.addEventListener("pointerdown", e => {
+    if(e.pointerType === "touch" && cv._touches > 1) return;
+    V.sel = o.id;
+    const x = e.offsetX;
+    const x0 = o.offset * V.pps, x1 = (o.offset + clen(o)) * V.pps;
+    const dL = Math.abs(x - x0), dR = Math.abs(x - x1);
+    mode = (dL <= GRAB && dL <= dR) ? "L" : (dR <= GRAB) ? "R" : "M";
+    sx = e.clientX; base = o.offset; base2 = mode === "R" ? o.trimEnd : o.trimStart;
+    moved = false; pid = e.pointerId;
+    cv.setPointerCapture(pid); cv.classList.add("drag");
+    vRedraw();
+  });
+
+  cv.addEventListener("pointermove", e => {
+    if(mode === null || e.pointerId !== pid) return;
+    const d = (e.clientX - sx) / V.pps;
+    if(Math.abs(e.clientX - sx) > 3) moved = true;
+    if(mode === "M") o.offset = Math.max(0, base + d);
+    else if(mode === "L"){
+      const lo = o.mask ? -1e9 : 0;
+      const ns = Math.min(Math.max(lo, base2 + d), o.trimEnd - 0.05);
+      o.offset = Math.max(0, base + (ns - base2));
+      o.trimStart = ns;
+    }else{
+      const hi = o.mask ? 1e9 : o.dur;
+      o.trimEnd = Math.max(o.trimStart + 0.05, Math.min(hi, base2 + d));
+      if(o.mask) o.dur = o.trimEnd;
+    }
+    vRedraw();
+    if(!V.playing && !o.mask) vPark(o);
+  });
+
+  const end = e => {
+    if(mode === null) return;
+    if(!moved && e.offsetX !== undefined) vSeek(e.offsetX / V.pps);
+    mode = null; cv.classList.remove("drag");
+    try{ cv.releasePointerCapture(pid); }catch(_){}
+  };
+  cv.addEventListener("pointerup", end);
+  cv.addEventListener("pointercancel", () => { mode = null; cv.classList.remove("drag"); });
+
+  cv.addEventListener("touchstart", e => {
+    cv._touches = e.touches.length;
+    if(e.touches.length === 2){
+      mode = null; cv.classList.remove("drag");
+      pinch = { d: dist(e.touches), pps: V.pps };
+    }
+  }, { passive: true });
+  cv.addEventListener("touchmove", e => {
+    if(pinch && e.touches.length === 2){
+      e.preventDefault();
+      const r = dist(e.touches) / pinch.d;
+      V.pps = Math.max(6, Math.min(600, pinch.pps * r));
+      $("#vzoom").value = Math.round(Math.max(8, Math.min(400, V.pps)));
+      vRedraw();
+    }
+  }, { passive: false });
+  cv.addEventListener("touchend", e => { cv._touches = e.touches.length; if(e.touches.length < 2) pinch = null; }, { passive: true });
+}
+elVRuler.addEventListener("pointerdown", e => vSeek(e.offsetX / V.pps));
+
+/* ══ 台紙の大きさ合わせ ══
+   裏の寸法（elStage.width/height）は PREVIEW_W まで。
+   見た目の大きさ（style.width/height）は CSS に任せず vLayoutStage() が px で入れる。
+   こうしておくと、押した場所は横の倍率ひとつで台紙の座標に戻せる。 */
+function vFitStageCanvas(){
+  const st = V.stage;
+  const bw = Math.min(st.w, PREVIEW_W), bh = Math.max(1, Math.round(bw * st.h / st.w));
+  if(elStage.width !== bw || elStage.height !== bh){ elStage.width = bw; elStage.height = bh; return true; }
+  return false;
+}
+
+let _vBoxKey = "";
+function vBoxKey(){
+  return elVStageBox.clientWidth + "|" + elVStageBox.clientHeight + "|" + V.stage.w + "|" + V.stage.h;
+}
+function vLayoutStage(){
+  _vBoxKey = vBoxKey();
+  const cs = getComputedStyle(elVStageBox);
+  const iw = elVStageBox.clientWidth  - (parseFloat(cs.paddingLeft) || 0) - (parseFloat(cs.paddingRight)  || 0);
+  const ih = elVStageBox.clientHeight - (parseFloat(cs.paddingTop)  || 0) - (parseFloat(cs.paddingBottom) || 0);
+  if(!(iw > 4 && ih > 4)) return;
+  const k = Math.min(iw / V.stage.w, ih / V.stage.h);
+  elStage.style.width  = (V.stage.w * k).toFixed(2) + "px";
+  elStage.style.height = (V.stage.h * k).toFixed(2) + "px";
+}
+// 入れ物の大きさが変わったときだけ入れ直す（毎こま測ると重い）
+function vLayoutIfMoved(){ if(vBoxKey() !== _vBoxKey) vLayoutStage(); }
+
+if(window.ResizeObserver){
+  new ResizeObserver(() => { if(V.on) vLayoutIfMoved(); }).observe(elVStageBox);
+}
+
+/* ══ 台紙の上で動かす・大きさを変える ══ */
+function vSnap(v, size, total){
+  const th = total * 0.012;
+  for(const t of [0, (total - size) / 2, total - size]) if(Math.abs(v - t) < th) return t;
+  return v;
+}
+
+(function vBindStage(){
+  let mode = null, sx = 0, sy = 0, bx = 0, by = 0, bw = 0, bh = 0, cur = null, pid = null;
+
+  // 画面の座標 → 台紙の座標。見た目の大きさは台紙の比率そのままなので、横の倍率ひとつで戻せる
+  const at = e => {
+    const r = elStage.getBoundingClientRect();
+    const k = (r.width || 1) / V.stage.w;
+    return { x: (e.clientX - r.left) / k, y: (e.clientY - r.top) / k, k: k };
+  };
+
+  elStage.addEventListener("pointerdown", e => {
+    if(V.exporting) return;
+    if(V.crop) return vCropDown(e);
+    const list = vItems();
+    if(!list.length) return;
+    const p = at(e);
+    let hit = null, corner = null;
+    for(let i = list.length - 1; i >= 0; i--){
+      const c = list[i];
+      if(c.id === V.sel){
+        // 小さいものでは、つかみ範囲が中身を覆い尽くさないようにする
+        const grab = Math.min(VGRAB / p.k, Math.min(c.w, c.h) * 0.26);
+        const cs = [[c.x, c.y, "nw"], [c.x + c.w, c.y, "ne"], [c.x, c.y + c.h, "sw"], [c.x + c.w, c.y + c.h, "se"]];
+        const co = cs.find(q => Math.abs(p.x - q[0]) <= grab && Math.abs(p.y - q[1]) <= grab);
+        if(co){ hit = c; corner = co[2]; break; }
+      }
+      if(p.x >= c.x && p.x <= c.x + c.w && p.y >= c.y && p.y <= c.y + c.h){ hit = c; break; }
+    }
+    if(!hit){ V.sel = null; vSyncSel(); vRedraw(); return; }
+    V.sel = hit.id; cur = hit; mode = corner || "move";
+    sx = p.x; sy = p.y; bx = hit.x; by = hit.y; bw = hit.w; bh = hit.h;
+    pid = e.pointerId;
+    try{ elStage.setPointerCapture(pid); }catch(_){}
+    vItems().forEach(o => { if(o.dom) o.dom.classList.toggle("sel", o.id === V.sel); });
+    vSyncSel(); vTouchDraw();
+  });
+
+  elStage.addEventListener("pointermove", e => {
+    if(V.crop) return vCropMove(e);
+    if(mode === null || e.pointerId !== pid) return;
+    const p = at(e);
+    if(mode === "move"){
+      cur.x = vSnap(bx + (p.x - sx), cur.w, V.stage.w);
+      cur.y = vSnap(by + (p.y - sy), cur.h, V.stage.h);
+    }else{
+      const ax = /w$/.test(mode) ? bx + bw : bx;         // 動かさないほうの角
+      const ay = /^n/.test(mode) ? by + bh : by;
+      if(cur.mask){
+        // 目かくしは自由な形。縦横それぞれ
+        const nw = Math.max(V.stage.w * 0.03, Math.abs(p.x - ax));
+        const nh = Math.max(V.stage.h * 0.03, Math.abs(p.y - ay));
+        cur.w = nw; cur.h = nh;
+      }else{
+        const k  = Math.max(Math.abs(p.x - ax) / bw, Math.abs(p.y - ay) / bh);
+        const kk = Math.max((V.stage.w * 0.06) / bw, Math.min(k, 6));
+        cur.w = bw * kk; cur.h = bh * kk;
+      }
+      cur.x = /w$/.test(mode) ? ax - cur.w : ax;
+      cur.y = /^n/.test(mode) ? ay - cur.h : ay;
+    }
+    vTouchDraw();
+  });
+
+  const end = () => {
+    if(V.crop) return vCropUp();
+    if(mode === null) return;
+    mode = null;
+    try{ elStage.releasePointerCapture(pid); }catch(_){}
+  };
+  elStage.addEventListener("pointerup", end);
+  elStage.addEventListener("pointercancel", end);
+
+  window.__at = at;   // 切り抜きからも使う
+})();
+
+/* ══ 台紙を描く ══ */
+let _tmp = null;
+function vTmp(w, h){
+  if(!_tmp){ const cv = document.createElement("canvas"); _tmp = { cv: cv, g: cv.getContext("2d") }; }
+  if(_tmp.cv.width !== w || _tmp.cv.height !== h){ _tmp.cv.width = w; _tmp.cv.height = h; }
+  return _tmp;
+}
+
+function vDrawStage(){
+  vFitStageCanvas();
+  vLayoutIfMoved();
+  if(V.crop) return vDrawCrop();
+  const k = elStage.width / V.stage.w;
+  vPaint(sg, k);
+  if(V.target) vPaint(V.target, 1);
+  vDrawFrame(k);
+}
+
+function vPaint(g, k){
+  const st = V.stage;
+  g.setTransform(1, 0, 0, 1, 0, 0);
+  g.fillStyle = st.bg;
+  g.fillRect(0, 0, st.w * k, st.h * k);
+  V.clips.forEach(c => {
+    if(!vIn(c) || !c.el.videoWidth) return;
+    try{
+      g.drawImage(c.el, c.cropX, c.cropY, c.cropW, c.cropH, c.x * k, c.y * k, c.w * k, c.h * k);
+    }catch(e){}
+  });
+  V.masks.forEach(m => { if(vIn(m)) vPaintMask(g, m, k); });
+}
+
+function vPaintMask(g, m, k){
+  const x = m.x * k, y = m.y * k, w = m.w * k, h = m.h * k;
+  if(m.kind === "mosaic"){
+    const cw = g.canvas.width, ch = g.canvas.height;
+    const sx = Math.max(0, Math.min(cw - 1, x)), sy = Math.max(0, Math.min(ch - 1, y));
+    const sw = Math.max(1, Math.min(cw - sx, w)), sh = Math.max(1, Math.min(ch - sy, h));
+    const cell = Math.max(2, m.gran * k);
+    const nw = Math.max(1, Math.round(sw / cell)), nh = Math.max(1, Math.round(sh / cell));
+    const t = vTmp(nw, nh);
+    try{
+      t.g.clearRect(0, 0, nw, nh);
+      t.g.drawImage(g.canvas, sx, sy, sw, sh, 0, 0, nw, nh);
+      const sm = g.imageSmoothingEnabled;
+      g.imageSmoothingEnabled = false;
+      g.drawImage(t.cv, 0, 0, nw, nh, sx, sy, sw, sh);
+      g.imageSmoothingEnabled = sm;
+    }catch(e){}
+  }else{
+    g.fillStyle = m.kind === "white" ? "#ffffff" : "#000000";
+    g.fillRect(x, y, w, h);
+  }
+}
+
+function vDrawFrame(k){
+  if(V.exporting) return;
+  const c = vSelected();
+  if(!c) return;
+  vOutline(sg, c.x * k, c.y * k, c.w * k, c.h * k);
+}
+function vOutline(g, x, y, w, h){
+  g.save();
+  g.strokeStyle = "#4e9bff"; g.lineWidth = 2; g.setLineDash([7, 5]);
+  g.strokeRect(x, y, w, h);
+  g.setLineDash([]);
+  g.fillStyle = "#4e9bff";
+  const s = 10;
+  [[x, y], [x + w, y], [x, y + h], [x + w, y + h]]
+    .forEach(q => g.fillRect(q[0] - s/2, q[1] - s/2, s, s));
+  g.restore();
+}
+
+/* ══ 切り抜き ══ */
+function vCropFit(){
+  const c = vFind(V.crop.id);
+  const cw = elStage.width, ch = elStage.height;
+  const k = Math.min(cw / c.vw, ch / c.vh);
+  return { c: c, k: k, ox: (cw - c.vw * k) / 2, oy: (ch - c.vh * k) / 2 };
+}
+
+function vCropStart(){
+  const c = vSelected();
+  if(!c || c.mask) return;
+  V.crop = { id: c.id, x: c.cropX, y: c.cropY, w: c.cropW, h: c.cropH, mode: null };
+  if(!vIn(c)){
+    try{ c.el.currentTime = Math.min(c.dur - 0.05, c.trimStart + 0.1); }catch(e){}
+  }
+  $("#vPlay").classList.add("quiet");     // 「切り抜く」と主要ボタンが並ばないように
+  vSyncSel(); vUpdateUI(); vTouchDraw();
+  msg("残す範囲を四角で囲んでから、「切り抜く」を押してください。やめるときは「やめる」を押してください。", "info");
+}
+function vCropEnd(apply){
+  if(!V.crop) return;
+  const c = vFind(V.crop.id);
+  if(apply && c){
+    const ox = c.x + c.w / 2, oy = c.y + c.h / 2;      // まん中はそのまま
+    c.cropX = V.crop.x; c.cropY = V.crop.y; c.cropW = V.crop.w; c.cropH = V.crop.h;
+    const k = Math.min(c.w / c.cropW, c.h / c.cropH);  // いまの置き場所に収める
+    c.w = c.cropW * k; c.h = c.cropH * k;
+    c.x = ox - c.w / 2; c.y = oy - c.h / 2;
+  }
+  V.crop = null;
+  clearMsg();
+  $("#vPlay").classList.remove("quiet");
+  if(c && !V.playing) vPark(c);
+  vSyncSel(); vUpdateUI(); vRedraw();
+}
+function vCropReset(){
+  const c = vSelected();
+  if(!c || c.mask) return;
+  const ox = c.x + c.w / 2, oy = c.y + c.h / 2;
+  c.cropX = 0; c.cropY = 0; c.cropW = c.vw; c.cropH = c.vh;
+  const k = Math.min(c.w / c.vw, c.h / c.vh);
+  c.w = c.vw * k; c.h = c.vh * k;
+  c.x = ox - c.w / 2; c.y = oy - c.h / 2;
+  vSyncSel(); vRedraw();
+}
+
+function vDrawCrop(){
+  const f = vCropFit(), c = f.c, g = sg;
+  g.setTransform(1, 0, 0, 1, 0, 0);
+  g.fillStyle = "#0b0e14";
+  g.fillRect(0, 0, elStage.width, elStage.height);
+  if(c.el.videoWidth){
+    try{ g.drawImage(c.el, f.ox, f.oy, c.vw * f.k, c.vh * f.k); }catch(e){}
+  }
+  const x = f.ox + V.crop.x * f.k, y = f.oy + V.crop.y * f.k,
+        w = V.crop.w * f.k, h = V.crop.h * f.k;
+  // 外側を暗く
+  g.fillStyle = "rgba(6,9,14,.72)";
+  g.fillRect(0, 0, elStage.width, y);
+  g.fillRect(0, y + h, elStage.width, elStage.height - y - h);
+  g.fillRect(0, y, x, h);
+  g.fillRect(x + w, y, elStage.width - x - w, h);
+  // 三分割の目安
+  g.strokeStyle = "rgba(255,255,255,.28)"; g.lineWidth = 1;
+  for(let i = 1; i < 3; i++){
+    g.beginPath(); g.moveTo(x + w*i/3, y); g.lineTo(x + w*i/3, y + h); g.stroke();
+    g.beginPath(); g.moveTo(x, y + h*i/3); g.lineTo(x + w, y + h*i/3); g.stroke();
+  }
+  vOutline(g, x, y, w, h);
+}
+
+let _cs = null;
+function vCropDown(e){
+  const f = vCropFit();
+  const r = elStage.getBoundingClientRect();
+  const k = (r.width || 1) / elStage.width;
+  const px = ((e.clientX - r.left) / k - f.ox) / f.k;      // 元動画の画素で
+  const py = ((e.clientY - r.top)  / k - f.oy) / f.k;
+  const grab = Math.min(VGRAB / (f.k * k), Math.min(V.crop.w, V.crop.h) * 0.26);
+  const q = V.crop;
+  const cs = [[q.x, q.y, "nw"], [q.x + q.w, q.y, "ne"], [q.x, q.y + q.h, "sw"], [q.x + q.w, q.y + q.h, "se"]];
+  const co = cs.find(t => Math.abs(px - t[0]) <= grab && Math.abs(py - t[1]) <= grab);
+  const inside = px >= q.x && px <= q.x + q.w && py >= q.y && py <= q.y + q.h;
+  if(!co && !inside) return;
+  _cs = { mode: co ? co[2] : "move", px: px, py: py, x: q.x, y: q.y, w: q.w, h: q.h, pid: e.pointerId };
+  try{ elStage.setPointerCapture(e.pointerId); }catch(_){}
+  vTouchDraw();
+}
+function vCropMove(e){
+  if(!_cs || e.pointerId !== _cs.pid) return;
+  const f = vCropFit(), c = f.c, q = V.crop;
+  const r = elStage.getBoundingClientRect();
+  const k = (r.width || 1) / elStage.width;
+  const px = ((e.clientX - r.left) / k - f.ox) / f.k;
+  const py = ((e.clientY - r.top)  / k - f.oy) / f.k;
+  const dx = px - _cs.px, dy = py - _cs.py;
+  const minW = c.vw * 0.08, minH = c.vh * 0.08;
+  if(_cs.mode === "move"){
+    q.x = Math.max(0, Math.min(c.vw - _cs.w, _cs.x + dx));
+    q.y = Math.max(0, Math.min(c.vh - _cs.h, _cs.y + dy));
+  }else{
+    const ax = /w$/.test(_cs.mode) ? _cs.x + _cs.w : _cs.x;
+    const ay = /^n/.test(_cs.mode) ? _cs.y + _cs.h : _cs.y;
+    const nx = Math.max(0, Math.min(c.vw, px)), ny = Math.max(0, Math.min(c.vh, py));
+    q.w = Math.max(minW, Math.abs(nx - ax));
+    q.h = Math.max(minH, Math.abs(ny - ay));
+    q.x = /w$/.test(_cs.mode) ? Math.max(0, ax - q.w) : ax;
+    q.y = /^n/.test(_cs.mode) ? Math.max(0, ay - q.h) : ay;
+    q.w = Math.min(q.w, c.vw - q.x);
+    q.h = Math.min(q.h, c.vh - q.y);
+  }
+  vTouchDraw();
+}
+function vCropUp(){ _cs = null; }
+
+$("#vFront").addEventListener("click", () => {
+  const o = vSelected();
+  if(!o || o.mask) return;
+  V.clips = V.clips.filter(x => x.id !== o.id); V.clips.push(o);
+  V.sel = o.id; vOrderRows(); vRedraw(); vUpdateUI();
+});
+$("#cropStart").addEventListener("click", vCropStart);
+$("#cropReset").addEventListener("click", vCropReset);
+$("#cropOk").addEventListener("click", () => vCropEnd(true));
+$("#cropCancel").addEventListener("click", () => vCropEnd(false));
+$("#cropAll").addEventListener("click", () => {
+  const c = vFind(V.crop && V.crop.id);
+  if(!c) return;
+  V.crop.x = 0; V.crop.y = 0; V.crop.w = c.vw; V.crop.h = c.vh;
+  vTouchDraw();
+});
+
+/* ══ 選んでいるものの手元 ══ */
+function vSyncSel(){
+  const o = vSelected();
+  const crop = !!V.crop;
+  $("#selCrop").hidden  = !crop;
+  $("#selClip").hidden  = crop || !o || !!(o && o.mask);
+  $("#selMask").hidden  = crop || !o || !(o && o.mask);
+  elVSel.hidden = crop ? false : !o;
+  if(!crop && o && !o.mask){
+    $("#selClip .who").textContent = o.name;
+    $("#cropReset").hidden = !isCropped(o);
+  }
+  if(!crop && o && o.mask){
+    $("#selMask").querySelectorAll("[data-kind]").forEach(b => b.classList.toggle("on", b.dataset.kind === o.kind));
+    $("#granWrap").hidden = o.kind !== "mosaic";
+    $("#gran").value = Math.round(o.gran);
+  }
+}
+$("#selMask").querySelectorAll("[data-kind]").forEach(b => b.addEventListener("click", () => {
+  const o = vSelected();
+  if(!o || !o.mask) return;
+  o.kind = b.dataset.kind;
+  o.name = "目かくし（" + KIND[o.kind] + "）";
+  o.dom.querySelector(".nm").textContent = o.name;
+  vSyncSel(); vRedraw();
+}));
+$("#gran").addEventListener("input", e => {
+  const o = vSelected();
+  if(o && o.mask){ o.gran = +e.target.value; vTouchDraw(); }
+});
+
+/* ══ 再生 ══ */
+function vSeek(sec){
+  V.cursor = Math.max(0, Math.min(sec, vtotal()));
+  if(V.playing){ V.t0 = vnow(); V.c0 = V.cursor; }
+  else V.clips.forEach(vPark);
+  vMoveHead(); vShowTime(); vTouchDraw();
+}
+function vPark(c){
+  try{
+    if(!c.el.paused) c.el.pause();
+    c.el.playbackRate = 1;
+    const t = Math.max(0, Math.min(c.dur - 0.05, c.trimStart + (V.cursor - c.offset)));
+    if(Math.abs(c.el.currentTime - t) > 0.04) c.el.currentTime = t;
+  }catch(e){}
+}
+function vSync(c){
+  if(!vIn(c)){ if(!c.el.paused){ try{ c.el.pause(); }catch(e){} c.el.playbackRate = 1; } return; }
+  const want = c.trimStart + (V.cursor - c.offset);
+  const d = c.el.currentTime - want;
+  if(Math.abs(d) > 0.35){ try{ c.el.currentTime = want; }catch(e){} c.el.playbackRate = 1; }
+  else if(Math.abs(d) > 0.045) c.el.playbackRate = d > 0 ? 0.95 : 1.05;
+  else c.el.playbackRate = 1;
+  if(c.el.paused) c.el.play().catch(() => {});
+}
+function vPlay(){
+  if(!V.clips.length) return;
+  vCropEnd(false);
+  ac.resume();
+  if(V.cursor >= vtotal() - 0.02) V.cursor = 0;
+  V.t0 = vnow(); V.c0 = V.cursor; V.playing = true;
+  $("#vicPlay").hidden = true; $("#vicStop").hidden = false;
+  $("#vPlay").setAttribute("aria-label", "停止");
+}
+function vStop(){
+  V.playing = false;
+  V.clips.forEach(c => { try{ c.el.pause(); c.el.playbackRate = 1; }catch(e){} });
+  $("#vicPlay").hidden = false; $("#vicStop").hidden = true;
+  $("#vPlay").setAttribute("aria-label", "再生");
+  vTouchDraw();
+}
+$("#vPlay").addEventListener("click", () => V.playing ? vStop() : vPlay());
+$("#vTop").addEventListener("click", () => vSeek(0));
+
+function vLoop(){
+  requestAnimationFrame(vLoop);
+  if(!V.on && !V.exporting) return;
+  if(V.playing){
+    V.cursor = V.c0 + Math.max(0, vnow() - V.t0);
+    const total = vtotal();
+    if(V.cursor >= total){ V.cursor = total; V.clips.forEach(vSync); vStop(); }
+    else V.clips.forEach(vSync);
+    vMoveHead(); vShowTime();
+    const x = V.cursor * V.pps;
+    if(x > elVScroll.scrollLeft + elVScroll.clientWidth - 70 || x < elVScroll.scrollLeft)
+      elVScroll.scrollLeft = x - 70;
+    vDrawStage();
+  }else if(performance.now() < V.dirtyUntil){
+    vDrawStage();
+  }
+}
+
+/* ══ 台紙のシート ══ */
+function vMarkStage(){
+  const key = V.stage.w + "x" + V.stage.h;
+  $("#stageSheet").querySelectorAll("[data-size]").forEach(b => b.classList.toggle("on", b.dataset.size === key));
+  $("#stageSheet").querySelectorAll("[data-bg]").forEach(b => b.classList.toggle("on", b.dataset.bg === V.stage.bg));
+}
+function vSetStage(w, h){
+  const ox = V.stage.w, oy = V.stage.h;
+  V.stage.w = w; V.stage.h = h;
+  V.masks.forEach(m => {              // 目かくしは比率のまま持ち越す
+    m.x = m.x / ox * w; m.w = m.w / ox * w;
+    m.y = m.y / oy * h; m.h = m.h / oy * h;
+    m.gran = Math.max(4, m.gran / ox * w);
+  });
+  $("#stW").value = w; $("#stH").value = h;
+  vFitStageCanvas(); vLayoutStage();
+  vArrange(); vMarkStage(); vSyncSel(); vTouchDraw();
+}
+$("#vStage").addEventListener("click", () => {
+  $("#stW").value = V.stage.w; $("#stH").value = V.stage.h;
+  vMarkStage(); openSheet("#stageSheet");
+});
+$("#stageClose").addEventListener("click", closeSheets);
+$("#stageSheet").querySelectorAll("[data-size]").forEach(b => b.addEventListener("click", () => {
+  const p = b.dataset.size.split("x");
+  vSetStage(+p[0], +p[1]);
+}));
+$("#stApply").addEventListener("click", () => {
+  const w = Math.round(+$("#stW").value), h = Math.round(+$("#stH").value);
+  if(!(w >= 160 && w <= 3840 && h >= 160 && h <= 3840)){
+    msg("台紙の大きさは160から3840までです。その間の数字を入れてから「この大きさにする」を押してください。", "err"); return;
+  }
+  vSetStage(w - w % 2, h - h % 2);
+});
+$("#stageSheet").querySelectorAll("[data-bg]").forEach(b => b.addEventListener("click", () => {
+  V.stage.bg = b.dataset.bg; vMarkStage(); vTouchDraw();
+}));
+$("#vArrange").addEventListener("click", () => { vArrange(); closeSheets(); });
+
+/* ══ 書き出し ══ */
+function vPickMime(){
+  if(!window.MediaRecorder) return null;
+  const list = [
+    'video/mp4;codecs="avc1.42E01E,mp4a.40.2"',
+    'video/mp4;codecs=avc1,mp4a.40.2',
+    'video/mp4',
+    'video/webm;codecs=vp9,opus',
+    'video/webm;codecs=vp8,opus',
+    'video/webm'
+  ];
+  for(let i = 0; i < list.length; i++){
+    try{ if(MediaRecorder.isTypeSupported(list[i])) return list[i]; }catch(e){}
+  }
+  return null;
+}
+
+// 音の文脈を起こす。最長1秒だけ待って、起きなくても先へ進む
+async function vWakeAudio(){
+  try{ ac.resume(); }catch(e){}
+  for(let i = 0; i < 20 && ac.state !== "running"; i++) await new Promise(r => setTimeout(r, 50));
+  return ac.state === "running";
+}
+
+$("#expCancel").addEventListener("click", () => { V.cancel = true; vStop(); });
+$("#vSave").addEventListener("click", vExport);
+
+async function vExport(){
+  const total = vtotal();
+  if(total <= 0) return;
+  const mime = vPickMime();
+  if(!mime){ msg("このブラウザは動画の書き出しに対応していません。PCのChromeで開き直してください。", "err"); return; }
+  if(!vMixDest) vMixDest = ac.createMediaStreamDestination();
+
+  vCropEnd(false);
+  vStop();
+  const sound = await vWakeAudio();
+
+  const cv = document.createElement("canvas");
+  cv.width = V.stage.w; cv.height = V.stage.h;
+  const g = cv.getContext("2d");
+
+  let rec;
+  const chunks = [];
+  try{
+    const stream = new MediaStream();
+    cv.captureStream(30).getVideoTracks().forEach(t => stream.addTrack(t));
+    vMixDest.stream.getAudioTracks().forEach(t => stream.addTrack(t));
+    try{ rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 8000000, audioBitsPerSecond: 192000 }); }
+    catch(e){ rec = new MediaRecorder(stream, { mimeType: mime }); }
+  }catch(e){
+    console.error(e);
+    msg("ブラウザが書き出しのしたくをできませんでした。ほかのタブを閉じてから、もう一度、右下の書き出すボタンを押してください。", "err");
+    return;
+  }
+  rec.ondataavailable = e => { if(e.data && e.data.size) chunks.push(e.data); };
+  const stopped = new Promise(r => { rec.onstop = r; });
+
+  V.exporting = true; V.cancel = false; V.target = g;
+  $("#expBar").style.width = "0%"; $("#expPct").textContent = "0%";
+  $("#expNote").textContent =
+    "はじめから終わりまで流しながら録ります。" + fmt(total, false) + "ほどかかります。" +
+    "終わるまでこの画面を開いたままにしてください。";
+  openSheet("#expSheet");
+  vUpdateUI();
+
+  // 頭出しして、絵が出るまで少し待つ
+  V.cursor = 0; V.clips.forEach(vPark);
+  vTouchDraw();
+  await new Promise(r => setTimeout(r, 400));
+
+  try{ rec.start(1000); }
+  catch(e){
+    console.error(e);
+    V.exporting = false; V.target = null; closeSheets(); vUpdateUI();
+    msg("ブラウザが録りはじめられませんでした。ほかのタブを閉じてから、もう一度、右下の書き出すボタンを押してください。", "err");
+    return;
+  }
+  vPlay();
+
+  await new Promise(resolve => {
+    const iv = setInterval(() => {
+      const p = Math.max(0, Math.min(100, Math.round(V.cursor / total * 100)));
+      $("#expBar").style.width = p + "%"; $("#expPct").textContent = p + "%";
+      if(V.cancel || !V.playing || V.cursor >= total - 0.01){ clearInterval(iv); resolve(); }
+    }, 200);
+  });
+
+  vStop();
+  await new Promise(r => setTimeout(r, 300));     // 最後のこまを拾う
+  try{ rec.stop(); }catch(e){}
+  await Promise.race([stopped, new Promise(r => setTimeout(r, 6000))]);   // 返らなくても先へ進む
+
+  V.target = null; V.exporting = false;
+  closeSheets(); vUpdateUI(); vTouchDraw();
+
+  if(V.cancel){ msg("書き出しをやめました。", "ok"); return; }
+  const ext = mime.indexOf("mp4") >= 0 ? "mp4" : "webm";
+  const blob = new Blob(chunks, { type: mime.split(";")[0] });
+  if(!blob.size){
+    msg("中身が空のまま録り終わりました。動画を足してから、もう一度、右下の書き出すボタンを押してください。", "err"); return;
+  }
+  const m = await deliver(blob, vBaseName() + "_まとめ." + ext);
+  if(!m) return;
+  const note = m + "（" + ext.toUpperCase() + "・" + vSize(blob.size) + "）";
+  if(sound) msg(note, "ok");
+  else msg("音を鳴らす許しが下りていませんでした。画面をどこか一度押してから、もう一度書き出してください。" + note, "info");
+}
+
+/* ══ 見た目の出し入れ ══ */
+function vUpdateUI(){
+  const has = V.clips.length > 0, any = vItems().length > 0, busy = V.exporting;
+  // 切り抜きの範囲を決めている間は、黙って捨てられてしまう操作を止める
+  const held = busy || !!V.crop;
+  $("#vPlay").disabled  = !has || held;
+  $("#vTop").disabled   = !has || held;
+  $("#vSave").disabled  = !has || held;
+  $("#vMask").disabled  = held;
+  $("#vStage").disabled = busy;
+  $("#modeAudio").disabled = held;
+  $("#modeVideo").disabled = held;
+  elVDrop.classList.toggle("off", held);
+  elVEmpty.hidden = any;
+  elStage.hidden  = !any;
+  if(any){ vFitStageCanvas(); vLayoutStage(); }
+  vSyncSel();
+}
+
+vUpdateUI();
+requestAnimationFrame(vLoop);
 
 /* ══ 起動 ══ */
 if(innerWidth > 900){ $("#edit").classList.remove("hide"); $("#stt").classList.remove("hide"); }
