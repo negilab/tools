@@ -205,7 +205,7 @@ body.mode-video #tabs{display:none!important}
 #vdrop .sub{display:block;font-size:11.5px;color:var(--tx3)}
 #vMask{flex:none;white-space:nowrap}
 
-/* 台紙の入れ物。台紙の見た目の大きさは CSS ではなく vLayoutStage() が px で入れる */
+/* キャンバスの入れ物。キャンバスの見た目の大きさは CSS ではなく vLayoutStage() が px で入れる */
 #vstage{flex:1 1 0;display:flex;align-items:center;justify-content:center;min-height:150px;padding:12px 14px;background:#0b0e14;overflow:hidden}
 #vstage.over{box-shadow:inset 0 0 0 2px var(--a1)}
 #stage{display:block;touch-action:none;border-radius:8px;box-shadow:0 0 0 1px var(--line)}
@@ -241,7 +241,7 @@ body.mode-video #tabs{display:none!important}
 #vzoomWrap{display:flex;align-items:center;gap:8px;color:var(--tx3);font-size:12px}
 #vzoom{width:120px}
 
-/* ── 台紙・書き出しのシート ── */
+/* ── キャンバス・書き出しのシート ── */
 .sizes{display:flex;gap:8px;margin-bottom:12px}
 .sizes button{flex:1;min-width:0;text-align:center;padding:12px 4px;font-size:13.5px;font-weight:600}
 .sizes button small{display:block;font-size:11px;color:var(--tx3);font-weight:400;margin-top:3px}
@@ -369,14 +369,14 @@ body.mode-video #tabs{display:none!important}
   <div id="vtop">
     <div id="vdrop">
       <span class="big">動画を足す</span>
-      <span class="sub">ここに落とすか、押して選ぶ</span>
+      <span class="sub">ここにドラッグするか、押して選ぶ</span>
     </div>
     <button id="vMask">目かくしを足す</button>
   </div>
 
   <div id="vstage">
     <canvas id="stage" hidden></canvas>
-    <div id="vempty">動画がまだありません。<br>上の「動画を足す」から選ぶか、そこに落としてください。</div>
+    <div id="vempty">動画がまだありません。<br>上の「動画を足す」から選ぶか、そこにドラッグしてください。</div>
   </div>
 
   <div id="vsel" hidden>
@@ -422,7 +422,7 @@ body.mode-video #tabs{display:none!important}
     <div id="vtime"><b>0:00.0</b>ぜんぶで 0:00.0</div>
     <span class="sp"></span>
     <div id="vzoomWrap"><span>拡大</span><input type="range" id="vzoom" min="8" max="400" value="46" aria-label="拡大"></div>
-    <button id="vStage">台紙を変える</button>
+    <button id="vStage">キャンバスの大きさと色</button>
     <button class="round sm" id="vSave" disabled aria-label="書き出す">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
     </button>
@@ -460,15 +460,15 @@ body.mode-video #tabs{display:none!important}
 
 <div class="sheet" id="stageSheet">
   <div class="grab"></div>
-  <h3>台紙</h3>
-  <p>動画を並べる紙の大きさと、余りを塗る色を決めます。大きさを変えると、動画をいったん均等に並べ直します。</p>
+  <h3>キャンバス</h3>
+  <p>キャンバスの大きさと、動画が無いところ（余り）を塗る色を決めます。大きさを変えると、動画をいったん均等に並べ直します。</p>
   <div class="sizes">
     <button data-size="1920x1080">横長<small>1920×1080</small></button>
     <button data-size="1080x1920">縦長<small>1080×1920</small></button>
     <button data-size="1080x1080">正方形<small>1080×1080</small></button>
   </div>
   <div class="sizerow">
-    <input type="text" id="stW" inputmode="numeric" aria-label="台紙の横"><span>×</span><input type="text" id="stH" inputmode="numeric" aria-label="台紙の縦"><button id="stApply">この大きさにする</button>
+    <input type="text" id="stW" inputmode="numeric" aria-label="キャンバスの横"><span>×</span><input type="text" id="stH" inputmode="numeric" aria-label="キャンバスの縦"><button id="stApply">この大きさにする</button>
   </div>
   <p class="lbl">余りの色</p>
   <div class="bgpick">
@@ -1255,7 +1255,7 @@ $("#keyInput").addEventListener("keydown", e => { if(e.key === "Enter") $("#keyS
 const VCOLORS = ["#4e9bff", "#ffa94d", "#4fd1a1", "#c08bff"];
 const MCOLOR  = "#8b93a8";               // 目かくしの帯の色
 const VMAX    = 4;                       // 同時に扱う動画の本数
-const VGRAB   = isTouch ? 22 : 12;       // 台紙の角つまみの当たり幅（画面px）
+const VGRAB   = isTouch ? 22 : 12;       // キャンバスの角つまみの当たり幅（画面px）
 const CLIP_H  = isTouch ? 62 : 54;       // 帯の高さ
 const PREVIEW_W = 960;                   // 画面に描くときの横幅の上限
 
@@ -1333,7 +1333,7 @@ $("#vfile").addEventListener("change", e => { vAddFiles([...e.target.files]); e.
 
 async function vAddFiles(files){
   for(const f of files){
-    if(V.clips.length >= VMAX){ msg("台紙に置ける動画は" + VMAX + "本までです。要らないものを削除してから足してください。", "err"); break; }
+    if(V.clips.length >= VMAX){ msg("キャンバスに置ける動画は" + VMAX + "本までです。要らないものを削除してから足してください。", "err"); break; }
     const looksVideo = /^video\//.test(f.type || "") || /\.(mp4|mov|m4v|webm|mkv|avi|ts)$/i.test(f.name);
     if(!looksVideo){ msg("動画のファイルではありません。mp4やmovを選んでください。「" + f.name + "」は足していません。", "err"); continue; }
     try{
@@ -1422,10 +1422,10 @@ function vAddMask(){
   vBuildRow(m);
   V.sel = m.id;
   vFitZoom(); vRedraw(); vUpdateUI();
-  msg("目かくしを台紙に置きました。台紙の上でつかんで、置く場所と大きさを決めてください。", "ok");
+  msg("目かくしをキャンバスに置きました。キャンバスの上でつかんで、置く場所と大きさを決めてください。", "ok");
 }
 
-/* ══ 台紙に均等に並べる ══ */
+/* ══ キャンバスに均等に並べる ══ */
 function vArrange(){
   const n = V.clips.length;
   if(!n) return;
@@ -1670,10 +1670,10 @@ function vBindRowDrag(o){
 }
 elVRuler.addEventListener("pointerdown", e => vSeek(e.offsetX / V.pps));
 
-/* ══ 台紙の大きさ合わせ ══
+/* ══ キャンバスの大きさ合わせ ══
    裏の寸法（elStage.width/height）は PREVIEW_W まで。
    見た目の大きさ（style.width/height）は CSS に任せず vLayoutStage() が px で入れる。
-   こうしておくと、押した場所は横の倍率ひとつで台紙の座標に戻せる。 */
+   こうしておくと、押した場所は横の倍率ひとつでキャンバスの座標に戻せる。 */
 function vFitStageCanvas(){
   const st = V.stage;
   const bw = Math.min(st.w, PREVIEW_W), bh = Math.max(1, Math.round(bw * st.h / st.w));
@@ -1702,7 +1702,7 @@ if(window.ResizeObserver){
   new ResizeObserver(() => { if(V.on) vLayoutIfMoved(); }).observe(elVStageBox);
 }
 
-/* ══ 台紙の上で動かす・大きさを変える ══ */
+/* ══ キャンバスの上で動かす・大きさを変える ══ */
 function vSnap(v, size, total){
   const th = total * 0.012;
   for(const t of [0, (total - size) / 2, total - size]) if(Math.abs(v - t) < th) return t;
@@ -1712,7 +1712,7 @@ function vSnap(v, size, total){
 (function vBindStage(){
   let mode = null, sx = 0, sy = 0, bx = 0, by = 0, bw = 0, bh = 0, cur = null, pid = null;
 
-  // 画面の座標 → 台紙の座標。見た目の大きさは台紙の比率そのままなので、横の倍率ひとつで戻せる
+  // 画面の座標 → キャンバスの座標。見た目の大きさはキャンバスの比率そのままなので、横の倍率ひとつで戻せる
   const at = e => {
     const r = elStage.getBoundingClientRect();
     const k = (r.width || 1) / V.stage.w;
@@ -1784,7 +1784,7 @@ function vSnap(v, size, total){
   window.__at = at;   // 切り抜きからも使う
 })();
 
-/* ══ 台紙を描く ══ */
+/* ══ キャンバスを描く ══ */
 let _tmp = null;
 function vTmp(w, h){
   if(!_tmp){ const cv = document.createElement("canvas"); _tmp = { cv: cv, g: cv.getContext("2d") }; }
@@ -2081,7 +2081,7 @@ function vLoop(){
   }
 }
 
-/* ══ 台紙のシート ══ */
+/* ══ キャンバスのシート ══ */
 function vMarkStage(){
   const key = V.stage.w + "x" + V.stage.h;
   $("#stageSheet").querySelectorAll("[data-size]").forEach(b => b.classList.toggle("on", b.dataset.size === key));
@@ -2111,7 +2111,7 @@ $("#stageSheet").querySelectorAll("[data-size]").forEach(b => b.addEventListener
 $("#stApply").addEventListener("click", () => {
   const w = Math.round(+$("#stW").value), h = Math.round(+$("#stH").value);
   if(!(w >= 160 && w <= 3840 && h >= 160 && h <= 3840)){
-    msg("台紙の大きさは160から3840までです。その間の数字を入れてから「この大きさにする」を押してください。", "err"); return;
+    msg("キャンバスの大きさは160から3840までです。その間の数字を入れてから「この大きさにする」を押してください。", "err"); return;
   }
   vSetStage(w - w % 2, h - h % 2);
 });
