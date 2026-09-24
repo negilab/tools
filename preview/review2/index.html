@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>進め方3と「アプリ前提」の直し（判断）</title>
+<style>
+  :root { --bg:#FBF8F1; --card:#fff; --rule:#EAE3D6; --ink:#2A2620; --ink2:#5C554B; --green:#3F6E3A; --gs:#EAF1E4; --orange:#D9622B; --marker:#FFE8A3; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font-family:"Hiragino Sans","Noto Sans JP","Yu Gothic",sans-serif; font-size:16px; line-height:1.7; padding:16px 14px 130px; }
+  h1 { font-size:20px; margin:0 0 6px; }
+  .lead { font-size:14px; color:var(--ink2); margin-bottom:16px; }
+  h2 { font-size:15px; color:var(--green); background:var(--gs); border-radius:999px; padding:4px 14px; display:inline-block; margin:22px 0 10px; }
+  .q { background:var(--card); border:1px solid var(--rule); border-radius:14px; padding:14px 14px 12px; margin-bottom:12px; }
+  .q .no { font-weight:700; color:var(--orange); font-size:13px; }
+  .q .where { font-weight:700; margin:2px 0 8px; }
+  .q .why { font-size:13px; color:var(--ink2); margin-bottom:8px; }
+  .q .cur, .q .prop { font-size:14.5px; border-radius:10px; padding:8px 10px; margin-bottom:8px; }
+  .q .cur { background:#F4EFE4; color:var(--ink2); }
+  .q .cur b, .q .prop b { display:block; font-size:12px; color:var(--ink2); margin-bottom:2px; }
+  .q .prop { background:var(--gs); }
+  .opts { display:flex; gap:8px; margin:10px 0 8px; }
+  .opts label { flex:1; text-align:center; border:1.5px solid var(--rule); border-radius:999px; padding:9px 0; font-weight:700; cursor:pointer; user-select:none; font-size:14px; }
+  .opts input { display:none; }
+  .opts label:has(input:checked) { background:var(--green); color:#fff; border-color:var(--green); }
+  .opts label.x:has(input:checked) { background:var(--orange); border-color:var(--orange); }
+  .opts label.d:has(input:checked) { background:#7a6f5c; border-color:#7a6f5c; }
+  textarea { width:100%; border:1.5px solid var(--rule); border-radius:10px; padding:8px 10px; font:inherit; font-size:15px; min-height:44px; resize:vertical; background:var(--bg); }
+  textarea:focus { outline:none; border-color:var(--green); background:#fff; }
+  #out { display:none; margin-top:18px; }
+  #out textarea { min-height:260px; font-size:13px; background:#fff; }
+  .note { font-size:13px; color:var(--ink2); margin-top:8px; }
+  .bar { position:fixed; left:0; right:0; bottom:0; background:rgba(251,248,241,.95); border-top:1px solid var(--rule); padding:10px 14px calc(10px + env(safe-area-inset-bottom)); display:flex; gap:8px; }
+  .btn { flex:1; border:0; border-radius:999px; padding:14px 6px; font:inherit; font-weight:700; font-size:15px; color:#fff; background:var(--orange); text-decoration:none; display:flex; align-items:center; justify-content:center; }
+  .btn.g { background:var(--green); }
+  .all { display:flex; gap:8px; margin:0 0 14px; }
+  .all button { flex:1; border:1.5px solid var(--rule); background:#fff; border-radius:999px; padding:8px; font:inherit; font-size:13px; font-weight:700; color:var(--ink2); }
+</style>
+</head>
+<body>
+<h1>進め方3と「アプリ前提」の直し（判断）</h1>
+<p class="lead">案はすべてコンサルのものです。1・2は進め方3の案（どちらか一方に○）。3〜11は「アプリ前提」に読める箇所で、○＝案のとおり直す／×＝そのまま／△＝コメントどおり。最後に「まとめる」→「メールで送る」か「コピー」。書きかけは自動保存されます。</p>
+<div class="all"><button type="button" id="allok">まだ選んでいないものを全部○にする</button></div>
+
+<div id="qs"></div>
+
+<div class="q">
+  <div class="where">ほかに言っておきたいこと（自由）</div>
+  <textarea name="free" placeholder="任意"></textarea>
+</div>
+
+<div id="out">
+  <div class="q">
+    <div class="where">まとまった回答</div>
+    <textarea id="outtext" readonly></textarea>
+    <p class="note" id="copied"></p>
+  </div>
+</div>
+
+<div class="bar">
+  <button class="btn g" type="button" id="make">まとめる</button>
+  <button class="btn" type="button" id="copy">コピー</button>
+  <a class="btn" id="mail" href="#">メールで送る</a>
+</div>
+
+<script>
+const Q = [
+ ["進め方3（どちらか）", 1, "案E：見出し「減らし方を決める」", "「作る」を主語にせず「減らす」を主語にし、方法を4つ並べてアプリをその1つに下げた。",
+  "（現状）続ける／使ってみて合えば、その月から月5万円。合わなければ、そこで終わりです。続ける間は、次の業務も順番に作っていきます。", "試作のあとは、1社につき月5万円。次に減らしたい業務を1つずつ順番に、エクセルの直し、仕事の流れの変更、AIやアプリの追加など、その業務に合う方法で片づけていきます。"],
+ ["進め方3（どちらか）", 2, "案F：見出し「1つずつ、順番に」", "「〜だけで済むこともある」で、大げさな仕組みを押しつけない人だと分かる。",
+  "（同上）", "ここからは1社につき月5万円で、減らしたい業務に1つずつ順番に取りかかります。エクセルを直すだけ、流れを変えるだけ、AIを足すだけで済むことも、アプリを作ることもあります。"],
+ ["アプリ前提に読める箇所", 3, "h1（指摘のみ・案なし）", "「ひとつの画面にまとめる」は結果がアプリになる前提。ただし困りごとを最初に言い当てる強さは一番ある。○＝そのまま／×＝変えたい（コメントで方向を）",
+  "エクセル、フォーム、メール、紙。散らばった事務を、ひとつの画面にまとめます。", "（案なし。変えるなら再依頼）"],
+ ["アプリ前提に読める箇所", 4, "導入文", "「動くものを作る」がアプリそのもの。「やり方に直す」ならエクセル・流れ・AI・アプリのどれでも通る。",
+  "いまのやり方をそのまま見せてもらい、減らせるところを見つけて、あなたの会社の環境の中で動くものを作ります。", "いまのやり方をそのまま見せてもらい、減らせるところを見つけて、あなたの会社の環境の中でできるやり方に直します。"],
+ ["アプリ前提に読める箇所", 5, "進め方2（見出し「試作をつくる」→「試してみる」）", "「試作」「動くもの」は作る前提。「形にする」なら直したエクセルでも通る。",
+  "無料。業務を1つ選んで、実際に動くものを作ります。これまでは打ち合わせの翌日か翌々日、遅くとも5営業日でお渡ししています。", "無料。業務を1つ選んで、減らし方を形にしてお渡しします。エクセルの直しで済むことも、小さなアプリになることもあります。これまでは打ち合わせの翌日か翌々日、遅くとも5営業日です。"],
+ ["アプリ前提に読める箇所", 6, "料金・箇条書き（上限なし）", "「作る」を「直す」に。金額と順番の事実は変えていない。",
+  "作るアプリの数に上限はありません。1つ目の業務を直したあと、2つ目、3つ目と作っても、月5万円のままです。", "減らす業務の数に上限はありません。1つ目を直したあと、2つ目、3つ目と直しても、月5万円のままです。"],
+ ["アプリ前提に読める箇所", 7, "料金・箇条書き（順番）", "同上。",
+  "作るのは1つずつ、順番に。大きいものは、作る前にかかる日数をお伝えします。", "取りかかるのは1つずつ、順番に。大きいものは、始める前にかかる日数をお伝えします。"],
+ ["アプリ前提に読める箇所", 8, "FAQ「業種は決まっていますか」の答え", "",
+  "…外の道具が一切使えない会社は、作れるものが限られます。", "…外の道具が一切使えない会社は、できることが限られます。"],
+ ["アプリ前提に読める箇所", 9, "FAQ「やめたら、アプリは使えなくなりますか」", "直したエクセルも「作ったもの」に含まれる。",
+  "Q：やめたら、アプリは使えなくなりますか。／A：使えます。アプリもデータも、あなたの手元に残ります。…", "Q：やめたら、作ったものは使えなくなりますか。／A：使えます。作ったものもデータも、あなたの手元に残ります。…"],
+ ["アプリ前提に読める箇所", 10, "FAQ「アプリはAIを使いますか」", "「AIを足すだけ」も減らし方の1つ、という本人の言葉を答えに入れた。追加料金の事実はそのまま。",
+  "Q：アプリはAIを使いますか。／A：アプリの一部にAIを組み込むかどうかは、業務を見て、作る前にお伝えします。上の事例のうち、出店受付・アルバイト管理・図面の道具は、AIを使っていません。", "Q：AIは使いますか。／A：AIを足すだけで減る業務なら、そうします。アプリの一部にAIを組み込む場合は月5万円の追加で、要るかどうかは業務を見て、始める前にお伝えします。上の事例のうち、出店受付・アルバイト管理・図面の道具は、AIを使っていません。"],
+ ["アプリ前提に読める箇所", 11, "meta description（検索結果に出る説明文）", "OGPの「散らばった事務を、ひとつの画面に。」はh1と同じ指摘のみ。",
+  "…散らばったエクセルやメール、紙を、あなたの会社の環境の中で動くものにまとめます。…", "…散らばったエクセルやメール、紙の事務を、あなたの会社の環境の中でできるやり方に直します。…"],
+];
+const KEY='negilab-review2-v1';
+let state={}; try{ state=JSON.parse(localStorage.getItem(KEY)||'{}'); }catch(e){}
+const box=document.getElementById('qs'); let sec='';
+Q.forEach(([s,n,where,why,cur,prop])=>{
+  if(s!==sec){ sec=s; const h=document.createElement('h2'); h.textContent=s; box.appendChild(h); }
+  const d=document.createElement('div'); d.className='q';
+  d.innerHTML=`<div class="no">${n}</div><div class="where">${where}</div><div class="why">${why}</div>
+   <div class="cur"><b>いま</b>${cur}</div><div class="prop"><b>コンサルの案</b>${prop}</div>
+   <div class="opts"><label><input type="radio" name="a${n}" value="○">○ 案のとおり</label><label class="x"><input type="radio" name="a${n}" value="×">× 直さない</label><label class="d"><input type="radio" name="a${n}" value="△">△</label></div>
+   <textarea name="c${n}" placeholder="コメント（任意）"></textarea>`;
+  box.appendChild(d);
+});
+function save(){ const f={}; document.querySelectorAll('input[type=radio]:checked').forEach(r=>f[r.name]=r.value); document.querySelectorAll('textarea[name]').forEach(t=>{ if(t.value) f[t.name]=t.value; }); localStorage.setItem(KEY, JSON.stringify(f)); }
+function restore(){ for(const k in state){ if(k[0]==='a'){ const r=document.querySelector(`input[name=${k}][value="${state[k]}"]`); if(r) r.checked=true; } else { const t=document.querySelector(`textarea[name=${k}]`); if(t) t.value=state[k]; } } }
+restore();
+document.addEventListener('input',save); document.addEventListener('change',save);
+document.getElementById('allok').onclick=()=>{ Q.forEach(([s,n])=>{ if(!document.querySelector(`input[name=a${n}]:checked`)){ document.querySelector(`input[name=a${n}][value="○"]`).checked=true; } }); save(); };
+function make(){
+  const lines=['【進め方3とアプリ前提の直し】'];
+  Q.forEach(([s,n])=>{ const r=document.querySelector(`input[name=a${n}]:checked`); const c=(document.querySelector(`textarea[name=c${n}]`).value||'').trim(); lines.push(`${n}. ${r?r.value:'（未回答）'}${c?'　'+c:''}`); });
+  const free=(document.querySelector('textarea[name=free]').value||'').trim(); if(free){ lines.push('','【自由コメント】',free); }
+  const txt=lines.join('\n'); document.getElementById('outtext').value=txt; document.getElementById('out').style.display='block'; document.getElementById('out').scrollIntoView({behavior:'smooth'}); return txt;
+}
+document.getElementById('make').onclick=make;
+document.getElementById('mail').onclick=(e)=>{ e.preventDefault(); const txt=make(); location.href='mailto:info@negilab.tokyo?subject='+encodeURIComponent('進め方3とアプリ前提の直し')+'&body='+encodeURIComponent(txt); };
+document.getElementById('copy').onclick=async()=>{ const txt=make(); try{ await navigator.clipboard.writeText(txt); document.getElementById('copied').textContent='コピーしました。チャットに貼ってください。'; }catch(e){ const ta=document.getElementById('outtext'); ta.focus(); ta.select(); document.getElementById('copied').textContent='上の文章を長押しして全選択→コピーしてください。'; } };
+</script>
+</body>
+</html>
