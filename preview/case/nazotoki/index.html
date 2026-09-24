@@ -2,17 +2,17 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<title>出店申し込みの受付を、ひとつの画面に｜ねぎラボ</title>
+<title>来場者向けの謎解きアプリ｜ねぎラボ</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="フォーム・メール・パワポ・エクセルに散らばっていた出店受付を、ひとつの管理画面に。写真つきの申し込み、消防の配置図、保健所の一覧表がボタンで出ます。作るのに1日。">
+<meta name="description" content="前回はLINEで一本道、答えによる分岐が作れなかった謎解きを、運営が問題と分岐を線でつないで作れる画面に。参加者はQRを読むだけ、登録なし。結末は3つ。">
 <meta name="author" content="neggy">
 <meta name="robots" content="index, follow">
-<link rel="canonical" href="https://negilab.tokyo/case/shutten/">
+<link rel="canonical" href="https://negilab.tokyo/case/nazotoki/">
 <meta property="og:type" content="article">
 <meta property="og:site_name" content="ねぎラボ">
-<meta property="og:title" content="出店申し込みの受付を、ひとつの画面に｜ねぎラボ">
-<meta property="og:description" content="フォーム・メール・パワポ・エクセルに散らばっていた出店受付を、ひとつの管理画面に。写真つきの申し込み、消防の配置図、保健所の一覧表がボタンで出ます。作るのに1日。">
-<meta property="og:url" content="https://negilab.tokyo/case/shutten/">
+<meta property="og:title" content="来場者向けの謎解きアプリ｜ねぎラボ">
+<meta property="og:description" content="前回はLINEで一本道、答えによる分岐が作れなかった謎解きを、運営が問題と分岐を線でつないで作れる画面に。参加者はQRを読むだけ、登録なし。結末は3つ。">
+<meta property="og:url" content="https://negilab.tokyo/case/nazotoki/">
 <meta property="og:image" content="https://negilab.tokyo/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -48,40 +48,28 @@
 
   <header class="hero">
     <div class="wrap">
-      <div class="crumb"><a href="/">ねぎラボ</a> ／ 作って納めたもの：出店申し込みの受付</div>
+      <div class="crumb"><a href="/">ねぎラボ</a> ／ 作って納めたもの：来場者向けの謎解き</div>
       <span class="ind">イベント運営会社</span>
-      <h1>「出店の受付が、フォームとメールとパワポとエクセルに散らばっている」</h1>
+      <h1>「問題を考える人も絵を描く人もいるのに、アプリを作る人だけいない」</h1>
     </div>
   </header>
 
   <section class="band">
     <div class="wrap">
       <h2 class="sec">困りごと</h2>
-      <p>Googleフォームに写真欄を付けると、Googleアカウントを持つ人しか開けません。そのため写真だけ別メールで受けていました。消防に出す配置図は、店名と写真をパワポに貼って作成。保健所に出す一覧表は、回答シートから列を間引いてエクセルに転記していました。</p>
+      <p>前回はLINEで一本道の謎解きを作りましたが、答えによる分岐が作れませんでした。問題を考える人、絵を描く人、運営はいます。アプリを作る人だけがいませんでした。</p>
     </div>
   </section>
   <section class="">
-    <div class="wrap">
-      <h2 class="sec">渡してもらったもの</h2>
-      <p>既存のGoogleフォーム、保健所に出した一覧表1枚、消防に出した配置図1枚。</p>
-    </div>
-  </section>
-  <section class="band">
     <div class="wrap">
       <h2 class="sec">作ったもの</h2>
-      <p>出店者はログインなしで、写真ごと申し込めます。申し込みは管理画面に表で並び、消防の配置図PDFと保健所の一覧表がボタンで出ます。一斉メールも同じ画面から。フォームを作る画面もあります。相談した当日に、実際の受付で使い始めました。作るのに1日。</p>
-    </div>
-  </section>
-  <section class="">
-    <div class="wrap">
-      <h2 class="sec">変えなかったこと</h2>
-      <p>フォームの質問12問は、そのままです。</p>
+      <p>参加者は、QRを読んでログインなしで遊ぶ画面。運営は、パソコンで問題と分岐を線でつないで作る画面。結末は3つ。数百人が同時に始めても詰まらない作りです。本番前に試す試験環境もあります。運営が作る画面は、すでに使われています。</p>
     </div>
   </section>
   <section class="band">
     <div class="wrap">
       <h2 class="sec">どこで動くか</h2>
-      <p>相手の会社のGoogleアカウントの中。サーバ代はかかりません。</p>
+      <p>相手向けに取得した独自ドメインと、Google Apps Script。</p>
     </div>
   </section>
   <section class="">
@@ -93,14 +81,14 @@
   <section class="band" id="demo">
     <div class="wrap">
       <h2 class="sec">体験版</h2>
-      <p>架空のデータで試せます。パソコンで開いてください。</p>
-      <div class="cta2"><a class="btn" href="https://negilab.github.io/tools/demo/shutten/" target="_blank" rel="noopener" data-cta="sub_try_shutten">体験版を開く<span class="arw">→</span></a></div>
+      <p>架空の題材で遊べます。携帯で開いてください。</p>
+      <div class="cta2"><a class="btn" href="https://negilab.github.io/tools/demo/nazotoki/" target="_blank" rel="noopener" data-cta="sub_try_nazotoki">体験版を開く<span class="arw">→</span></a></div>
     </div>
   </section>
 
   <section class="" id="contact">
     <div class="wrap">
-      <p class="lead">「受付は動いているけれど、そのあとの転記が手作業」なら、いまのフォームと出している書類を見せてください。</p>
+      <p class="lead">「作る人だけいない」なら、やりたいことをそのまま話してください。前回の仕組みがLINEでも紙でも構いません。</p>
       <div class="cta2"><a class="btn" href="/#contact" data-cta="sub_contact_form">作業の相談をする<span class="arw">→</span></a></div>
       <p class="mail">メール：<a href="mailto:info@negilab.tokyo?subject=%E4%BD%9C%E6%A5%AD%E3%81%AE%E7%9B%B8%E8%AB%87" data-cta="sub_contact_mail">info@negilab.tokyo</a></p>
     </div>
