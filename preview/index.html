@@ -127,6 +127,7 @@
   .hero { padding-block: clamp(28px, 6vw, 64px) clamp(48px, 8vw, 80px); overflow: hidden; }
   .hero .wrap { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, .9fr); gap: 32px 48px; align-items: end; }
   .hero h1 { font-size: clamp(28px, 7.4vw, 46px); line-height: 1.32; font-weight: 900; margin: 14px 0 20px; }
+  .hero .sub .asterisk { display: block; font-size: 13px; color: var(--ink-3); margin-top: 6px; }
   .hero .sub { font-size: clamp(16px, 2.6vw, 18.5px); color: var(--ink-2); max-width: 30em; }
   .hero .badges { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 26px; }
   .badge {
@@ -156,7 +157,7 @@
   .hero .pic { position: relative; align-self: end; }
   .hero .pic img { width: min(100%, 420px); margin-inline: auto; }
   .hero .pic .tag {
-    position: absolute; left: 4px; bottom: 18px;
+    position: absolute; left: 4px; bottom: 46%;
     font-family: var(--maru); font-weight: 700; font-size: 14px; line-height: 1.5; color: var(--ink);
     background: var(--card); border-radius: 14px 14px 14px 4px; padding: 10px 14px; box-shadow: var(--shadow);
   }
@@ -368,7 +369,7 @@
     .hero .wrap { grid-template-columns: 1fr; }
     .hero .pic { order: -1; }
     .hero .pic img { width: min(62vw, 300px); margin-inline: 0; }
-    .hero .pic .tag { left: min(52vw, 250px); bottom: 10px; }
+    .hero .pic .tag { left: min(52vw, 250px); bottom: 46%; }
     .pillars { grid-template-columns: 1fr; }
     .case .grid { grid-template-columns: 1fr; }
     .price { grid-template-columns: 1fr; }
@@ -496,7 +497,7 @@
     <div class="wrap">
       <div>
         <h1>エクセル、フォーム、メール、紙。<br>散らばった事務を、<span class="mark">ひとつの画面</span>にまとめます。</h1>
-        <p class="sub">いま使っている画面と紙を見せてもらい、動くものを作って試してもらいます。試作は無料。合えば、1社につき月5万円。</p>
+        <p class="sub">いま使っている画面と紙を見せてもらい、動くものを作って試してもらいます。試作は無料。合えば、月5万円。ほかの業務の改善やアプリづくりも、同じ月5万円の中で。<small class="asterisk">※作るのは1つずつ、順番に。</small></p>
         <div class="cta2">
           <a class="btn" href="https://negilab.github.io/tools/pdfmask/" target="_blank" rel="noopener" data-cta="hero_try">体験版を触る<small>図面から名前と印を消す道具・パソコン向け</small></a>
           <a class="btn ghost" href="#contact" data-cta="hero_form">作業の相談をする</a>
@@ -667,8 +668,7 @@
         <div class="ph"><img src="me.jpg" alt="neggy" width="600" height="600" loading="lazy"></div>
         <div>
           <div class="nm">neggy<small>ねぎラボ　東京都杉並区、1人。</small></div>
-          <p class="bio">コールセンターと医療の現場で12年、業務を減らす側の責任者をしてきました。勤務先は、NTTドコモグループ、ベルシステム24、Ubie。13,000の医療機関を支える運用を10人分から1人分にしたのも、通話の採点を年3,600時間から600時間にしたのも、道具を自分で作って実現したものです。</p>
-          <p class="bio">アプリのコードはAI（Claude）に書かせています。私は業務の側を見て、何を作るかを決めます。</p>
+          <p class="bio">コールセンターと医療の現場で12年、業務を減らす側の責任者をしてきました。勤務先は、NTTドコモグループ、ベルシステム24、Ubie。13,000の医療機関を支える運用を10人分から1人分にしたのも、通話の採点を年3,600時間から600時間にしたのも、業務の流れを見直し、道具を自分で作って実現したものです。</p>
         </div>
       </div>
     </div>
