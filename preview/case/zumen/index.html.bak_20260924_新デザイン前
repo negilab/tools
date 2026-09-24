@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>図面の個人情報を消す作業、2時間が数分に｜PDFの黒塗り・墨消しを、候補にチェックするだけに｜ねぎラボ</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="建設会社の図面一式（100ページ超）から、工事名・所在地・担当者名・電話番号・印を消す作業が1件2時間。機械が候補を出し、人はチェックを付けるだけの道具にして数分に。文字そのものを除去し、図面はそのパソコンから出ません。">
+<meta name="author" content="neggy">
+<link rel="canonical" href="https://negilab.tokyo/case/zumen/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="ねぎラボ">
+<meta property="og:title" content="図面の個人情報を消す作業、2時間が数分に｜PDFの黒塗り・墨消しを、候補にチェックするだけに｜ねぎラボ">
+<meta property="og:description" content="建設会社の図面一式（100ページ超）から、工事名・所在地・担当者名・電話番号・印を消す作業が1件2時間。機械が候補を出し、人はチェックを付けるだけの道具にして数分に。文字そのものを除去し、図面はそのパソコンから出ません。">
+<meta property="og:url" content="https://negilab.tokyo/case/zumen/">
+<meta property="og:image" content="https://negilab.tokyo/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="ja_JP">
+<meta name="twitter:card" content="summary_large_image">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-3PXE03027C"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){ dataLayer.push(arguments); }
+  gtag('js', new Date());
+  gtag('config', 'G-3PXE03027C');
+</script>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap">
+<link rel="stylesheet" href="/site.css">
+<style>
+  .topbar { position: sticky; transform: none; visibility: visible; }
+  .hero { padding-top: clamp(18px, 4vw, 30px); }
+  .hero h1 { font-size: clamp(27px, 6.4vw, 40px); margin-top: clamp(28px, 6vw, 44px); }
+  .crumb { font-size: 13px; color: var(--ink-3); margin-bottom: 6px; }
+  .crumb a { color: var(--ink-3); }
+  .rel { margin-top: 28px; padding-top: 18px; border-top: 1px solid var(--rule); max-width: var(--measure); }
+  .rel h3 { font-family: var(--mincho); font-size: 17px; margin: 0 0 8px; }
+  .rel ul { margin: 0; padding: 0; list-style: none; }
+  .rel li { padding: 8px 0; border-bottom: 1px solid var(--rule); font-size: 15px; }
+  .rel li a { text-decoration-color: var(--rule-2); }
+  .give { max-width: var(--measure); }
+  .give dl { margin: 18px 0 0; border-top: 1px solid var(--rule); }
+  .give dl div { display: grid; grid-template-columns: 9.5em 1fr; column-gap: 18px; padding: 13px 0; border-bottom: 1px solid var(--rule); font-size: 14.5px; line-height: 1.8; }
+  .give dt { color: var(--ink-3); font-weight: 700; font-size: 12.5px; letter-spacing: .08em; padding-top: .25em; }
+  .give dd { margin: 0; color: var(--ink-2); }
+  .give dd b { color: var(--ink); }
+  footer nav { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-bottom: 14px; }
+  footer nav a { color: var(--ink-3); font-size: 12.5px; text-decoration-color: var(--rule); }
+  footer .wrap { display: block; }
+  @media (max-width: 600px) { .give dl div { grid-template-columns: 1fr; row-gap: 3px; } }
+</style>
+</head>
+<body>
+<div class="topbar is-on">
+  <div class="wrap">
+    <span class="nm"><a href="/" style="color:inherit;text-decoration:none">ねぎラボ</a><small>業務改善と、自動化アプリの構築</small></span>
+    <span class="sp"></span>
+    <a class="mini" href="/#contact" data-cta="sub_topbar_form">相談する</a>
+  </div>
+</div>
+<main>
+
+  <header class="hero">
+    <div class="wrap">
+      <div class="crumb" style="margin-top:10px"><a href="/">ねぎラボ</a> ／ 事例：図面のマスキング</div>
+      <h1 style="margin-top:8px">図面の個人情報、1頁ずつ消していませんか。</h1>
+      <div class="pitch"><p>建設会社で、外に渡す前の図面から個人情報を消すのに、1件2時間かかっていました。<b>機械が消す候補を出し、人はチェックを付けるだけ</b>の道具にして、数分に。黒く塗るのではなく文字そのものを取り除き、図面はそのパソコンから一歩も出ません。</p></div>
+      <div class="facts">
+        <span>月5万円・使っている間だけ</span>
+        <span>最低契約期間なし。初月で終われます</span>
+        <span>試作は無料・3日以内</span>
+      </div>
+      <div class="cta">
+        <a class="btn" href="/#contact" data-cta="sub_hero_form">相談を送る<span class="arw">→</span></a>
+      </div>
+      <p class="undercta">いまは、<b>実際に動く試作を無料で作っています。</b>業務を1つ選んで、相談から3日以内にお出しします。</p>
+    </div>
+  </header>
+
+  <section class="pains band">
+    <div class="wrap">
+      <h2 class="sec">こんな作業になっていませんか。</h2>
+      <ul><li>渡す前に、全ページを目で送って消す箇所を探している。</li><li>市販ソフトの墨消しで語句は消せるが、印や手書きは1つずつ塗っている。</li><li>黒塗りしたつもりが、コピーすると文字が残っている。</li><li>図面を外部サービスに上げるのが不安で、結局手作業に戻っている。</li></ul>
+      <p class="close">どれか1つでも心当たりがあれば、下の事例を見てください。業種が違っても、やることは同じです。<b>業務を見て、自動化できるところを、動く形にします。</b></p>
+    </div>
+  </section>
+
+  <section class="band" id="cases">
+    <div class="wrap">
+      <span class="eyebrow">事例</span>
+      <h2 class="sec">作って、いま使われているものです。</h2>
+      <article class="case">
+        <div class="ind">建設会社・図面を外に渡す前のマスク</div>
+        <h3>「図面には個人情報が全部入っているので、渡す前に1頁ずつ消していました」</h3>
+        <div class="ba"><span class="from">2時間</span><span class="arw">→</span><span class="to">数分</span><span class="cap">図面1件ぶんから個人情報を消す時間（100ページ超・消す箇所は数千）</span></div>
+        <p class="lead" style="margin-top:26px">消す候補にチェックを付けるだけで終わります。図面はそのパソコンから一歩も出ません。この会社の図面だけに合わせた、消すための道具ができたようなイメージです。</p>
+        <ul class="tiles"><li><b>外に出ない</b>ネット不要。AIにもクラウドにも送らない</li><li><b>選ぶだけ</b>人がやるのは、候補にチェックを付けることだけ</li><li><b>文字ごと除去</b>黒く塗るのではなく、文字そのものを取り除く</li><li><b>サーバ代 0円</b>そのパソコンの中だけで動く</li></ul>
+        <div class="io" style="margin-top:24px"><b>渡してもらったもの</b>　図面のPDF、何を消したいかの説明<br><b>できたもの</b>　図面専用の消す道具。そのパソコンの中だけで動きます<br><b>AI</b>　使っていません<br><b>サーバ代</b>　かかっていません</div>
+        <div class="body"><p>図面には、工事名、所在地、設計者や担当者の名前、電話番号、印が載っています。外部に渡す前に、そこだけを消す必要があります。ある物件の図面一式は100ページを超え、消す箇所は数千、印は全ページに押されていました。図面の文字がそのまま取り出せる状態なら、市販ソフトにも、指定した語句をまとめて消す機能（墨消しといいます）があります。それでも、何を消すかを探して全ページを目で送るのに1時間、検索に掛からない印を1つずつ塗るのに30分。1件あたり2時間が残ります。</p><p>私は、人が探して塗るという段取りをやめ、機械が候補を出して、人は選ぶだけにすることを提案しました。開くと、消す候補が並びます。名前、電話番号、住所、工事名、全ページに押された印。チェックを付けると、同じものが全ページから消えます。黒い四角を上に置くのではなく、文字そのものを図面から取り除きます。あとから検索しても、コピーしても出てきません。</p><p>道具はそのパソコンの中だけで動きます。ネットにつながっていなくても動き、図面の中身はAIにもクラウドにも送っていません。だから図面は外に出ません。</p><p>1件分が数分になりました。いまも実際の図面で確かめながら、直し続けています。</p></div>
+        <p class="near"><b>近いのはこんな場合</b> — 図面、報告書、名簿。外に出す前に、毎回同じ箇所を消したり伏せたりしている仕事。</p>
+      </article>
+      <div class="rel"><h3>関連するページ</h3><ul><li><a href="/tema/masking/">渡す前に同じ箇所を消している</a>　<span style="color:var(--ink-3);font-size:13px">この手間の一般的な話</span></li><li><a href="/case/shutten/">事例：出店の受付を1画面に</a>　<span style="color:var(--ink-3);font-size:13px">別の業種の事例</span></li><li><a href="/case/arbeit/">事例：アルバイトの支払い計算</a>　<span style="color:var(--ink-3);font-size:13px">別の業種の事例</span></li></ul></div>
+    </div>
+  </section>
+
+  <section class="band">
+    <div class="wrap give">
+      <span class="eyebrow">頼み方と料金</span>
+      <h2 class="sec">渡してもらうのは、いま使っているものだけです。</h2>
+      <dl><div><dt>渡してもらうもの</dt><dd>いま使っているもの、そのまま。フォーム、エクセル、紙、PDF。整えなくて大丈夫です</dd></div><div><dt>最初にやること</dt><dd>いまの業務を見せてもらいます。初回はビデオ通話で足ります。うまく説明できなくて構いません</dd></div><div><dt>試作</dt><dd><b>無料。</b>業務を1つ選んで、3日以内に実際に動くものをお出しします。見てから決めてください</dd></div><div><dt>料金</dt><dd><b>月5万円</b>。業務の見直しと、アプリを作って直す分を含みます。使っている間だけ。使わなくなったら、その月で終わり</dd></div><div><dt>最低契約期間</dt><dd>ありません。初月で終わることもできます</dd></div><div><dt>サーバ代・AI</dt><dd>この事例では、どちらもかかっていません。要るときは、作る前に言います</dd></div></dl>
+      <p class="note" style="margin-top:16px;font-size:13.5px;color:var(--ink-3)">料金の詳細と、進め方の全体は<a href="/#price">トップページ</a>にあります。</p>
+    </div>
+  </section>
+
+  <section id="contact">
+    <div class="wrap">
+      <span class="eyebrow">相談</span>
+      <h2 class="sec">「うちの場合はどうか」で大丈夫です。</h2>
+      <p class="lede">事例に自分の業種が無くても、まず聞いてください。うちの仕事でもできるか、見て答えます。うまく説明できなくて構いません。いまのやり方を、そのまま見せてください。</p>
+      <ul class="reassure">
+        <li><span><b>試作は無料です。</b>業務を1つ、3日以内に、実際に動く形でお出しします。</span></li>
+        <li><span><b>初月で終われます。</b>最低契約期間はありません。合わないと思ったら、そこまでです。</span></li>
+        <li><span><b>うまく説明できなくて大丈夫です。</b>いまのやり方を、そのまま見せてください。</span></li>
+      </ul>
+      <div class="cta">
+        <a class="btn" href="/#contact" data-cta="sub_contact_form">相談フォームへ<span class="arw">→</span></a>
+      </div>
+      <p class="mail" style="margin-top:22px;font-size:14.5px;line-height:2;color:var(--ink-2)">メール　<a href="mailto:info@negilab.tokyo?subject=%E6%A5%AD%E5%8B%99%E3%81%AE%E7%9B%B8%E8%AB%87" data-cta="sub_contact_mail">info@negilab.tokyo</a><br>東京・杉並。関東は、行けるところへは伺います。それ以外はビデオ通話で。</p>
+    </div>
+  </section>
+
+</main>
+<footer>
+  <div class="wrap">
+    <nav><a href="/">トップ</a><a href="/case/shutten/">事例：出店の受付を1画面に</a><a href="/case/zumen/" style="color:var(--ink)">事例：図面の個人情報を消す</a><a href="/case/arbeit/">事例：アルバイトの支払い計算</a><a href="/tema/fax/">FAXの注文を打ち直している</a><a href="/tema/niju/">同じ内容を2つ以上のソフトに</a><a href="/tema/shorui/">申し込みを別の書類に作り直す</a><a href="/tema/keisan/">毎回ちがう条件で手計算</a><a href="/tema/masking/">渡す前に同じ箇所を消している</a></nav>
+    <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px 20px"><span>ねぎラボ　／　neggy　／　業務改善と、自動化・支援アプリの構築</span><span>info@negilab.tokyo</span></div>
+  </div>
+</footer>
+<div class="bar is-on" style="position:fixed">
+  <a class="go" href="/#contact" data-cta="sub_bar_form">相談を送る</a>
+</div>
+<script>
+(function () {
+  function track(name) { if (typeof window.gtag === 'function') window.gtag('event', 'cta_click', { cta: name, page: location.pathname }); }
+  document.addEventListener('click', function (ev) {
+    var el = ev.target && ev.target.closest ? ev.target.closest('[data-cta]') : null;
+    if (el) track(el.getAttribute('data-cta'));
+  }, { passive: true });
+  document.querySelectorAll('details.more').forEach(function (d) {
+    var s = d.querySelector('summary'); var open = s.textContent;
+    d.addEventListener('toggle', function () { s.textContent = d.open ? '閉じる' : open; });
+  });
+})();
+</script>
+</body>
+</html>

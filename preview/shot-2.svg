@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 760" role="img">
+<style>text{font-family:'Zen Maru Gothic','Noto Sans JP','Hiragino Sans',sans-serif}</style>
+<rect x="0.5" y="0.5" width="1199" height="759" rx="12" fill="#FFFFFF" stroke="#E6DFD3"/>
+<path d="M12.5 0.5H1187.5A12 12 0 0 1 1199.5 12.5V44H0.5V12.5A12 12 0 0 1 12.5 0.5Z" fill="#EFECE6"/>
+<path d="M0.5 44H1199.5M0.5 100H1199.5" stroke="#E6DFD3"/>
+<circle cx="26" cy="22" r="6" fill="#E3A58E"/><circle cx="46" cy="22" r="6" fill="#E8CB85"/><circle cx="66" cy="22" r="6" fill="#A8C49A"/>
+<rect x="96" y="10" width="520" height="24" rx="12" fill="#FFFFFF" stroke="#E6DFD3"/>
+<text x="114" y="27" font-size="14" fill="#6B6458">図面の個人情報を消す道具</text>
+<circle cx="46" cy="72" r="15" fill="#EAF1E4"/>
+<path d="M39 79C39 69 45 64 54 64C54 73 49 79 39 79ZM39 79L48 70" fill="#3F6E3A" stroke="#3F6E3A" stroke-width="1.5" stroke-linejoin="round"/>
+<text x="72" y="79" font-size="20" fill="#2A2620" font-weight="700">図面から個人情報を消す</text>
+<text x="1168" y="78" font-size="15" fill="#6B6458" text-anchor="end">ネット不要 ・ このパソコンの中だけで動く</text>
+<rect x="32" y="120" width="640" height="568" rx="12" fill="#F6F3EC"/>
+<rect x="62" y="150" width="580" height="410" rx="2" fill="#FFFFFF" stroke="#E6DFD3"/>
+<rect x="76" y="164" width="552" height="382" fill="none" stroke="#8C8579" stroke-width="1.2"/>
+<path d="M116 204h300v200h-300z M236 204v120 M116 324h200 M316 264v140 M316 264h100" fill="none" stroke="#5E584E" stroke-width="3"/>
+<path d="M176 324a28 28 0 0 1 28 -28 M316 364a26 26 0 0 0 26 26" fill="none" stroke="#8C8579" stroke-width="1.2"/>
+<path d="M116 186h300 M116 180v12 M416 180v12 M98 204v200 M92 204h12 M92 404h12" fill="none" stroke="#A39B8E" stroke-width="1"/>
+<path d="M246 214v100" stroke="#CFC7B9" stroke-width="1"/>
+<path d="M258 214v100" stroke="#CFC7B9" stroke-width="1"/>
+<path d="M270 214v100" stroke="#CFC7B9" stroke-width="1"/>
+<path d="M282 214v100" stroke="#CFC7B9" stroke-width="1"/>
+<path d="M294 214v100" stroke="#CFC7B9" stroke-width="1"/>
+<path d="M306 214v100" stroke="#CFC7B9" stroke-width="1"/>
+<rect x="428" y="396" width="200" height="150" fill="#FFFFFF" stroke="#8C8579" stroke-width="1.2"/>
+<path d="M428 426h200" stroke="#B5AD9F" stroke-width="1"/>
+<path d="M428 456h200" stroke="#B5AD9F" stroke-width="1"/>
+<path d="M428 486h200" stroke="#B5AD9F" stroke-width="1"/>
+<path d="M428 516h200" stroke="#B5AD9F" stroke-width="1"/>
+<path d="M484 396v150" stroke="#B5AD9F" stroke-width="1"/>
+<rect x="492" y="406" width="110" height="10" rx="2" fill="#8C8579"/>
+<rect x="488" y="401" width="118" height="20" rx="4" fill="#D9622B" fill-opacity="0.10" stroke="#D9622B" stroke-width="1.5"/>
+<rect x="438" y="408" width="34" height="6" rx="2" fill="#CFC7B9"/>
+<rect x="492" y="436" width="120" height="10" rx="2" fill="#8C8579"/>
+<rect x="488" y="431" width="128" height="20" rx="4" fill="#D9622B" fill-opacity="0.10" stroke="#D9622B" stroke-width="1.5"/>
+<rect x="438" y="438" width="34" height="6" rx="2" fill="#CFC7B9"/>
+<rect x="492" y="466" width="70" height="10" rx="2" fill="#8C8579"/>
+<rect x="488" y="461" width="78" height="20" rx="4" fill="#D9622B" fill-opacity="0.10" stroke="#D9622B" stroke-width="1.5"/>
+<rect x="438" y="468" width="34" height="6" rx="2" fill="#CFC7B9"/>
+<rect x="492" y="496" width="80" height="10" rx="2" fill="#8C8579"/>
+<rect x="488" y="491" width="88" height="20" rx="4" fill="#D9622B" fill-opacity="0.10" stroke="#D9622B" stroke-width="1.5"/>
+<rect x="438" y="498" width="34" height="6" rx="2" fill="#CFC7B9"/>
+<rect x="492" y="526" width="96" height="10" rx="2" fill="#8C8579"/>
+<rect x="488" y="521" width="104" height="20" rx="4" fill="#D9622B" fill-opacity="0.10" stroke="#D9622B" stroke-width="1.5"/>
+<rect x="438" y="528" width="34" height="6" rx="2" fill="#CFC7B9"/>
+<circle cx="394" cy="516" r="16" fill="none" stroke="#C0564A" stroke-width="2"/>
+<circle cx="394" cy="516" r="22" fill="#D9622B" fill-opacity="0.10" stroke="#D9622B" stroke-width="1.5"/>
+<text x="62" y="594" font-size="15" fill="#6B6458">○○邸新築工事_図面一式.pdf</text>
+<rect x="470" y="574" width="172" height="32" rx="16" fill="#FFFFFF" stroke="#E6DFD3"/>
+<text x="556" y="596" font-size="15" fill="#2A2620" font-weight="700" text-anchor="middle">‹　1 / 112　›</text>
+<rect x="62" y="624" width="16" height="16" rx="4" fill="#D9622B" fill-opacity="0.12" stroke="#D9622B" stroke-width="1.5"/>
+<text x="88" y="638" font-size="15" fill="#6B6458">オレンジの枠 ＝ 消す候補として見つかった箇所</text>
+<text x="62" y="668" font-size="15" fill="#6B6458">黒く塗らず、文字そのものを取り除きます</text>
+<text x="700" y="146" font-size="20" fill="#2A2620" font-weight="700">消す候補</text>
+<text x="1168" y="146" font-size="15" fill="#6B6458" text-anchor="end">チェックした項目を消します</text>
+<rect x="700" y="166" width="468" height="56" rx="10" fill="#EAF1E4"/>
+<rect x="716" y="184" width="20" height="20" rx="5" fill="#3F6E3A"/><path d="M721 194.0 l4.4 4.4 l7.6 -8.4" fill="none" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="752" y="189" font-size="14" fill="#6B6458">工事名</text>
+<text x="752" y="211" font-size="16" fill="#2A2620" font-weight="700">○○邸新築工事</text>
+<text x="1152" y="201" font-size="15" fill="#3F6E3A" font-weight="700" text-anchor="end">全ページ</text>
+<rect x="700" y="230" width="468" height="56" rx="10" fill="#EAF1E4"/>
+<rect x="716" y="248" width="20" height="20" rx="5" fill="#3F6E3A"/><path d="M721 258.0 l4.4 4.4 l7.6 -8.4" fill="none" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="752" y="253" font-size="14" fill="#6B6458">所在地</text>
+<text x="752" y="275" font-size="16" fill="#2A2620" font-weight="700">東京都△△区○○町 x-x-x</text>
+<text x="1152" y="265" font-size="15" fill="#3F6E3A" font-weight="700" text-anchor="end">全ページ</text>
+<rect x="700" y="294" width="468" height="56" rx="10" fill="#EAF1E4"/>
+<rect x="716" y="312" width="20" height="20" rx="5" fill="#3F6E3A"/><path d="M721 322.0 l4.4 4.4 l7.6 -8.4" fill="none" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="752" y="317" font-size="14" fill="#6B6458">設計者名</text>
+<text x="752" y="339" font-size="16" fill="#2A2620" font-weight="700">○○ 一郎</text>
+<text x="1152" y="329" font-size="15" fill="#3F6E3A" font-weight="700" text-anchor="end">112か所</text>
+<rect x="700" y="358" width="468" height="56" rx="10" fill="#EAF1E4"/>
+<rect x="716" y="376" width="20" height="20" rx="5" fill="#3F6E3A"/><path d="M721 386.0 l4.4 4.4 l7.6 -8.4" fill="none" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="752" y="381" font-size="14" fill="#6B6458">担当者名</text>
+<text x="752" y="403" font-size="16" fill="#2A2620" font-weight="700">△△ 次郎</text>
+<text x="1152" y="393" font-size="15" fill="#3F6E3A" font-weight="700" text-anchor="end">38か所</text>
+<rect x="700" y="422" width="468" height="56" rx="10" fill="#EAF1E4"/>
+<rect x="716" y="440" width="20" height="20" rx="5" fill="#3F6E3A"/><path d="M721 450.0 l4.4 4.4 l7.6 -8.4" fill="none" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="752" y="445" font-size="14" fill="#6B6458">電話番号</text>
+<text x="752" y="467" font-size="16" fill="#2A2620" font-weight="700">03-xxxx-xxxx</text>
+<text x="1152" y="457" font-size="15" fill="#3F6E3A" font-weight="700" text-anchor="end">64か所</text>
+<rect x="700" y="486" width="468" height="56" rx="10" fill="#EAF1E4"/>
+<rect x="716" y="504" width="20" height="20" rx="5" fill="#3F6E3A"/><path d="M721 514.0 l4.4 4.4 l7.6 -8.4" fill="none" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="752" y="509" font-size="14" fill="#6B6458">印</text>
+<text x="752" y="531" font-size="16" fill="#2A2620" font-weight="700">丸い印（○○）</text>
+<text x="1152" y="521" font-size="15" fill="#3F6E3A" font-weight="700" text-anchor="end">全ページ</text>
+<rect x="700" y="550" width="468" height="56" rx="10" fill="#FFFFFF" stroke="#E6DFD3"/>
+<rect x="716.5" y="568.5" width="19" height="19" rx="5" fill="#FFFFFF" stroke="#BDB3A3"/>
+<text x="752" y="573" font-size="14" fill="#6B6458">会社の代表番号</text>
+<text x="752" y="595" font-size="16" fill="#2A2620" font-weight="700">0120-xxx-xxx</text>
+<text x="1152" y="585" font-size="15" fill="#6B6458" font-weight="700" text-anchor="end">2か所</text>
+<rect x="700" y="626" width="468" height="52" rx="10" fill="#D9622B"/><text x="934.0" y="658.12" font-size="17" fill="#FFFFFF" font-weight="700" text-anchor="middle">チェックした項目を全ページから消す</text>
+</svg>

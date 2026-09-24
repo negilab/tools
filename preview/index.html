@@ -1,0 +1,1055 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>ねぎラボ｜いまの仕事のやり方に合わせて、アプリを作ります。使っている間だけ月5万円</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="受付、支払いの計算、図面の伏せ字。市販のソフトに仕事を合わせるのではなく、御社の仕事の順番に合わせて、御社のためだけのアプリを作ります。使っている間だけ月5万円（税込）、最低契約期間なし。試作は無料、遅くとも5営業日。体験版をその場で触れます。">
+<meta name="author" content="neggy">
+<meta name="robots" content="noindex, nofollow">
+
+<link rel="canonical" href="https://negilab.tokyo/">
+<meta property="og:url" content="https://negilab.tokyo/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="ねぎラボ">
+<meta property="og:title" content="いまの仕事のやり方に合わせて、アプリを作ります。使っている間だけ、月5万円。">
+<meta property="og:description" content="御社の仕事の順番に合わせて、御社のためだけのアプリを作ります。試作は無料。最低契約期間なし。体験版をその場で触れます。">
+<meta property="og:locale" content="ja_JP">
+<meta property="og:image" content="https://negilab.tokyo/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#FBF8F1">
+
+<!-- 計測（Googleアナリティクス4） -->
+
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&family=Noto+Sans+JP:wght@400;500;700&family=M+PLUS+Rounded+1c:wght@800&display=swap">
+
+<style>
+  /* ═══ 色と書体（B案：生成り・葉の緑・オレンジのボタン） ═══ */
+  :root {
+    color-scheme: light;
+    --bg:        #FBF8F1;
+    --bg-2:      #F4EFE4;
+    --card:      #FFFFFF;
+    --rule:      #EAE3D6;
+    --rule-2:    #D9CFBE;
+    --ink:       #2A2620;
+    --ink-2:     #5C554B;
+    --ink-3:     #85796A;
+    --green:     #3F6E3A;
+    --green-deep:#2F5A2C;
+    --green-soft:#EAF1E4;
+    --orange:    #D9622B;
+    --orange-deep:#BF5222;
+    --orange-soft:#FBEBE2;
+    --marker:    #FFE8A3;
+    --white:     #FFFFFF;
+
+    --maru:  "Zen Maru Gothic", "Hiragino Maru Gothic ProN", "Rounded Mplus 1c", "Noto Sans JP", sans-serif;
+    --sans:  "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+    --num:   "M PLUS Rounded 1c", "Zen Maru Gothic", sans-serif;
+
+    --w: 1040px;
+    --w-text: 720px;
+    --gutter: 20px;
+    --sp: clamp(64px, 10vw, 112px);
+    --r: 18px;
+    --shadow: 0 1px 2px rgba(60,40,10,.04), 0 10px 30px rgba(60,40,10,.06);
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; scroll-padding-top: 80px; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: var(--sans); font-size: 16px; line-height: 1.9;
+    -webkit-font-smoothing: antialiased; overflow-wrap: break-word; overflow-x: clip;
+  }
+  ::selection { background: var(--marker); }
+  p { margin: 0; text-wrap: pretty; }
+  p + p { margin-top: 1em; }
+  h1, h2, h3, h4 { margin: 0; font-family: var(--maru); font-weight: 700; font-feature-settings: "palt"; text-wrap: balance; }
+  img, svg { max-width: 100%; height: auto; display: block; }
+  a { color: var(--green); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: .22em; text-decoration-color: var(--rule-2); }
+  a:hover { text-decoration-color: currentColor; }
+  a:focus-visible, button:focus-visible, summary:focus-visible, input:focus-visible, textarea:focus-visible {
+    outline: 3px solid var(--orange); outline-offset: 3px; border-radius: 6px;
+  }
+  .wrap { width: 100%; max-width: var(--w); margin-inline: auto; padding-inline: var(--gutter); }
+  .narrow { max-width: var(--w-text); }
+  section { padding-block: var(--sp); }
+  .band { background: var(--bg-2); }
+  .band-white { background: var(--card); }
+
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--maru); font-size: 14px; font-weight: 700; color: var(--green);
+    background: var(--green-soft); border-radius: 999px; padding: 4px 14px; margin-bottom: 18px;
+  }
+  h2.sec { font-size: clamp(26px, 5.4vw, 36px); line-height: 1.4; margin-bottom: 16px; }
+  .lede { color: var(--ink-2); font-size: 17px; max-width: 38em; margin-bottom: 36px; }
+  .mark { background: linear-gradient(transparent 58%, var(--marker) 58%, var(--marker) 92%, transparent 92%); padding-inline: .05em; }
+
+  /* ═══ ボタン ═══ */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+    min-height: 58px; padding: 12px 28px; border-radius: 999px; border: 0; cursor: pointer;
+    background: var(--orange); color: var(--white);
+    font-family: var(--maru); font-size: 17px; font-weight: 700; letter-spacing: .02em; line-height: 1.3;
+    text-decoration: none; text-align: center;
+    box-shadow: 0 4px 14px rgba(217,98,43,.28);
+  }
+  .btn:hover { background: var(--orange-deep); text-decoration: none; transform: translateY(-1px); }
+  .btn .arw { font-size: 15px; opacity: .9; }
+  .btn.ghost { background: var(--card); color: var(--green); box-shadow: inset 0 0 0 2px var(--green); }
+  .btn.ghost:hover { background: var(--green-soft); }
+  .btn.sm { min-height: 44px; padding: 8px 18px; font-size: 15px; box-shadow: none; }
+
+  /* ═══ ヘッダー ═══ */
+  .head {
+    position: sticky; top: 0; z-index: 30;
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid transparent; transition: border-color .2s;
+  }
+  .head.is-scrolled { border-bottom-color: var(--rule); }
+  .head .wrap { display: flex; align-items: center; gap: 18px; min-height: 64px; }
+  .head .logo img { height: 34px; width: auto; }
+  .head nav { display: flex; gap: 22px; margin-left: 14px; }
+  .head nav a { font-family: var(--maru); font-weight: 700; font-size: 15px; color: var(--ink-2); text-decoration: none; }
+  .head nav a:hover { color: var(--green); }
+  .head .sp { flex: 1 1 auto; }
+
+  /* ═══ 冒頭 ═══ */
+  .hero { padding-block: clamp(28px, 6vw, 64px) clamp(48px, 8vw, 80px); overflow: hidden; }
+  .hero .wrap { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, .9fr); gap: 32px 48px; align-items: end; }
+  .hero h1 { font-size: clamp(28px, 7.4vw, 46px); line-height: 1.32; font-weight: 900; margin: 14px 0 20px; }
+  .hero .sub { font-size: clamp(16px, 2.6vw, 18.5px); color: var(--ink-2); max-width: 30em; }
+  .hero .badges { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 26px; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--maru); font-size: 14.5px; font-weight: 700; color: var(--green-deep);
+    background: var(--card); border: 1.5px solid var(--rule-2); border-radius: 999px; padding: 7px 15px 7px 11px;
+  }
+  .badge::before {
+    content: ""; width: 18px; height: 18px; border-radius: 50%; background: var(--green);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm-1.2 14.2-4-4 1.6-1.6 2.4 2.4 5.4-5.4 1.6 1.6z'/%3E%3C/svg%3E") center/contain no-repeat;
+            mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm-1.2 14.2-4-4 1.6-1.6 2.4 2.4 5.4-5.4 1.6 1.6z'/%3E%3C/svg%3E") center/contain no-repeat;
+  }
+
+  /* 一行フォーム */
+  .quick { margin-top: 30px; max-width: 34em; }
+  .quick .row { display: flex; gap: 10px; }
+  .quick input {
+    flex: 1 1 auto; min-width: 0; min-height: 58px; padding: 12px 18px;
+    font-family: inherit; font-size: 16px; color: var(--ink);
+    background: var(--card); border: 1.5px solid var(--rule-2); border-radius: 999px;
+  }
+  .quick input:focus { border-color: var(--green); }
+  .quick .btn { flex: 0 0 auto; }
+  .quick .note { margin-top: 12px; font-size: 14px; color: var(--ink-2); line-height: 1.7; }
+  .quick .note b { color: var(--ink); }
+
+  .hero .pic { position: relative; align-self: end; }
+  .hero .pic img { width: min(100%, 420px); margin-inline: auto; }
+  .hero .pic .tag {
+    position: absolute; left: 4px; bottom: 18px;
+    font-family: var(--maru); font-weight: 700; font-size: 14px; line-height: 1.5; color: var(--ink);
+    background: var(--card); border-radius: 14px 14px 14px 4px; padding: 10px 14px; box-shadow: var(--shadow);
+  }
+  .hero .pic .tag small { display: block; font-weight: 500; color: var(--ink-2); font-size: 12.5px; }
+
+  /* ═══ 実績の帯 ═══ */
+  .proof { padding-block: 34px; border-block: 1px solid var(--rule); background: var(--card); }
+  .proof .wrap { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px 32px; }
+  .proof .n { font-family: var(--num); font-weight: 800; font-size: clamp(24px, 3.6vw, 32px); line-height: 1.15; color: var(--green-deep); font-variant-numeric: tabular-nums; }
+  .proof .n .from { color: var(--ink-3); font-weight: 800; text-decoration: line-through; text-decoration-thickness: 2px; font-size: .78em; margin-right: 6px; }
+  .proof .n .arw { color: var(--orange); font-size: .7em; margin-right: 6px; }
+  .proof .l { font-size: 14px; color: var(--ink-2); margin-top: 4px; }
+  .proof .co { grid-column: 1 / -1; font-size: 13.5px; color: var(--ink-3); border-top: 1px dashed var(--rule); padding-top: 14px; margin-top: 4px; }
+  .proof .co b { color: var(--ink-2); font-weight: 500; }
+
+  /* ═══ こんな作業 ═══ */
+  .pains { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
+  .pain {
+    display: grid; grid-template-columns: 44px 1fr; gap: 14px; align-items: start;
+    background: var(--card); border: 1px solid var(--rule); border-radius: var(--r); padding: 20px 20px;
+    font-size: 15.5px; line-height: 1.7;
+  }
+  .pain .ic { width: 44px; height: 44px; border-radius: 12px; background: var(--green-soft); display: grid; place-items: center; color: var(--green); }
+  .pain .ic svg { width: 24px; height: 24px; }
+  .pain b { display: block; font-family: var(--maru); font-size: 17px; margin-bottom: 2px; }
+  .pain span { color: var(--ink-2); font-size: 14.5px; }
+  .pains-close { margin-top: 26px; font-size: 16px; color: var(--ink-2); max-width: 40em; }
+  .pains-close b { color: var(--ink); }
+
+  /* ═══ 考え方 ═══ */
+  .pillars { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .pillar { background: var(--card); border-radius: var(--r); padding: 26px 24px 24px; box-shadow: var(--shadow); }
+  .pillar .no { font-family: var(--num); font-weight: 800; font-size: 14px; color: var(--orange); letter-spacing: .1em; }
+  .pillar h3 { font-size: 19px; line-height: 1.5; margin: 6px 0 10px; }
+  .pillar p { font-size: 14.5px; color: var(--ink-2); line-height: 1.8; }
+  .ai-note {
+    margin-top: 22px; display: flex; gap: 12px; align-items: start;
+    background: var(--green-soft); border-radius: 14px; padding: 16px 18px; font-size: 14.5px; color: var(--ink-2); line-height: 1.8;
+  }
+  .ai-note b { color: var(--green-deep); }
+  .ai-note .ic { flex: 0 0 auto; width: 26px; height: 26px; border-radius: 50%; background: var(--green); color: #fff; display: grid; place-items: center; font-family: var(--maru); font-weight: 900; font-size: 15px; margin-top: 2px; }
+
+  /* ═══ 事例 ═══ */
+  .case { background: var(--card); border-radius: 24px; box-shadow: var(--shadow); padding: clamp(22px, 4vw, 36px); margin-top: 26px; }
+  .case:first-of-type { margin-top: 0; }
+  .case .ind { display: inline-flex; gap: 8px; align-items: center; font-family: var(--maru); font-size: 13.5px; font-weight: 700; color: var(--green-deep); background: var(--green-soft); border-radius: 999px; padding: 3px 12px; margin-bottom: 14px; }
+  .case h3 { font-size: clamp(21px, 4.2vw, 27px); line-height: 1.45; margin-bottom: 12px; }
+  .case .quote { font-size: 15.5px; color: var(--ink-2); border-left: 3px solid var(--rule-2); padding-left: 14px; margin-bottom: 22px; }
+  .case .grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 26px 32px; align-items: start; }
+  .shot { margin: 0; }
+  .shot .frame { border-radius: 12px; overflow: hidden; border: 1px solid var(--rule); box-shadow: 0 8px 24px rgba(60,40,10,.08); background: #fff; }
+  .shot .frame img { width: 100%; }
+  .shot figcaption { font-size: 12.5px; color: var(--ink-3); margin-top: 8px; line-height: 1.6; }
+  .ba { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px 12px; margin-bottom: 14px; }
+  .ba .from { font-family: var(--num); font-weight: 800; font-size: 22px; color: var(--ink-3); text-decoration: line-through; text-decoration-thickness: 2.5px; text-decoration-color: color-mix(in srgb, var(--orange) 70%, transparent); }
+  .ba .arw { color: var(--orange); font-weight: 700; font-size: 18px; }
+  .ba .to { font-family: var(--num); font-weight: 800; font-size: clamp(30px, 5vw, 40px); line-height: 1; color: var(--green-deep); }
+  .ba .cap { flex: 1 0 100%; font-size: 13.5px; color: var(--ink-2); line-height: 1.6; }
+  .case .lead { font-size: 15.5px; line-height: 1.85; }
+  .points { list-style: none; margin: 18px 0 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .points li { background: var(--bg); border-radius: 12px; padding: 12px 14px; font-size: 13.5px; color: var(--ink-2); line-height: 1.6; }
+  .points li b { display: block; font-family: var(--maru); font-size: 16px; color: var(--ink); margin-bottom: 2px; }
+  .io { margin-top: 18px; display: grid; grid-template-columns: 9.5em 1fr; gap: 6px 12px; font-size: 13.5px; color: var(--ink-2); line-height: 1.7; }
+  .io dt { font-weight: 700; color: var(--green-deep); }
+  .io dd { margin: 0; }
+  .near { margin-top: 20px; padding-top: 16px; border-top: 1px dashed var(--rule); font-size: 14.5px; color: var(--ink-2); display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: baseline; justify-content: space-between; }
+  .near b { color: var(--ink); }
+  .near a { font-family: var(--maru); font-weight: 700; white-space: nowrap; }
+  .others { margin-top: 34px; background: var(--card); border-radius: var(--r); padding: 24px 26px; border: 1px dashed var(--rule-2); }
+  .others h3 { font-size: 18px; margin-bottom: 12px; }
+  .others ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+  .others li { font-size: 14.5px; color: var(--ink-2); line-height: 1.75; padding-left: 1.2em; text-indent: -1.2em; }
+  .others li::before { content: "・"; color: var(--green); }
+  .others li b { color: var(--ink); }
+
+  /* ═══ 途中の呼びかけ ═══ */
+  .midcta { background: var(--green-deep); color: #fff; padding-block: clamp(44px, 7vw, 64px); }
+  .midcta .wrap { display: grid; grid-template-columns: 1fr auto; gap: 18px 32px; align-items: center; }
+  .midcta h2 { font-size: clamp(22px, 4.2vw, 30px); line-height: 1.45; color: #fff; }
+  .midcta p { color: rgba(255,255,255,.85); font-size: 15px; margin-top: 8px; max-width: 34em; }
+  .midcta .btn { box-shadow: 0 6px 18px rgba(0,0,0,.2); }
+
+  /* ═══ 進め方 ═══ */
+  .steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; counter-reset: s; position: relative; }
+  .steps li { counter-increment: s; display: grid; grid-template-columns: 52px 1fr; gap: 0 18px; padding: 0 0 26px; position: relative; }
+  .steps li::before {
+    content: counter(s); width: 44px; height: 44px; border-radius: 50%;
+    background: var(--card); border: 2px solid var(--green); color: var(--green-deep);
+    font-family: var(--num); font-weight: 800; font-size: 18px; display: grid; place-items: center; z-index: 1;
+  }
+  .steps li::after { content: ""; position: absolute; left: 21px; top: 44px; bottom: -2px; width: 2px; background: var(--rule-2); }
+  .steps li:last-child::after { display: none; }
+  .steps li:last-child { padding-bottom: 0; }
+  .steps b, .steps span { grid-column: 2; }
+  .steps b { display: block; font-family: var(--maru); font-size: 18px; line-height: 1.5; padding-top: 6px; }
+  .steps .tag { display: inline-block; font-size: 12.5px; font-weight: 700; color: var(--orange-deep); background: var(--orange-soft); border-radius: 999px; padding: 2px 10px; margin-left: 8px; vertical-align: 2px; }
+  .steps span { display: block; font-size: 15px; color: var(--ink-2); line-height: 1.8; margin-top: 4px; }
+
+  /* ═══ 料金 ═══ */
+  .price { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 24px; align-items: start; }
+  .pcard { background: var(--card); border-radius: 24px; padding: 30px 28px; box-shadow: var(--shadow); border-top: 6px solid var(--orange); position: sticky; top: 84px; }
+  .pcard .lbl { font-family: var(--maru); font-size: 15px; font-weight: 700; color: var(--ink-2); }
+  .pcard .yen { font-family: var(--num); font-weight: 800; font-size: clamp(48px, 9vw, 64px); line-height: 1; color: var(--ink); letter-spacing: -.02em; margin: 6px 0 2px; }
+  .pcard .yen small { font-size: .42em; font-weight: 800; color: var(--ink-2); margin-left: 4px; }
+  .pcard .tax { font-size: 13.5px; color: var(--ink-3); }
+  .pcard ul { list-style: none; margin: 18px 0 0; padding: 18px 0 0; border-top: 1px solid var(--rule); display: grid; gap: 10px; }
+  .pcard li { display: grid; grid-template-columns: 22px 1fr; gap: 10px; font-size: 15px; line-height: 1.6; }
+  .pcard li::before { content: "✓"; color: var(--green); font-weight: 900; }
+  .pcard .btn { width: 100%; margin-top: 22px; }
+  .terms { display: grid; gap: 0; background: var(--card); border-radius: var(--r); border: 1px solid var(--rule); overflow: hidden; }
+  .terms div { display: grid; grid-template-columns: 9em 1fr; gap: 14px; padding: 16px 20px; border-top: 1px solid var(--rule); font-size: 14.5px; line-height: 1.8; }
+  .terms div:first-child { border-top: 0; }
+  .terms dt { font-family: var(--maru); font-weight: 700; color: var(--green-deep); font-size: 14px; padding-top: .15em; }
+  .terms dd { margin: 0; color: var(--ink-2); }
+  .terms dd b { color: var(--ink); }
+  .first { margin-top: 18px; background: var(--marker); border-radius: 14px; padding: 16px 20px; font-size: 14.5px; line-height: 1.8; color: var(--ink); }
+  .first b { font-family: var(--maru); }
+  .vs { margin-top: 22px; }
+  .vs h3 { font-size: 17px; margin-bottom: 10px; }
+  .vs table { width: 100%; border-collapse: collapse; background: var(--card); border-radius: 14px; overflow: hidden; border: 1px solid var(--rule); font-size: 14px; }
+  .vs th, .vs td { padding: 11px 14px; text-align: left; border-top: 1px solid var(--rule); vertical-align: top; line-height: 1.6; }
+  .vs thead th { border-top: 0; background: var(--bg-2); font-family: var(--maru); font-size: 13.5px; }
+  .vs thead th:last-child { background: var(--green-soft); color: var(--green-deep); }
+  .vs tbody th { font-weight: 700; color: var(--ink-2); font-size: 13.5px; width: 7.5em; }
+  .vs td.no { color: var(--ink-3); }
+  .vs td.yes { color: var(--ink); font-weight: 700; background: color-mix(in srgb, var(--green-soft) 45%, transparent); }
+
+  /* ═══ つくる人 ═══ */
+  .me { display: grid; grid-template-columns: 260px minmax(0, 1fr); gap: 30px 44px; align-items: start; }
+  .me .ph img { width: 100%; border-radius: 28px; box-shadow: var(--shadow); }
+  .me .nm { font-family: var(--maru); font-size: 26px; font-weight: 900; line-height: 1.3; }
+  .me .nm small { display: block; font-size: 14px; font-weight: 700; color: var(--ink-2); }
+  .me .bio { margin-top: 12px; font-size: 15.5px; color: var(--ink-2); }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 22px; }
+  .stat { background: var(--card); border-radius: 14px; padding: 16px 16px 14px; border: 1px solid var(--rule); }
+  .stat .v { font-family: var(--num); font-weight: 800; font-size: 30px; line-height: 1; color: var(--green-deep); }
+  .stat .v small { font-size: 15px; margin-left: 1px; }
+  .stat .d { font-size: 13px; color: var(--ink-2); line-height: 1.6; margin-top: 8px; }
+  .me .aw { margin-top: 14px; font-size: 13px; color: var(--ink-3); line-height: 1.8; }
+  .promise { margin-top: 22px; display: grid; gap: 10px; }
+  .promise div { background: var(--card); border-radius: 14px; padding: 14px 18px; font-size: 14.5px; color: var(--ink-2); line-height: 1.75; border-left: 4px solid var(--green); }
+  .promise b { color: var(--ink); font-family: var(--maru); display: block; }
+  .biz { margin-top: 22px; font-size: 13.5px; color: var(--ink-3); line-height: 1.8; display: flex; flex-wrap: wrap; gap: 4px 18px; }
+
+  /* ═══ FAQ ═══ */
+  .faq { display: grid; gap: 10px; }
+  .faq details { background: var(--card); border-radius: 14px; border: 1px solid var(--rule); }
+  .faq summary { cursor: pointer; list-style: none; display: grid; grid-template-columns: 1fr 24px; gap: 14px; align-items: center; padding: 16px 20px; font-family: var(--maru); font-weight: 700; font-size: 16px; line-height: 1.6; }
+  .faq summary::-webkit-details-marker { display: none; }
+  .faq summary::after { content: "＋"; color: var(--green); font-weight: 900; font-size: 20px; line-height: 1; text-align: center; }
+  .faq details[open] summary::after { content: "－"; }
+  .faq summary:hover { color: var(--green-deep); }
+  .faq .a { padding: 0 20px 18px; font-size: 15px; color: var(--ink-2); line-height: 1.85; max-width: 36em; }
+
+  /* ═══ 相談 ═══ */
+  .reassure { list-style: none; margin: 0 0 30px; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .reassure li { background: var(--card); border-radius: 14px; padding: 14px 16px; font-size: 14.5px; line-height: 1.7; color: var(--ink-2); border: 1px solid var(--rule); }
+  .reassure b { display: block; font-family: var(--maru); color: var(--ink); font-size: 15.5px; }
+  form.main { background: var(--card); border-radius: 24px; padding: clamp(22px, 4vw, 34px); box-shadow: var(--shadow); }
+  .field { margin-bottom: 20px; }
+  .field > label, .field > .lg { display: block; font-family: var(--maru); font-size: 14.5px; font-weight: 700; color: var(--ink); margin-bottom: 8px; }
+  .req { color: var(--orange-deep); font-size: 12px; font-weight: 700; margin-left: 8px; background: var(--orange-soft); border-radius: 999px; padding: 1px 8px; }
+  .opt { color: var(--ink-3); font-size: 12px; font-weight: 500; margin-left: 8px; }
+  .hint { font-size: 13.5px; color: var(--ink-3); line-height: 1.65; margin-top: 6px; }
+  input[type="text"], input[type="email"], textarea {
+    width: 100%; font-family: inherit; font-size: 16px; line-height: 1.7; color: var(--ink);
+    background: var(--bg); border: 1.5px solid var(--rule-2); border-radius: 12px; padding: 12px 16px; min-height: 52px;
+  }
+  textarea { min-height: 130px; resize: vertical; }
+  input:focus, textarea:focus { border-color: var(--green); background: var(--card); }
+  [aria-invalid="true"] { border-color: var(--orange) !important; background: var(--orange-soft) !important; }
+  .err { display: none; margin-top: 6px; font-size: 13.5px; font-weight: 700; color: var(--orange-deep); }
+  .err.is-on { display: block; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
+  fieldset { border: 0; margin: 0; padding: 0; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--ink-2); background: var(--bg); border: 1.5px solid var(--rule-2); border-radius: 999px; padding: 8px 14px; min-height: 42px; user-select: none; }
+  .chip input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .chip .bx { width: 16px; height: 16px; border: 1.5px solid var(--rule-2); border-radius: 5px; background: var(--card); }
+  .chip:hover { border-color: var(--ink-3); }
+  .chip:has(input:checked) { border-color: var(--green); background: var(--green-soft); color: var(--ink); font-weight: 700; }
+  .chip:has(input:checked) .bx { border-color: var(--green); background: var(--green); position: relative; }
+  .chip:has(input:checked) .bx::after { content: ""; position: absolute; left: 4px; top: 1px; width: 5px; height: 9px; border-right: 2px solid #fff; border-bottom: 2px solid #fff; transform: rotate(42deg); }
+  .chip:has(input:focus-visible) { outline: 3px solid var(--orange); outline-offset: 2px; }
+  .before-send { margin: 6px 0 14px; font-size: 14px; color: var(--ink-2); background: var(--bg); border-radius: 12px; padding: 12px 16px; line-height: 1.7; }
+  .before-send b { color: var(--ink); }
+  .send { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .send .copy { grid-column: 1 / -1; justify-self: center; background: none; border: 0; font: inherit; font-size: 14px; color: var(--ink-3); text-decoration: underline; cursor: pointer; padding: 6px; }
+  .sent { display: none; margin-top: 18px; padding: 16px 18px; background: var(--green-soft); border-radius: 12px; font-size: 14.5px; line-height: 1.8; }
+  .sent.is-on { display: block; }
+  .direct { margin-top: 26px; font-size: 15px; color: var(--ink-2); display: flex; flex-wrap: wrap; gap: 6px 24px; }
+  .direct a { font-weight: 700; }
+
+  /* ═══ 足元 ═══ */
+  footer { padding-block: 40px 60px; border-top: 1px solid var(--rule); font-size: 13.5px; color: var(--ink-3); }
+  footer .cols { display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 24px 32px; }
+  footer h4 { font-family: var(--maru); font-size: 13.5px; color: var(--ink-2); margin-bottom: 10px; }
+  footer ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+  footer a { color: var(--ink-3); text-decoration: none; }
+  footer a:hover { color: var(--green); text-decoration: underline; }
+  footer .logo img { height: 26px; width: auto; margin-bottom: 10px; opacity: .8; }
+  footer .copy { margin-top: 28px; padding-top: 18px; border-top: 1px solid var(--rule); display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 20px; }
+
+  /* ═══ 携帯の追従ボタン ═══ */
+  .bar { display: none; }
+
+  /* ═══ 幅の切り替え ═══ */
+  @media (max-width: 860px) {
+    .hero .wrap { grid-template-columns: 1fr; }
+    .hero .pic { order: -1; }
+    .hero .pic img { width: min(62vw, 300px); margin-inline: 0; }
+    .hero .pic .tag { left: min(52vw, 250px); bottom: 10px; }
+    .pillars { grid-template-columns: 1fr; }
+    .case .grid { grid-template-columns: 1fr; }
+    .price { grid-template-columns: 1fr; }
+    .pcard { position: static; }
+    .me { grid-template-columns: 1fr; }
+    .me .ph img { width: 180px; }
+    .midcta .wrap { grid-template-columns: 1fr; }
+    footer .cols { grid-template-columns: 1fr; }
+    .head nav { display: none; }
+  }
+  @media (max-width: 600px) {
+    .hero h1 { font-size: clamp(27px, 7.4vw, 34px); }
+    .quick .row { flex-direction: column; }
+    .quick .btn { width: 100%; }
+    .proof .wrap { grid-template-columns: 1fr; gap: 14px; }
+    .proof .n { font-size: 26px; }
+    .stats { grid-template-columns: 1fr; }
+    .reassure { grid-template-columns: 1fr; }
+    .two { grid-template-columns: 1fr; }
+    .send { grid-template-columns: 1fr; }
+    .terms div { grid-template-columns: 1fr; gap: 2px; }
+    .points { grid-template-columns: 1fr; }
+    .io { grid-template-columns: 1fr; gap: 2px 0; }
+    .io dd { margin-bottom: 8px; }
+    .head .btn.sm { padding-inline: 14px; font-size: 14px; }
+    .bar {
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+      display: flex; padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+      background: color-mix(in srgb, var(--bg) 92%, transparent); backdrop-filter: blur(10px); border-top: 1px solid var(--rule);
+      transform: translateY(115%); visibility: hidden;
+    }
+    .bar.is-on { transform: none; visibility: visible; }
+    .bar .btn { flex: 1 1 auto; min-height: 52px; }
+    body:has(.bar.is-on) footer { padding-bottom: 130px; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    html { scroll-behavior: smooth; }
+    .btn { transition: background-color .15s, transform .15s; }
+    .bar { transition: transform .25s ease, visibility .25s; }
+  }
+  @media print {
+    .head, .bar, form, .quick, .midcta { display: none !important; }
+    body { background: #fff; }
+    .case, .pillar, .pcard, .stat { box-shadow: none; border: 1px solid #ccc; }
+  }
+
+  /* ═══ v4 追加 ═══ */
+  .hero h1 .sub2 { display: block; font-size: .62em; font-weight: 900; color: var(--ink-2); margin-top: .35em; }
+  .cta2 { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 26px; }
+  .doors { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 18px; }
+  .doors a { font-family: var(--maru); font-weight: 700; font-size: 14px; color: var(--green-deep); background: var(--card); border: 1.5px solid var(--rule-2); border-radius: 999px; padding: 7px 14px; text-decoration: none; }
+  .doors a:hover { border-color: var(--green); background: var(--green-soft); }
+  .shot a.frame { display: block; position: relative; text-decoration: none; }
+  .shot a.frame .play { position: absolute; right: 12px; bottom: 12px; font-family: var(--maru); font-weight: 700; font-size: 13px; color: #fff; background: var(--orange); border-radius: 999px; padding: 6px 14px; box-shadow: 0 4px 12px rgba(217,98,43,.35); }
+  .shot a.frame:hover .play { background: var(--orange-deep); }
+  .try { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; margin-top: 18px; }
+  .try .btn { min-height: 52px; flex-direction: column; gap: 0; line-height: 1.2; padding: 8px 26px; }
+  .try .btn small { font-size: 11.5px; font-weight: 500; opacity: .9; }
+  .try .more { font-family: var(--maru); font-weight: 700; }
+  .others li a { font-family: var(--maru); font-weight: 700; margin-left: 6px; white-space: nowrap; }
+  .vs thead th small { display: block; font-weight: 500; font-size: 11.5px; color: var(--ink-3); }
+  .vs tbody th { width: 9em; }
+  .me .links { margin-top: 14px; font-size: 14px; color: var(--ink-2); }
+  .hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+  .before-send .dim { color: var(--ink-3); font-size: 13px; }
+  .send { display: block; }
+  .send .btn { width: 100%; }
+  .send .alt { margin-top: 12px; font-size: 13.5px; color: var(--ink-3); text-align: center; line-height: 2; }
+  .send .alt .copy { display: inline; padding: 0; font-size: 13.5px; color: var(--green); }
+  @media (max-width: 600px) {
+    .cta2 .btn { flex: 1 1 100%; }
+    .vs table { font-size: 12.5px; }
+    .vs th, .vs td { padding: 8px 8px; }
+    .vs tbody th { width: 6.5em; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══ ヘッダー ══ -->
+<div class="head" id="head">
+  <div class="wrap">
+    <a class="logo" href="/tools/preview/" aria-label="ねぎラボ"><img src="logo.png" alt="ねぎラボ" width="480" height="183"></a>
+    <nav aria-label="ページ内">
+      <a href="#cases">事例</a>
+      <a href="#how">進め方</a>
+      <a href="#price">料金</a>
+      <a href="#faq">よくある質問</a>
+    </nav>
+    <span class="sp"></span>
+    <a class="btn sm" href="#contact" data-cta="head_form">相談する</a>
+  </div>
+</div>
+
+<main>
+
+  <!-- ══ 冒頭 ══ -->
+  <header class="hero">
+    <div class="wrap">
+      <div>
+        <span class="eyebrow">小さな会社の、仕事に合わせたアプリづくり</span>
+        <h1>いまの仕事のやり方に<br>合わせて、アプリを作ります。<span class="sub2">使っている間だけ、<span class="mark">月5万円</span>。</span></h1>
+        <p class="sub">受付、支払いの計算、図面の伏せ字。市販のソフトに仕事を合わせるのではなく、御社の仕事の順番に合わせて、御社のためだけのアプリを作ります。まず無料で動く試作を作り、触ってから決めてもらいます。渡したあとも、使いながら直し続けます。</p>
+
+        <div class="cta2">
+          <a class="btn" href="#cases" data-cta="hero_try">事例を触ってみる<span class="arw">↓</span></a>
+          <a class="btn ghost" href="#contact" data-cta="hero_form">相談する</a>
+        </div>
+
+        <div class="badges">
+          <span class="badge">相談した当日から使い始めた事例あり</span>
+          <span class="badge">試作は無料。遅くとも5営業日</span>
+          <span class="badge">最低契約期間なし。やめた月で終わり</span>
+        </div>
+      </div>
+
+      <div class="pic">
+        <img src="me-hero.png" alt="ねぎラボの neggy" width="450" height="518" fetchpriority="high">
+        <div class="tag">neggy<small>業務改善 12年 → 自分で作る人</small></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ══ 実績の帯 ══ -->
+  <div class="proof">
+    <div class="wrap">
+      <div>
+        <div class="n"><span class="from">4つのツール</span><span class="arw">→</span>1画面</div>
+        <div class="l">出店申し込みの受付から役所の書類まで（イベント運営）</div>
+      </div>
+      <div>
+        <div class="n">105万円分、一円も違わず</div>
+        <div class="l">アルバイトの支払い計算を、実データで確認（イベント運営）</div>
+      </div>
+      <div>
+        <div class="n"><span class="from">2時間</span><span class="arw">→</span>数分</div>
+        <div class="l">図面から個人情報を消す作業、1件あたり（建設会社）</div>
+      </div>
+      <div class="co">これまでの現場：<b>NTTドコモグループ ／ ベルシステム24 ／ Ubie</b>　業務改善の責任者として12年。NTTドコモ社長表彰ほか</div>
+    </div>
+  </div>
+
+  <!-- ══ 事例（触れる） ══ -->
+  <section id="cases">
+    <div class="wrap">
+      <span class="eyebrow">事例</span>
+      <h2 class="sec">作って、いま使われているもの。触れます。</h2>
+      <p class="lede">業種は問いません。事例がイベント運営と建設に寄っているのは、最初の相手がたまたまそうだっただけです。「触ってみる」の先は体験版です。データは架空のもので、閉じると消えます。</p>
+
+      <!-- 事例 1 -->
+      <article class="case" id="case-1">
+        <div class="ind">イベント運営会社</div>
+        <h3>出店申し込みの受付を、4つのツールから1つの画面に。</h3>
+        <p class="quote">「フォーム、メール、パワポ、エクセル。1件のイベントで4つを行き来していました」</p>
+        <div class="grid">
+          <figure class="shot"><a class="frame" href="https://negilab.github.io/tools/demo/shutten/" target="_blank" rel="noopener" data-cta="try_shutten"><img src="shot-1.svg" alt="出店申し込みの管理画面" width="1200" height="760" loading="lazy"><span class="play">触ってみる</span></a><figcaption>届いた申し込みが並ぶ画面。ここから役所の書類も、一斉連絡も出せます。</figcaption></figure>
+          <div>
+            <div class="ba"><span class="from">4つのツール</span><span class="arw">→</span><span class="to">1つの画面</span><span class="cap">申し込みが届いた時点で、消防と保健所に出す書類が数クリックでできます。</span></div>
+            <p class="lead">Googleフォームの質問12問はそのまま。変えたのは、受けたあとの手間だけです。出店者はログインなしで写真ごと申し込め、一斉連絡も同じ画面から送れます。</p>
+            <ul class="points">
+              <li><b>相談した当日</b>実際の受付で使い始めた</li>
+              <li><b>数クリック</b>消防の配置図PDFと保健所の一覧表</li>
+              <li><b>12問そのまま</b>いまのフォームの質問は変えていない</li>
+              <li><b>サーバ代 0円</b>会社のGoogleの中で動く</li>
+            </ul>
+            <div class="try">
+              <a class="btn" href="https://negilab.github.io/tools/demo/shutten/" target="_blank" rel="noopener" data-cta="try_shutten">触ってみる<small>パソコンで</small></a>
+              <a class="more" href="/tools/preview/case/shutten/">くわしく見る →</a>
+            </div>
+          </div>
+        </div>
+        <p class="near"><span><b>近いのはこんな仕事</b>　申し込み、注文、予約。受け取った内容を別の書類や連絡に作り直している。</span></p>
+      </article>
+
+      <!-- 事例 2 -->
+      <article class="case" id="case-2">
+        <div class="ind">イベント運営会社</div>
+        <h3>アルバイトの支払い計算を、「その日の顔ぶれを選ぶだけ」に。</h3>
+        <p class="quote">「誰にいくら渡すか、欠員や交代が出るたびに計算し直していました」</p>
+        <div class="grid">
+          <figure class="shot"><a class="frame" href="https://negilab.github.io/tools/demo/baito/" target="_blank" rel="noopener" data-cta="try_baito"><img src="shot-3.svg" alt="アルバイトの支払い画面" width="1200" height="760" loading="lazy"><span class="play">触ってみる</span></a><figcaption>その日の顔ぶれを選ぶと金額が出ます。前の日の顔ぶれをそのまま写せます。</figcaption></figure>
+          <div>
+            <div class="ba"><span class="from">毎回、手で計算</span><span class="arw">→</span><span class="to">選ぶだけ</span><span class="cap">イベントと人を別々に持ち、日付でつなぐ組み立てに変えました。</span></div>
+            <p class="lead">その日に出た人を選ぶだけで金額が出て、支払い明細のPDFがメールまで届きます。イベント11件・支払い105万円分の実データを移し替え、一円も違わないことを確認しています。</p>
+            <ul class="points">
+              <li><b>一円も違わない</b>11件・105万円分の実データで確認</li>
+              <li><b>チェック1つ</b>未払いが支払済になり、明細PDFが届く</li>
+              <li><b>渡したのは1枚</b>いま使っているエクセルだけ</li>
+              <li><b>サーバ代 0円</b>会社のGoogleの中で動く</li>
+            </ul>
+            <div class="try">
+              <a class="btn" href="https://negilab.github.io/tools/demo/baito/" target="_blank" rel="noopener" data-cta="try_baito">触ってみる<small>パソコンでも携帯でも</small></a>
+              <a class="more" href="/tools/preview/case/arbeit/">くわしく見る →</a>
+            </div>
+          </div>
+        </div>
+        <p class="near"><span><b>近いのはこんな仕事</b>　支払い、請求、見積り。条件がそのつど変わって、毎回エクセルで計算している。</span></p>
+      </article>
+
+      <!-- 事例 3 -->
+      <article class="case" id="case-3">
+        <div class="ind">建設会社</div>
+        <h3>図面の個人情報を消す作業を、1件2時間から数分に。</h3>
+        <p class="quote">「図面には個人情報が全部入っているので、渡す前に1頁ずつ消していました」</p>
+        <div class="grid">
+          <figure class="shot"><a class="frame" href="https://negilab.github.io/tools/pdfmask/" target="_blank" rel="noopener" data-cta="try_pdfmask"><img src="shot-2.svg" alt="図面から個人情報を消す画面" width="1200" height="760" loading="lazy"><span class="play">触ってみる</span></a><figcaption>消す候補が並ぶ画面。チェックを付けると、同じものが全ページから消えます。</figcaption></figure>
+          <div>
+            <div class="ba"><span class="from">2時間</span><span class="arw">→</span><span class="to">数分</span><span class="cap">100ページ超・消す箇所は数千の図面1件ぶん。人がやるのは、候補にチェックを付けることだけ。</span></div>
+            <p class="lead">開くと、名前・電話番号・住所・工事名・全ページの印が候補として並びます。黒く塗るのではなく、文字そのものを図面から取り除きます。図面はそのパソコンから出ません。</p>
+            <ul class="points">
+              <li><b>外に出ない</b>ネット不要。AIにもクラウドにも送らない</li>
+              <li><b>選ぶだけ</b>候補にチェックを付けるだけ</li>
+              <li><b>文字ごと除去</b>黒塗りではなく、文字を取り除く</li>
+              <li><b>サーバ代 0円</b>そのパソコンの中だけで動く</li>
+            </ul>
+            <div class="try">
+              <a class="btn" href="https://negilab.github.io/tools/pdfmask/" target="_blank" rel="noopener" data-cta="try_pdfmask">触ってみる<small>パソコンで</small></a>
+              <a class="more" href="/tools/preview/case/zumen/">くわしく見る →</a>
+            </div>
+          </div>
+        </div>
+        <p class="near"><span><b>近いのはこんな仕事</b>　図面、報告書、名簿。外に出す前に、毎回同じ箇所を消したり伏せたりしている。</span></p>
+      </article>
+
+      <div class="others">
+        <h3>ほかにも、こんなものを作っています</h3>
+        <ul>
+          <li id="nazo-line"><b>来場者が携帯で遊ぶ謎解き：</b>参加者はQRを読むだけ。問題を作る人は、パソコンの画面で問題と分岐を線でつなぎます。<a href="https://negilab.github.io/tools/demo/nazotoki/" target="_blank" rel="noopener" data-cta="try_nazotoki">体験版を触ってみる（携帯で）→</a></li>
+          <li><b>人材紹介の会社：</b>登録している人を条件で絞り込み、案件の募集メールを一括で送る仕組み。</li>
+          <li><b>マークシートの読み取り機を使っていた会社：</b>決まったフォルダにPDFを入れると読み取って、結果をスプレッドシートに書き込む仕組み。</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ こんな手作業 ══ -->
+  <section class="band" id="pains">
+    <div class="wrap">
+      <span class="eyebrow">こんな手作業、ありませんか</span>
+      <h2 class="sec">毎日くり返している「手」の仕事。</h2>
+      <p class="lede">1つでも心当たりがあれば、そこが減らせるところです。業種が違っても、やることは同じです。</p>
+      <div class="pains">
+        <div class="pain"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6M6 14H4a2 2 0 0 1-2-2v-1a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v1a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v7H6z"/></svg></div><div><b>FAXやメールの注文を、打ち直している</b><span>届いた注文を、Excelや販売管理ソフトに手で入れ直す。</span></div></div>
+        <div class="pain"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="8" height="16" rx="1.5"/><rect x="13" y="4" width="8" height="16" rx="1.5"/><path d="M11 12h2"/></svg></div><div><b>同じ内容を、2つ以上のソフトに入れている</b><span>片方に入れたら、もう片方にも同じことを打つ。</span></div></div>
+        <div class="pain"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg></div><div><b>申し込みを受けたあと、別の書類に作り直している</b><span>受けた内容を、役所の書類や連絡文に貼り直す。</span></div></div>
+        <div class="pain"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 10h2M12 10h2M8 14h2M12 14h2M8 18h2M12 18h2"/></svg></div><div><b>毎回条件が違うので、そのつど手で計算している</b><span>人数、時間、単価。変わるたびにExcelを直す。</span></div></div>
+        <div class="pain"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z"/><path d="M3 3l18 18"/></svg></div><div><b>人に渡す前に、毎回同じ箇所を消している</b><span>図面や名簿の個人情報を、1ページずつ伏せる。</span></div></div>
+        <div class="pain"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01M9 6h6"/></svg></div><div><b>イベントや催しで、来場者向けの仕掛けが欲しい</b><span>謎解き、スタンプラリー、クイズ。携帯で遊べるものを作る人がいない。</span></div></div>
+      </div>
+      <p class="pains-close"><b>仕事を見て、機械に任せられるところを、動く形にします。</b>紙のように機械がそのまま読めないものは、機械に候補を出させて、人は確認するだけにします。</p>
+    </div>
+  </section>
+
+  <!-- ══ 違い ══ -->
+  <section id="why">
+    <div class="wrap">
+      <span class="eyebrow">ほかの手段との違い</span>
+      <h2 class="sec">自分で作る、外注する、ねぎラボに頼む。<br>違いは「誰がやるか」です。</h2>
+      <p class="lede">私も、作るときはAI（Claude）を使っています。だから数日で動きます。道具が同じなら、違うのは作る前と、作ったあとに誰がいるかです。</p>
+      <div class="vs">
+        <table>
+          <thead><tr><th></th><th>自分で作る<small>ChatGPT・ノーコードなど</small></th><th>外注する<small>ココナラ・開発会社など</small></th><th>ねぎラボ</th></tr></thead>
+          <tbody>
+            <tr><th>何を作らないかを決める</th><td class="no">ご自身</td><td class="no">御社が要件を書いて渡す</td><td class="yes">御社の仕事を見て、一緒に決める。作らなくていいと分かれば作らない</td></tr>
+            <tr><th>動くまで仕上げる</th><td class="no">ご自身</td><td class="no">相手の納品まで</td><td class="yes">無料の試作を数日で。触ってから決める</td></tr>
+            <tr><th>作ったあと直す</th><td class="no">ご自身</td><td class="no">契約による</td><td class="yes">使っている間、直し続ける。月5万円に含む</td></tr>
+            <tr><th>データの置き場</th><td class="no">ご自身のパソコンや道具の中</td><td class="no">契約による</td><td class="yes">御社のGoogleか、御社のパソコンの中</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ 途中の呼びかけ ══ -->
+  <div class="midcta">
+    <div class="wrap">
+      <div>
+        <h2>うちの仕事でもできるか、試作で確かめませんか？</h2>
+        <p>いちばん困っている作業を1つ。打ち合わせの翌日か翌々日には、実際に動く形でお見せします。無料です。見てから決めてください。</p>
+      </div>
+      <a class="btn" href="#contact" data-cta="mid_form">無料で試作を相談する<span class="arw">→</span></a>
+    </div>
+  </div>
+
+  <!-- ══ 進め方 ══ -->
+  <section class="band" id="how">
+    <div class="wrap narrow">
+      <span class="eyebrow">進め方</span>
+      <h2 class="sec">相談から、使い始めるまで。</h2>
+      <p class="lede">仕事を見る人と、作る人が同じです。伝言にならないので、話が早く進みます。</p>
+      <ol class="steps">
+        <li><b>いまの仕事を見せてもらいます<span class="tag">初回はビデオ通話</span></b><span>誰が、いつ、何をしているか。うまく説明できなくて大丈夫です。実際の画面と紙を、そのまま見せてください。紙を見たほうが早いときは伺います。</span></li>
+        <li><b>動く試作を作ります<span class="tag">無料</span></b><span>いちばん困っている作業を1つ選んで、実際に動くものにしてお見せします。これまでは打ち合わせの翌日か翌々日、遅くとも5営業日以内にお渡ししています。ここまで無料です。見てから決めてください。</span></li>
+        <li><b>何を機械に任せるか、一緒に決めます</b><span>作らなくていいと分かれば、ここで終わりにできます。</span></li>
+        <li><b>残るところだけ、作ります</b><span>いま使っているフォームやエクセルはそのままに、新しくしたほうが早いものだけ新しく作ります。御社のGoogleの中、御社のパソコンの中、それで足りなければ御社専用のURLで動かします。</span></li>
+        <li><b>作ったあとも、見ています</b><span>使いながら直します。連絡は翌営業日までにお返しします。</span></li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ══ 料金 ══ -->
+  <section id="price">
+    <div class="wrap">
+      <span class="eyebrow">料金</span>
+      <h2 class="sec">月5万円。使っている月だけ。</h2>
+      <p class="lede">仕事の見直しと、アプリを作って直し続ける分を含みます。初期費用はありません。</p>
+
+      <div class="price">
+        <div class="pcard">
+          <div class="lbl">アプリを使っている間</div>
+          <div class="yen">5<small>万円／月</small></div>
+          <div class="tax">税込 50,000円。初期費用はありません。</div>
+          <ul>
+            <li>仕事の見直し、作る、直し続ける分を含む</li>
+            <li>最低契約期間なし。使わなくなった月で終わり</li>
+            <li>試作は無料。見てから決められる</li>
+            <li>上の事例の大きさなら追加なし。大きいものは作る前に「2件分」と決める</li>
+          </ul>
+          <a class="btn" href="#contact" data-cta="price_form">無料で試作を相談する<span class="arw">→</span></a>
+        </div>
+
+        <div>
+          <dl class="terms">
+            <div><dt>いつまで</dt><dd>アプリを<b>使っている間</b>です。使わなくなったら、その月で終わりです。</dd></div>
+            <div><dt>最低契約期間</dt><dd><b>ありません。</b>「最低◯か月」といった取り決めはしません。初月で終わることもできます。</dd></div>
+            <div><dt>期日のある1回きりのもの</dt><dd>イベントの謎解きのように、期日があって作って渡すものは、<b>作る前に金額を決めます。</b>本番まで見ます。</dd></div>
+            <div><dt>実費が要るとき</dt><dd>御社専用のURL（ドメイン）や外の置き場が要るとき、紙や画像を読むためにAIが要るとき。<b>作る前に言います。</b>AIは月の上限を先に決め、上限で止まります。目安は紙1枚で数円。</dd></div>
+            <div id="quit-row"><dt>やめたあと</dt><dd>その月で終了です。<b>アプリもデータも、御社のGoogleやパソコンの中にそのまま残します。</b>そのまま使い続けて構いません。ただし、直しはしません。</dd></div>
+          </dl>
+          <p class="first"><b>初月にやること。</b>いまの仕事を一緒に洗い出して、何を機械に任せるかを決めます。無料の試作を土台に、いちばん困っている作業から作り始めます。作らなくていいと分かっても、合わないと思っても、初月で終われます。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ やめるとき・1人体制 ══ -->
+  <section class="band" id="quit">
+    <div class="wrap narrow">
+      <span class="eyebrow">やめるとき・1人でやっていること</span>
+      <h2 class="sec">やめたあとのことと、私に何かあったときのこと。</h2>
+      <div class="promise">
+        <div id="quit-text"><b>やめたら、その月で終わりです。</b>アプリもデータも、御社のGoogleやパソコンの中にそのまま残します。そのまま使い続けて構いません。ただし、直しはしません。</div>
+        <div><b>説明書と、引き継ぎの紙を付けて渡します。</b>私に何かあっても、アプリと紙は御社の手元に残り、別の人が引き継げる形にしておきます。（AIを使う部分の設定だけは除きます）</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ つくる人 ══ -->
+  <section id="profile">
+    <div class="wrap">
+      <span class="eyebrow">つくる人</span>
+      <h2 class="sec">仕事を見る人と、作る人が同じです。</h2>
+      <div class="me">
+        <div class="ph"><img src="me.jpg" alt="neggy" width="600" height="600" loading="lazy"></div>
+        <div>
+          <div class="nm">neggy<small>ねぎラボ</small></div>
+          <p class="bio">コールセンターと医療ITの現場で12年、業務改善の責任者をしてきました。350人・月2億円のセンターを回し、13,000の医療機関を支える仕事を10人分から1人分に減らしました。減らす道具は、いつも自分で作ってきました。いまは、その道具を小さな会社のために作っています。</p>
+          <div class="stats">
+            <div class="stat"><div class="v">83<small>%</small></div><div class="d">通話の採点業務を削減。年3,600時間を600時間に</div></div>
+            <div class="stat"><div class="v">90<small>%</small></div><div class="d">人件費を削減。月400万円を40万円に。10人分の仕事を1人分に</div></div>
+            <div class="stat"><div class="v">350<small>人</small></div><div class="d">回したセンターの規模。月2億円、5プロジェクトを同時に</div></div>
+          </div>
+          <p class="aw">NTTドコモグループ、ベルシステム24、Ubie。NTTドコモ社長表彰 ／ NTTドコモ副社長表彰 ／ ドコモグループかいぜん大会 全国大会 ／ Ubie 事業部表彰 2回</p>
+          <p class="links">自分用にも道具を作っています。打ち合わせの録画から音声と文字起こしを取る道具は<a href="https://negilab.github.io/tools/douga/" target="_blank" rel="noopener">ここ</a>で使えます。作り方は <a href="https://note.com/neggy_negilab" target="_blank" rel="noopener">note</a> に書いています。</p>
+          <div class="biz"><span>屋号：ねぎラボ（個人事業）</span><span>所在地：東京都杉並区</span><span>適格請求書発行事業者（インボイス）：未登録</span><span>連絡先：info@negilab.tokyo</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ FAQ ══ -->
+  <section class="band" id="faq">
+    <div class="wrap narrow">
+      <span class="eyebrow">よくある質問</span>
+      <h2 class="sec">よく聞かれること。</h2>
+      <div class="faq">
+        <details><summary>うちみたいな小さい会社でも頼めますか？</summary><div class="a">はい。事例はどれも小さな会社です。月5万円という金額は、そのために決めました。</div></details>
+        <details><summary>業種は決まっていますか？</summary><div class="a">決まっていません。受付、支払い、書類、図面。手でくり返している仕事があれば、業種は問いません。ひとつだけ、社内の決まりで外のツール（GoogleやAI）が一切使えない会社は、作れるものが限られます。先に教えてください。</div></details>
+        <details><summary>新しいソフトを覚えないといけませんか？</summary><div class="a">覚えるのは、御社のために作った画面だけです。いまのフォームやエクセルはそのまま使えます。市販のソフトに乗り換えてもらうことはありません。</div></details>
+        <details><summary>AIで作っているなら、自分でもできるのでは？</summary><div class="a">できることもあります。私がやっているのは、御社の仕事を見て「何を作らないか」を決めること、動くまで仕上げること、そのあと直し続けることです。作る道具は同じでも、ここに時間がかかります。</div></details>
+        <details><summary>うちのデータをAIに入れるのですか？</summary><div class="a">御社が外に出してよいと言ったものだけです。図面の事例では、図面をAIにもクラウドにも送っていません。そのパソコンの中だけで動きます。</div></details>
+        <details><summary>Googleを使っていない会社でも頼めますか？</summary><div class="a">頼めます。Excelとパソコンの中に作ります。それで足りなければ、御社専用のURLで動かします。</div></details>
+        <details id="faq-quit"><summary>途中でやめられますか？</summary><div class="a">やめられます。最低契約期間はありません。使っている月だけ払ってください。やめたあと、アプリもデータも御社の手元に残します。直しだけ止まります。</div></details>
+        <details><summary>1人でやっているそうですが、何かあったらどうなりますか？</summary><div class="a">アプリと説明書と引き継ぎの紙を、御社のGoogleかパソコンの中に置きます。私に何かあっても、手元に残り、別の人が引き継げます。</div></details>
+        <details><summary>試作は本当に無料ですか？</summary><div class="a">無料です。いちばん困っている作業を1つ選んで、実際に動くものをお出しします。これまでは打ち合わせの翌日か翌々日、遅くとも5営業日以内です。見てから決めてください。</div></details>
+        <details><summary>遠方でも頼めますか？</summary><div class="a">頼めます。東京・杉並から、関東は行けるところへ伺います。それ以外はビデオ通話で進めます。事例1は、相談したその日のうちに実際の受付で使い始めました。</div></details>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ 相談 ══ -->
+  <section id="contact">
+    <div class="wrap narrow">
+      <span class="eyebrow">相談</span>
+      <h2 class="sec">まずは、いまのやり方を聞かせてください。</h2>
+      <p class="lede">事例に御社の業種が無くても大丈夫です。うちの仕事でもできるか、見てお答えします。</p>
+
+      <ul class="reassure">
+        <li><b>試作は無料</b>作業を1つ、数日のうちに、実際に動く形でお見せします。</li>
+        <li><b>初月で終われます</b>最低契約期間はありません。合わなければ、そこまでです。</li>
+        <li><b>説明は要りません</b>いまのやり方を、そのまま書いてください。</li>
+      </ul>
+
+      <form class="main" id="f" novalidate>
+        <div class="two">
+          <div class="field">
+            <label for="f-name">お名前<span class="req">必須</span></label>
+            <input type="text" id="f-name" name="name" autocomplete="name" placeholder="例）山田">
+            <p class="err" id="e-name">お名前を入れてください。</p>
+          </div>
+          <div class="field">
+            <label for="f-company">会社名<span class="opt">任意</span></label>
+            <input type="text" id="f-company" name="company" autocomplete="organization" placeholder="例）株式会社○○">
+          </div>
+        </div>
+
+        <div class="field">
+          <fieldset>
+            <legend class="lg">近いものはどれですか<span class="opt">いくつでも・任意</span></legend>
+            <div class="chips">
+              <label class="chip"><input type="checkbox" name="t" value="申し込みや注文を別の書類に作り直している"><span class="bx"></span>申し込みや注文を、別の書類に作り直している</label>
+              <label class="chip"><input type="checkbox" name="t" value="人数・時間・単価を毎回手で計算している"><span class="bx"></span>人数や時間や単価を、毎回手で計算している</label>
+              <label class="chip"><input type="checkbox" name="t" value="渡す前に同じ箇所を消している"><span class="bx"></span>渡す前に、毎回同じ箇所を消している</label>
+              <label class="chip"><input type="checkbox" name="t" value="FAXや紙を打ち直している"><span class="bx"></span>FAXや紙を打ち直している</label>
+              <label class="chip"><input type="checkbox" name="t" value="同じ内容を2つ以上のソフトに入れている"><span class="bx"></span>同じ内容を2つ以上のソフトに入れている</label>
+              <label class="chip"><input type="checkbox" name="t" value="来場者向けの仕掛けが欲しい"><span class="bx"></span>イベントや催しで、来場者向けの仕掛けが欲しい</label>
+              <label class="chip"><input type="checkbox" name="t" value="上のどれでもない"><span class="bx"></span>上のどれでもない</label>
+            </div>
+          </fieldset>
+        </div>
+
+        <div class="field">
+          <label for="f-detail">いまの状況<span class="req">必須</span></label>
+          <textarea id="f-detail" name="detail" placeholder="一行で構いません。&#10;例）注文がFAXで来て、2人がかりで販売管理ソフトに打ち直しています。"></textarea>
+          <p class="hint">整理できていなくて大丈夫です。困っていることを、そのまま書いてください。</p>
+          <p class="err" id="e-detail">一行でいいので、いまの状況を書いてください。</p>
+        </div>
+
+        <div class="field">
+          <label for="f-contact">返信先のメールアドレス<span class="req" id="contact-req">必須</span></label>
+          <input type="email" id="f-contact" name="contact" autocomplete="email" placeholder="例）info@example.co.jp">
+          <p class="err" id="e-contact">返事を返す先を入れてください。</p>
+        </div>
+
+        <!-- 迷惑送信よけ。人には見えない -->
+        <div class="hp" aria-hidden="true"><label>会社URL<input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>
+
+        <p class="before-send" id="before-send"><b>送ると、info@negilab.tokyo に届きます。</b>返事はメールで、翌営業日までにお返しします。営業の電話はかけません。<br><span class="dim">この相談フォームも、私が作ったものです。御社に作るものも、こういう形です。</span></p>
+
+        <div class="send">
+          <button class="btn" type="submit" id="f-send" data-cta="form_send">送る<span class="arw">→</span></button>
+          <div class="alt" id="alt">
+            送れないときは、メールで：<a href="mailto:info@negilab.tokyo?subject=%E6%A5%AD%E5%8B%99%E3%81%AE%E7%9B%B8%E8%AB%87" data-cta="contact_mail">info@negilab.tokyo</a>
+            ／ <a href="#" id="f-mailto" data-cta="form_mailto">メールアプリで送る</a>
+            ／ <a href="#" id="f-gmail" target="_blank" rel="noopener" data-cta="form_gmail">Gmailで送る</a>
+            ／ <button class="copy" type="button" id="f-copy" data-cta="form_copy">内容をコピーする</button>
+          </div>
+        </div>
+
+        <div class="sent" id="f-sent" role="status"></div>
+      </form>
+
+      <div class="direct">
+        <span>メール：<a href="mailto:info@negilab.tokyo?subject=%E6%A5%AD%E5%8B%99%E3%81%AE%E7%9B%B8%E8%AB%87" data-cta="contact_mail2">info@negilab.tokyo</a></span>
+        <span>場所：東京・杉並。関東は伺います。それ以外はビデオ通話で。</span>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="cols">
+      <div>
+        <div class="logo"><img src="logo.png" alt="ねぎラボ" width="480" height="183"></div>
+        <p>仕事に合わせたアプリの構築。<br>使っている間だけ、月5万円。</p>
+      </div>
+      <div>
+        <h4>触ってみる</h4>
+        <ul>
+          <li><a href="https://negilab.github.io/tools/demo/shutten/" target="_blank" rel="noopener">出店受付</a></li>
+          <li><a href="https://negilab.github.io/tools/demo/baito/" target="_blank" rel="noopener">アルバイトの支払い</a></li>
+          <li><a href="https://negilab.github.io/tools/demo/nazotoki/" target="_blank" rel="noopener">謎解き</a></li>
+          <li><a href="https://negilab.github.io/tools/pdfmask/" target="_blank" rel="noopener">図面のマスク</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>事例</h4>
+        <ul>
+          <li><a href="/tools/preview/case/shutten/">出店の受付を1画面に</a></li>
+          <li><a href="/tools/preview/case/arbeit/">アルバイトの支払い計算</a></li>
+          <li><a href="/tools/preview/case/zumen/">図面の個人情報を消す</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>こんな手間</h4>
+        <ul>
+          <li><a href="/tools/preview/tema/fax/">FAXの注文を打ち直している</a></li>
+          <li><a href="/tools/preview/tema/niju/">同じ内容を2つ以上のソフトに</a></li>
+          <li><a href="/tools/preview/tema/shorui/">申し込みを別の書類に作り直す</a></li>
+          <li><a href="/tools/preview/tema/keisan/">毎回ちがう条件で手計算</a></li>
+          <li><a href="/tools/preview/tema/masking/">渡す前に同じ箇所を消している</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="copy"><span>ねぎラボ ／ neggy ／ <a href="https://note.com/neggy_negilab" target="_blank" rel="noopener">note</a></span><span>info@negilab.tokyo</span></div>
+  </div>
+</footer>
+
+<!-- 携帯だけ。冒頭と相談が画面から外れている間、下に出る -->
+<div class="bar" id="bar">
+  <a class="btn" href="#contact" data-cta="bar_form">無料で試作を相談する</a>
+</div>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Person",
+      "@id": "#neggy",
+      "name": "neggy",
+      "jobTitle": "業務改善／業務アプリの構築",
+      "email": "info@negilab.tokyo",
+      "knowsAbout": ["業務改善", "業務自動化", "業務アプリ開発", "Google Apps Script", "PDF処理"]
+    },
+    {
+      "@type": "ProfessionalService",
+      "name": "ねぎラボ",
+      "description": "いまの仕事のやり方に合わせて、アプリを作ります。使っている間だけ、月5万円（税込）。",
+      "founder": { "@id": "#neggy" },
+      "email": "info@negilab.tokyo",
+      "areaServed": "日本",
+      "address": { "@type": "PostalAddress", "addressLocality": "杉並区", "addressRegion": "東京都", "addressCountry": "JP" },
+      "priceRange": "月額50,000円（税込）"
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        { "@type": "Question", "name": "うちみたいな小さい会社でも頼めますか？", "acceptedAnswer": { "@type": "Answer", "text": "はい。事例はどれも小さな会社です。月5万円という金額は、そのために決めました。" } },
+        { "@type": "Question", "name": "新しいソフトを覚えないといけませんか？", "acceptedAnswer": { "@type": "Answer", "text": "覚えるのは、御社のために作った画面だけです。いまのフォームやエクセルはそのまま使えます。" } },
+        { "@type": "Question", "name": "Googleを使っていない会社でも頼めますか？", "acceptedAnswer": { "@type": "Answer", "text": "頼めます。Excelとパソコンの中に作ります。それで足りなければ、御社専用のURLで動かします。" } },
+        { "@type": "Question", "name": "途中でやめられますか？", "acceptedAnswer": { "@type": "Answer", "text": "やめられます。最低契約期間はありません。使っている月だけ払ってください。やめたあと、アプリもデータも御社の手元に残します。" } },
+        { "@type": "Question", "name": "試作は本当に無料ですか？", "acceptedAnswer": { "@type": "Answer", "text": "無料です。作業を1つ選んで、実際に動くものをお出しします。遅くとも5営業日以内です。" } }
+      ]
+    }
+  ]
+}
+</script>
+
+<script>
+(function () {
+  'use strict';
+  var MAIL = 'info@negilab.tokyo';
+  var SUBJECT = '業務の相談';
+  var KEY = 'negilab-soudan-v3';
+  /* ▼ Apps Script の相談フォームのURL。空なら mailto 方式で動く。必ず script.google.com/macros/s/… の形にする */
+  var ENDPOINT = '';
+
+  function track(name, extra) {
+    if (typeof window.gtag !== 'function') return;
+    var p = { cta: name };
+    if (extra) for (var k in extra) p[k] = extra[k];
+    window.gtag('event', 'cta_click', p);
+  }
+  document.addEventListener('click', function (ev) {
+    var el = ev.target && ev.target.closest ? ev.target.closest('[data-cta]') : null;
+    if (el) track(el.getAttribute('data-cta'));
+  }, { passive: true });
+
+  (function () {
+    var head = document.getElementById('head');
+    var bar = document.getElementById('bar');
+    var hero = document.querySelector('.hero');
+    var contact = document.getElementById('contact');
+    function update() {
+      var y = window.scrollY || 0;
+      if (head) head.classList.toggle('is-scrolled', y > 8);
+      if (!hero || !contact || !bar) return;
+      var heroSeen = hero.getBoundingClientRect().bottom > 0;
+      var contactSeen = contact.getBoundingClientRect().top < window.innerHeight;
+      bar.classList.toggle('is-on', !heroSeen && !contactSeen);
+    }
+    window.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('resize', update);
+    update();
+  })();
+
+  var form = document.getElementById('f');
+  if (!form) return;
+  var name = document.getElementById('f-name'), company = document.getElementById('f-company'),
+      contact = document.getElementById('f-contact'), detail = document.getElementById('f-detail'),
+      sent = document.getElementById('f-sent'), sendBtn = document.getElementById('f-send'),
+      copyBtn = document.getElementById('f-copy'), gmailA = document.getElementById('f-gmail'),
+      mailtoA = document.getElementById('f-mailto'), before = document.getElementById('before-send'),
+      hp = form.querySelector('input[name="website"]');
+  var opened = Date.now();
+  var direct = !!ENDPOINT;
+
+  /* mailto 方式のときは、文言とボタンを差し替える */
+  if (!direct) {
+    before.innerHTML = '<b>ボタンを押すと、メールの下書きが開きます。</b>中身はこのフォームの内容です。確かめて、そのまま送信してください。返事はメールで、翌営業日までにお返しします。営業の電話はかけません。';
+    sendBtn.innerHTML = 'メールアプリで送る<span class="arw">→</span>';
+    mailtoA.style.display = 'none';
+    document.getElementById('contact-req').textContent = '任意';
+    document.getElementById('contact-req').className = 'opt';
+    contact.placeholder = '空欄なら、送ってくださったアドレスにお返しします';
+  }
+
+  function topics() { return Array.prototype.map.call(form.querySelectorAll('input[name="t"]:checked'), function (c) { return c.value; }); }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify({ name: name.value, company: company.value, contact: contact.value, detail: detail.value, topics: topics() })); } catch (e) {} }
+  function restore() {
+    try {
+      var v = JSON.parse(localStorage.getItem(KEY) || 'null'); if (!v) return;
+      if (v.name) name.value = v.name; if (v.company) company.value = v.company; if (v.contact) contact.value = v.contact; if (v.detail) detail.value = v.detail;
+      if (v.topics && v.topics.length) form.querySelectorAll('input[name="t"]').forEach(function (c) { if (v.topics.indexOf(c.value) > -1) c.checked = true; });
+    } catch (e) {}
+  }
+  restore();
+  form.addEventListener('input', save); form.addEventListener('change', save);
+
+  function mark(el, errId, bad) { el.setAttribute('aria-invalid', bad ? 'true' : 'false'); var e = document.getElementById(errId); if (e) e.classList.toggle('is-on', bad); }
+  function check(needContact) {
+    var bad = null;
+    var list = [[name, 'e-name'], [detail, 'e-detail']];
+    if (needContact) list.push([contact, 'e-contact']);
+    list.forEach(function (p) { var empty = !p[0].value.trim(); mark(p[0], p[1], empty); if (empty && !bad) bad = p[0]; });
+    if (bad) { bad.focus(); bad.scrollIntoView({ block: 'center' }); return false; }
+    return true;
+  }
+  function text() {
+    var t = topics(); var lines = ['【お名前】' + name.value.trim()];
+    if (company.value.trim()) lines.push('【会社名】' + company.value.trim());
+    if (contact.value.trim()) lines.push('【返信先】' + contact.value.trim());
+    if (t.length) lines.push('【近いもの】' + t.join('／'));
+    lines.push('', '【いまの状況】', detail.value.trim(), '');
+    return lines.join('\n');
+  }
+  function mailto(body) { return 'mailto:' + MAIL + '?subject=' + encodeURIComponent(SUBJECT) + '&body=' + encodeURIComponent(body); }
+  function gmail(body) { return 'https://mail.google.com/mail/?view=cm&fs=1&to=' + encodeURIComponent(MAIL) + '&su=' + encodeURIComponent(SUBJECT) + '&body=' + encodeURIComponent(body); }
+  function show(html) { sent.innerHTML = html; sent.classList.add('is-on'); sent.scrollIntoView({ block: 'nearest' }); }
+
+  form.addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    if (!direct) {
+      if (!check(false)) return;
+      track('form_submit', { topics: topics().length });
+      window.location.href = mailto(text());
+      show('<p><b>メールの下書きが開きましたか？</b>開いたら、そのまま送信してください。開かなかった場合は、下の「Gmailで送る」か「内容をコピーする」をお使いください。</p>');
+      return;
+    }
+    if (!check(true)) return;
+    if (hp && hp.value) { show('<p>送りました。ありがとうございます。</p>'); return; }
+    if (Date.now() - opened < 3000) { show('<p>もう一度「送る」を押してください。</p>'); opened = 0; return; }
+    sendBtn.disabled = true; sendBtn.textContent = '送っています…';
+    var payload = { name: name.value.trim(), company: company.value.trim(), contact: contact.value.trim(), topics: topics(), detail: detail.value.trim(), page: location.href };
+    fetch(ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) })
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        if (!j || !j.ok) throw new Error('ng');
+        track('form_submit', { topics: topics().length });
+        show('<p><b>送りました。ありがとうございます。</b>翌営業日までに、' + (contact.value.trim() || 'ご記入のアドレス') + ' へお返事します。</p>');
+        try { localStorage.removeItem(KEY); } catch (e) {}
+        form.reset(); sendBtn.disabled = false; sendBtn.innerHTML = '送る<span class="arw">→</span>';
+      })
+      .catch(function () {
+        sendBtn.disabled = false; sendBtn.innerHTML = '送る<span class="arw">→</span>';
+        show('<p><b>送れませんでした。</b>お手数ですが、下の「メールアプリで送る」か「Gmailで送る」か「内容をコピーする」で送ってください。</p>');
+      });
+  });
+
+  mailtoA.addEventListener('click', function (ev) { ev.preventDefault(); if (!check(false)) return; track('form_mailto_submit'); window.location.href = mailto(text()); show('<p><b>メールの下書きが開きましたか？</b>開いたら、そのまま送信してください。</p>'); });
+  gmailA.addEventListener('click', function (ev) { if (!check(false)) { ev.preventDefault(); return; } gmailA.href = gmail(text()); track('form_gmail_submit'); show('<p><b>Gmailの作成画面が開きます。</b>そのまま送信してください。</p>'); });
+  copyBtn.addEventListener('click', function () {
+    var body = MAIL + '\n件名：' + SUBJECT + '\n\n' + text(); var was = copyBtn.textContent;
+    function done() { copyBtn.textContent = 'コピーしました'; show('<p>コピーしました。メールに貼り付けて、<b>' + MAIL + '</b> へ送ってください。</p>'); setTimeout(function () { copyBtn.textContent = was; }, 3000); }
+    function fallback() { var ta = document.createElement('textarea'); ta.value = body; ta.style.cssText = 'position:fixed;top:-1000px;left:0;opacity:0'; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); done(); } catch (e) { copyBtn.textContent = 'コピーできませんでした'; } document.body.removeChild(ta); }
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(body).then(done, fallback); else fallback();
+  });
+})();
+</script>
+</body>
+</html>
