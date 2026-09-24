@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ねぎラボ 全体レビューの反映（判断）</title>
+<style>
+  :root { --bg:#FBF8F1; --card:#fff; --rule:#EAE3D6; --ink:#2A2620; --ink2:#5C554B; --green:#3F6E3A; --gs:#EAF1E4; --orange:#D9622B; --marker:#FFE8A3; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font-family:"Hiragino Sans","Noto Sans JP","Yu Gothic",sans-serif; font-size:16px; line-height:1.7; padding:16px 14px 130px; }
+  h1 { font-size:20px; margin:0 0 6px; }
+  .lead { font-size:14px; color:var(--ink2); margin-bottom:16px; }
+  h2 { font-size:15px; color:var(--green); background:var(--gs); border-radius:999px; padding:4px 14px; display:inline-block; margin:22px 0 10px; }
+  .q { background:var(--card); border:1px solid var(--rule); border-radius:14px; padding:14px 14px 12px; margin-bottom:12px; }
+  .q .no { font-weight:700; color:var(--orange); font-size:13px; }
+  .q .where { font-weight:700; margin:2px 0 8px; }
+  .q .why { font-size:13px; color:var(--ink2); margin-bottom:8px; }
+  .q .cur, .q .prop { font-size:14.5px; border-radius:10px; padding:8px 10px; margin-bottom:8px; }
+  .q .cur { background:#F4EFE4; color:var(--ink2); }
+  .q .cur b, .q .prop b { display:block; font-size:12px; color:var(--ink2); margin-bottom:2px; }
+  .q .prop { background:var(--gs); }
+  .opts { display:flex; gap:8px; margin:10px 0 8px; }
+  .opts label { flex:1; text-align:center; border:1.5px solid var(--rule); border-radius:999px; padding:9px 0; font-weight:700; cursor:pointer; user-select:none; font-size:14px; }
+  .opts input { display:none; }
+  .opts label:has(input:checked) { background:var(--green); color:#fff; border-color:var(--green); }
+  .opts label.x:has(input:checked) { background:var(--orange); border-color:var(--orange); }
+  .opts label.d:has(input:checked) { background:#7a6f5c; border-color:#7a6f5c; }
+  textarea { width:100%; border:1.5px solid var(--rule); border-radius:10px; padding:8px 10px; font:inherit; font-size:15px; min-height:44px; resize:vertical; background:var(--bg); }
+  textarea:focus { outline:none; border-color:var(--green); background:#fff; }
+  #out { display:none; margin-top:18px; }
+  #out textarea { min-height:260px; font-size:13px; background:#fff; }
+  .note { font-size:13px; color:var(--ink2); margin-top:8px; }
+  .bar { position:fixed; left:0; right:0; bottom:0; background:rgba(251,248,241,.95); border-top:1px solid var(--rule); padding:10px 14px calc(10px + env(safe-area-inset-bottom)); display:flex; gap:8px; }
+  .btn { flex:1; border:0; border-radius:999px; padding:14px 6px; font:inherit; font-weight:700; font-size:15px; color:#fff; background:var(--orange); text-decoration:none; display:flex; align-items:center; justify-content:center; }
+  .btn.g { background:var(--green); }
+  .all { display:flex; gap:8px; margin:0 0 14px; }
+  .all button { flex:1; border:1.5px solid var(--rule); background:#fff; border-radius:999px; padding:8px; font:inherit; font-size:13px; font-weight:700; color:var(--ink2); }
+</style>
+</head>
+<body>
+<h1>全体レビューの反映（判断）</h1>
+<p class="lead">案はすべてコンサルのものです。○＝案のとおり直す／×＝直さない／△＝コメントどおり。最後に「まとめる」→「メールで送る」か「コピー」。書きかけは自動保存されます。</p>
+<div class="all"><button type="button" id="allok">まだ選んでいないものを全部○にする</button></div>
+
+<div id="qs"></div>
+
+<div class="q">
+  <div class="where">ほかに言っておきたいこと（自由）</div>
+  <textarea name="free" placeholder="任意"></textarea>
+</div>
+
+<div id="out">
+  <div class="q">
+    <div class="where">まとまった回答</div>
+    <textarea id="outtext" readonly></textarea>
+    <p class="note" id="copied"></p>
+  </div>
+</div>
+
+<div class="bar">
+  <button class="btn g" type="button" id="make">まとめる</button>
+  <button class="btn" type="button" id="copy">コピー</button>
+  <a class="btn" id="mail" href="#">メールで送る</a>
+</div>
+
+<script>
+const Q = [
+ ["優先1〜5", 1, "最初の画面：ボタン「体験版を触る」", "何の体験版か分からない。スマホで開くとパソコン専用の図面道具に飛んで行き止まりになる。",
+  "体験版を触る（図面から名前と印を消す道具・パソコン向け）→ 図面マスクへ", "ボタンに対象を書き、スマホ幅では「アルバイトの出勤と支払い（携帯でも）」に飛ばす。切り替えが難しければ体験版一覧へ"],
+ ["優先1〜5", 2, "料金：「大きいものは、作る前に『2つ分の時間がかかります』とお伝えします」", "「2つ分」が何の2つ分か、読み手には分からない。",
+  "大きいものは、作る前に「2つ分の時間がかかります」とお伝えします。", "大きいものは、作る前にかかる日数をお伝えします。"],
+ ["優先1〜5", 3, "料金：「修正と追加は、回数の制限なし。保守込み。」", "事務の人には「保守」が何を指すか分からない。",
+  "修正と追加は、回数の制限なし。保守込み。", "直しや追加は何度でも。動かなくなったときの対応も、この中です。"],
+ ["優先1〜5", 4, "料金：「サーバ代」（本文と「別にかかるもの」）", "何のお金か分からないまま「月5万円」だけ目に入る。",
+  "エクセルやGoogle、そのパソコンの中で動くものは、サーバ代がかかりません。／社外の大勢が使う仕組みのサーバ代：月5万円", "エクセルやGoogle、そのパソコンの中で動くものは、置き場所の費用がかかりません。／お客さんや一般の人など、社外の大勢が使うものは、置き場所の費用として月5万円"],
+ ["優先1〜5", 5, "料金：「アプリの中でAIを使う場合：月5万円の追加」", "どういう状態か想像できず、金額が倍になるので「うちは要るの？」で止まる。例示は禁止なので判断の仕方だけ添える。",
+  "アプリの中でAIを使う場合：月5万円の追加", "アプリの一部にAIを組み込む場合：月5万円の追加。要るかどうかは、業務を見て作る前にお伝えします。"],
+ ["優先1〜5", 6, "フォーム：「困っている作業」の説明文", "項目名の繰り返しで、何を書けばいいか分からない。",
+  "（欄の中の例：出店の申し込みを、フォームとメールの両方で受けている）", "説明文を例にする：「例：出店の申し込みを、フォームとメールの両方で受けている」（欄の外に出す）"],
+ ["優先1〜5", 7, "フォーム：「フォームが開かないときは、info@… に直接どうぞ」", "フォームはページ内にあるので「開かない」がおかしい。",
+  "フォームが開かないときは、info@negilab.tokyo に直接どうぞ。", "送れないときは、info@negilab.tokyo に直接どうぞ。"],
+ ["優先1〜5", 8, "フォームの上に一行", "他サイトは「無料相談」を前面に出している。事実（試作まで無料）からして書ける。",
+  "（なし）", "「相談も試作も無料です」をフォームの上とボタン近くに一行"],
+ ["優先1〜5", 9, "進め方1：「いま使っている画面と紙を見せてください」", "本人が導入文で指摘した「画面と紙」が残っている。",
+  "ビデオ通話で、いま使っている画面と紙を見せてください。紙を見たほうが早ければ、関東なら伺います。", "ビデオ通話で、いま使っているエクセルやフォーム、書類をそのまま見せてください。紙を見たほうが早ければ、関東なら伺います。"],
+ ["優先1〜5", 10, "導入文：「あなたの会社の環境の中で動くものを作ります」", "「環境」は自分側の言葉。締めの一文（本人案）と「環境」が2回続く。",
+  "…減らせるところを見つけて、あなたの会社の環境の中で動くものを作ります。", "…減らせるところを見つけて、いま使っているエクセルやGoogle、そのパソコンの中で動くものを作ります。"],
+ ["事例カード", 11, "図面カード：「開くと消す候補が一覧に並び」", "何を開くのか主語が無い。",
+  "開くと消す候補が一覧に並び、チェックすると全ページから消えるファイルを作りました。", "図面を読み込むと消す候補が一覧に並び、チェックすると全ページから消えたファイルが出てきます。"],
+ ["事例カード", 12, "アルバイトカード：「前の日の顔ぶれを写せる」", "「写す」が撮影に読める。",
+  "前の日の顔ぶれを写せる。携帯からも使える", "前の日と同じ顔ぶれを、そのまま次の日に入れられる。携帯からも使える"],
+ ["事例カード", 13, "謎解きカード：「問題と分岐を線でつないで作る画面」", "「分岐」「線でつなぐ」は作り手の言葉。見出し（客の言葉）は触らない。",
+  "運営は、問題と分岐を線でつないで作る画面。", "運営は、問題と「答えごとの次の問題」を画面の上でつないで作れます。"],
+ ["誰がやるか", 14, "「13,000の医療機関を支える運用を」", "「運用」は業界の言葉。",
+  "13,000の医療機関を支える運用を10人分から1人分にしたのも", "13,000の医療機関を支える裏方の仕事を、10人分から1人分にしたのも"],
+ ["誰がやるか", 15, "「通話の採点を年3,600時間から600時間に」", "何の通話か分からない。",
+  "通話の採点を年3,600時間から600時間にしたのも", "コールセンターの通話を採点する仕事を、年3,600時間から600時間にしたのも"],
+ ["誰がやるか", 16, "追加の一行（他サイト比較より）", "Dee Solutions は「相談から作るまで同じ人が担当」を書いている。ねぎラボも事実として言えるのに書いていない。",
+  "（なし）", "相談から作るところまで、同じ人が担当します。"],
+ ["FAQ", 17, "「アプリはAIを使いますか」の答え", "「業務を見てから決めます」だけでは質問に答えていない印象。料金の追加とつなげる。",
+  "できたアプリの中でAIを使うかどうかは、業務を見てから決めます。上の事例のうち、出店受付・アルバイト管理・図面の道具は、アプリの中でAIを使っていません。", "アプリの一部にAIを組み込むかどうかは、業務を見て、作る前にお伝えします。上の事例のうち、出店受付・アルバイト管理・図面の道具は、AIを使っていません。"],
+ ["FAQ", 18, "新しい問い：「Googleは使っていません。エクセルだけです。」", "初見の人がまず聞くもの。事実シートで答えられる。",
+  "（なし）", "Q：Googleは使っていません。エクセルだけです。／A：そのパソコンの中だけで動くものも作れます。図面の道具がそうです。"],
+ ["フッター", 19, "体験版一覧「打ち合わせ録画の道具（自分用）」", "「自分用」が誰のことか分からない。",
+  "打ち合わせ録画の道具（自分用）", "打ち合わせ録画の道具（ねぎラボが自分で使っているもの）／またはトップの一覧から外す"],
+ ["子ページ", 20, "/case/zumen/「HTMLファイル1つです」", "HTMLが分からない。",
+  "HTMLファイル1つです。", "ブラウザで開くファイル1つです。"],
+ ["子ページ", 21, "/case/shutten/「回答シートから列を間引いて」", "作り手の言葉。",
+  "回答シートから列を間引いてエクセルに転記していました。", "フォームの回答一覧から、必要な列だけを抜き出してエクセルに転記していました。"],
+ ["子ページ", 22, "/case/arbeit/「出面151行」", "「出面」は業界の言葉で、読めない人が多い。",
+  "案件11件・出面151行・名簿52人分", "案件11件・出勤の記録151行・名簿52人分"],
+];
+const KEY='negilab-review-v1';
+let state={}; try{ state=JSON.parse(localStorage.getItem(KEY)||'{}'); }catch(e){}
+const box=document.getElementById('qs'); let sec='';
+Q.forEach(([s,n,where,why,cur,prop])=>{
+  if(s!==sec){ sec=s; const h=document.createElement('h2'); h.textContent=s; box.appendChild(h); }
+  const d=document.createElement('div'); d.className='q';
+  d.innerHTML=`<div class="no">${n}</div><div class="where">${where}</div><div class="why">${why}</div>
+   <div class="cur"><b>いま</b>${cur}</div><div class="prop"><b>コンサルの案</b>${prop}</div>
+   <div class="opts"><label><input type="radio" name="a${n}" value="○">○ 案のとおり</label><label class="x"><input type="radio" name="a${n}" value="×">× 直さない</label><label class="d"><input type="radio" name="a${n}" value="△">△</label></div>
+   <textarea name="c${n}" placeholder="コメント（任意）"></textarea>`;
+  box.appendChild(d);
+});
+function save(){ const f={}; document.querySelectorAll('input[type=radio]:checked').forEach(r=>f[r.name]=r.value); document.querySelectorAll('textarea[name]').forEach(t=>{ if(t.value) f[t.name]=t.value; }); localStorage.setItem(KEY, JSON.stringify(f)); }
+function restore(){ for(const k in state){ if(k[0]==='a'){ const r=document.querySelector(`input[name=${k}][value="${state[k]}"]`); if(r) r.checked=true; } else { const t=document.querySelector(`textarea[name=${k}]`); if(t) t.value=state[k]; } } }
+restore();
+document.addEventListener('input',save); document.addEventListener('change',save);
+document.getElementById('allok').onclick=()=>{ Q.forEach(([s,n])=>{ if(!document.querySelector(`input[name=a${n}]:checked`)){ document.querySelector(`input[name=a${n}][value="○"]`).checked=true; } }); save(); };
+function make(){
+  const lines=['【全体レビューの反映】'];
+  Q.forEach(([s,n])=>{ const r=document.querySelector(`input[name=a${n}]:checked`); const c=(document.querySelector(`textarea[name=c${n}]`).value||'').trim(); lines.push(`${n}. ${r?r.value:'（未回答）'}${c?'　'+c:''}`); });
+  const free=(document.querySelector('textarea[name=free]').value||'').trim(); if(free){ lines.push('','【自由コメント】',free); }
+  const txt=lines.join('\n'); document.getElementById('outtext').value=txt; document.getElementById('out').style.display='block'; document.getElementById('out').scrollIntoView({behavior:'smooth'}); return txt;
+}
+document.getElementById('make').onclick=make;
+document.getElementById('mail').onclick=(e)=>{ e.preventDefault(); const txt=make(); location.href='mailto:info@negilab.tokyo?subject='+encodeURIComponent('全体レビューの反映')+'&body='+encodeURIComponent(txt); };
+document.getElementById('copy').onclick=async()=>{ const txt=make(); try{ await navigator.clipboard.writeText(txt); document.getElementById('copied').textContent='コピーしました。チャットに貼ってください。'; }catch(e){ const ta=document.getElementById('outtext'); ta.focus(); ta.select(); document.getElementById('copied').textContent='上の文章を長押しして全選択→コピーしてください。'; } };
+</script>
+</body>
+</html>
