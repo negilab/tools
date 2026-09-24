@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ねぎラボ サイト再構築：判断シート</title>
+<style>
+  :root { --bg:#FBF8F1; --card:#fff; --rule:#EAE3D6; --ink:#2A2620; --ink2:#5C554B; --green:#3F6E3A; --gs:#EAF1E4; --orange:#D9622B; --os:#FBEBE2; --marker:#FFE8A3; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font-family:"Hiragino Sans","Noto Sans JP","Yu Gothic",sans-serif; font-size:16px; line-height:1.7; padding:16px 14px 120px; }
+  h1 { font-size:20px; margin:0 0 6px; }
+  .lead { font-size:14px; color:var(--ink2); margin-bottom:18px; }
+  h2 { font-size:15px; color:var(--green); background:var(--gs); border-radius:999px; padding:4px 14px; display:inline-block; margin:22px 0 10px; }
+  .q { background:var(--card); border:1px solid var(--rule); border-radius:14px; padding:14px 14px 12px; margin-bottom:12px; }
+  .q .no { font-weight:700; color:var(--orange); font-size:13px; }
+  .q .t { font-weight:700; margin:2px 0 6px; }
+  .q .my { font-size:13.5px; color:var(--ink2); background:var(--bg); border-radius:8px; padding:6px 10px; margin-bottom:10px; }
+  .q .my b { color:var(--green); }
+  .opts { display:flex; gap:8px; margin-bottom:8px; }
+  .opts label { flex:1; text-align:center; border:1.5px solid var(--rule); border-radius:999px; padding:9px 0; font-weight:700; cursor:pointer; user-select:none; }
+  .opts input { display:none; }
+  .opts label:has(input:checked) { background:var(--green); color:#fff; border-color:var(--green); }
+  .opts label.x:has(input:checked) { background:var(--orange); border-color:var(--orange); }
+  .opts label.d:has(input:checked) { background:#7a6f5c; border-color:#7a6f5c; }
+  textarea { width:100%; border:1.5px solid var(--rule); border-radius:10px; padding:8px 10px; font:inherit; font-size:15px; min-height:44px; resize:vertical; background:var(--bg); }
+  textarea:focus { outline:none; border-color:var(--green); background:#fff; }
+  .free { margin-top:20px; }
+  .free textarea { min-height:100px; }
+  .bar { position:fixed; left:0; right:0; bottom:0; background:rgba(251,248,241,.95); border-top:1px solid var(--rule); padding:10px 14px calc(10px + env(safe-area-inset-bottom)); display:flex; gap:10px; }
+  .btn { flex:1; border:0; border-radius:999px; padding:14px; font:inherit; font-weight:700; font-size:16px; color:#fff; background:var(--orange); }
+  .btn.g { background:var(--green); }
+  #out { display:none; margin-top:18px; }
+  #out textarea { min-height:260px; font-size:13px; background:#fff; }
+  .note { font-size:13px; color:var(--ink2); margin-top:8px; }
+  .saved { font-size:12px; color:var(--ink2); }
+</style>
+</head>
+<body>
+<h1>サイト再構築：判断シート</h1>
+<p class="lead">○＝私の案でOK／×＝違う／△＝条件つき・迷う。コメントは任意です。書きかけは自動で保存されます。最後に下の「回答をまとめる」のあと、「コピー」してチャットに貼るか、「メールで送る」で info@negilab.tokyo 宛てに送ってください（メールなら私が読みに行きます）。</p>
+
+<div id="qs"></div>
+
+<div class="free">
+  <div class="q">
+    <div class="t">ほかに言っておきたいこと（自由）</div>
+    <textarea id="free" placeholder="何でも"></textarea>
+  </div>
+</div>
+
+<div id="out">
+  <div class="q">
+    <div class="t">まとまった回答（これをコピーして貼ってください）</div>
+    <textarea id="outtext" readonly></textarea>
+    <p class="note" id="copied"></p>
+  </div>
+</div>
+
+<div class="bar">
+  <button class="btn g" type="button" id="make">回答をまとめる</button>
+  <button class="btn" type="button" id="copy">コピー</button>
+  <a class="btn" id="mail" href="#" style="text-decoration:none;display:flex;align-items:center;justify-content:center">メールで送る</a>
+</div>
+
+<script>
+const Q = [
+ ["商売の定義", 1, "「新しく買うソフトは要らない。でも御社のためだけの新しいアプリは作る」と言い直す", "○"],
+ ["商売の定義", 2, "「作るときはAI（Claude）を使っています。だから数日で動く」とサイトで公言する（noteでは公言済み）", "○（ヒーローでは言わず、比較表とFAQで）"],
+ ["商売の定義", 3, "（決着済み：業種は絞らない。飛ばしてください）", "—"],
+ ["画面・事例", 4, "体験版4本（出店受付・バイト管理・謎解き・図面マスク）をトップから直接リンクし、再現画面SVGは捨てる", "○"],
+ ["画面・事例", 5, "謎解きを「いま作っているもの」として載せる（先方の了解は要りますか？）", "先方OKなら○"],
+ ["画面・事例", 6, "図面マスクを「いま使われている」と言い切ってよいか。未確認なら「納めました」止まりにする", "「納めました」止まり"],
+ ["画面・事例", 7, "「人材紹介の一括メール」「マークシート読み取り機」の2件を、ねぎラボの実績として載せ続ける（フォルダに実体なし）", "本人が実績と言うなら残す"],
+ ["料金", 8, "「使っている間だけ月5万円（税込）」は今も決定のまま", "○"],
+ ["料金", 9, "期日のある1回きり（謎解きなど）の枠を作る。金額は出さず「作る前に決めます」", "枠は作る・金額は出さない"],
+ ["料金", 10, "やめたあと、アプリは「残す（直さない）」にする（「使えなくなる」から変更）", "「残す・直さない」"],
+ ["料金", 11, "「1社につき同時に1件」の約束を消す（実態と違う）", "消す"],
+ ["事業の形", 12, "開業日が12月予定のまま「いま無料で試作」と言う", "○"],
+ ["事業の形", 13, "試作の日数を「遅くとも5営業日」に統一（子ページの「3日以内」も直す）", "○"],
+ ["事業の形", 14, "動画編集の道具を「自分用の道具」として1行だけ載せる", "○"],
+ ["受け口", 15, "mailtoに加えて、Apps Scriptで受ける相談フォームを作る（費用ゼロ・送信がページ内で終わる。初回承認は中地さんの操作が要る）", "○（今回入れる）"],
+ ["範囲", 16, "今回は「トップ＋既存子ページ8本の見た目更新」まで。/event/ /try/ などの新ページは次回", "○"],
+];
+const KEY='negilab-handan-v1';
+let state={}; try{ state=JSON.parse(localStorage.getItem(KEY)||'{}'); }catch(e){}
+const box=document.getElementById('qs'); let sec='';
+Q.forEach(([s,n,t,my])=>{
+  if(s!==sec){ sec=s; const h=document.createElement('h2'); h.textContent=s; box.appendChild(h); }
+  const d=document.createElement('div'); d.className='q';
+  d.innerHTML=`<div class="no">${n}</div><div class="t">${t}</div><div class="my">私の案：<b>${my}</b></div>
+   <div class="opts">
+     <label><input type="radio" name="a${n}" value="○">○</label>
+     <label class="x"><input type="radio" name="a${n}" value="×">×</label>
+     <label class="d"><input type="radio" name="a${n}" value="△">△</label>
+   </div>
+   <textarea name="c${n}" placeholder="コメント（任意）"></textarea>`;
+  box.appendChild(d);
+});
+function save(){ const f={}; document.querySelectorAll('input[type=radio]:checked').forEach(r=>f[r.name]=r.value); document.querySelectorAll('textarea[name]').forEach(t=>{ if(t.value) f[t.name]=t.value; }); f.free=document.getElementById('free').value; localStorage.setItem(KEY, JSON.stringify(f)); }
+function restore(){ for(const k in state){ if(k==='free'){ document.getElementById('free').value=state[k]; continue; } if(k[0]==='a'){ const r=document.querySelector(`input[name=${k}][value="${state[k]}"]`); if(r) r.checked=true; } else { const t=document.querySelector(`textarea[name=${k}]`); if(t) t.value=state[k]; } } }
+restore();
+document.addEventListener('input',save); document.addEventListener('change',save);
+function make(){
+  const lines=['【判断シートの回答】'];
+  Q.forEach(([s,n,t])=>{ const r=document.querySelector(`input[name=a${n}]:checked`); const c=(document.querySelector(`textarea[name=c${n}]`).value||'').trim(); lines.push(`${n}. ${r?r.value:'（未回答）'}${c?'　'+c:''}`); });
+  const free=document.getElementById('free').value.trim(); if(free){ lines.push('','【自由コメント】',free); }
+  const txt=lines.join('\n'); document.getElementById('outtext').value=txt; document.getElementById('out').style.display='block'; document.getElementById('out').scrollIntoView({behavior:'smooth'}); return txt;
+}
+document.getElementById('make').onclick=make;
+document.getElementById('mail').onclick=(e)=>{ e.preventDefault(); const txt=make(); location.href='mailto:info@negilab.tokyo?subject='+encodeURIComponent('判断シートの回答')+'&body='+encodeURIComponent(txt); };
+document.getElementById('copy').onclick=async()=>{ const txt=make(); try{ await navigator.clipboard.writeText(txt); document.getElementById('copied').textContent='コピーしました。チャットに貼ってください。'; }catch(e){ const ta=document.getElementById('outtext'); ta.focus(); ta.select(); document.getElementById('copied').textContent='上の文章を長押しして全選択→コピーしてください。'; } };
+</script>
+</body>
+</html>
