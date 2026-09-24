@@ -419,6 +419,7 @@
   /* ═══ v4 追加 ═══ */
   .hero h1 .sub2 { display: block; font-size: .62em; font-weight: 900; color: var(--ink-2); margin-top: .35em; }
   .cta2 { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 26px; }
+  .free-note { margin-top: 12px; font-size: 14px; color: var(--ink-2); }
   .doors { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 18px; }
   .doors a { font-family: var(--maru); font-weight: 700; font-size: 14px; color: var(--green-deep); background: var(--card); border: 1.5px solid var(--rule-2); border-radius: 999px; padding: 7px 14px; text-decoration: none; }
   .doors a:hover { border-color: var(--green); background: var(--green-soft); }
@@ -502,6 +503,7 @@
           <a class="btn" href="https://negilab.github.io/tools/pdfmask/" target="_blank" rel="noopener" data-cta="hero_try">体験版を触る<small>図面から名前と印を消す道具・パソコン向け</small></a>
           <a class="btn ghost" href="#contact" data-cta="hero_form">作業の相談をする</a>
         </div>
+        <p class="free-note">相談も試作も無料です。</p>
       </div>
       <div class="pic">
         <img src="me-hero.png" alt="ねぎラボの neggy" width="450" height="518" fetchpriority="high">
@@ -529,7 +531,7 @@
     <div class="wrap narrow">
       <h2 class="sec">進め方</h2>
       <ol class="steps">
-        <li><b>見せてもらう</b><span>ビデオ通話で、いま使っている画面と紙を見せてください。紙を見たほうが早ければ、関東なら伺います。</span></li>
+        <li><b>見せてもらう</b><span>ビデオ通話で、いま使っているエクセルやフォーム、書類を、そのまま見せてください。整えなくて大丈夫です。</span></li>
         <li><b>試作をつくる<span class="tag">無料</span></b><span>業務を1つ選んで、実際に動くものを作ります。これまでは打ち合わせの翌日か翌々日、遅くとも5営業日でお渡ししています。</span></li>
         <li><b>続ける</b><span>使ってみて合えば、その月から月5万円。合わなければ、そこで終わりです。続ける間は、次の業務も順番に作っていきます。</span></li>
       </ol>
@@ -548,7 +550,7 @@
         <div class="grid">
           <figure class="shot"><a class="frame" href="https://negilab.github.io/tools/pdfmask/" target="_blank" rel="noopener" data-cta="try_pdfmask"><img src="shot-2.svg" alt="図面から消す候補が並び、チェックで全ページから消える画面" width="1200" height="760" loading="lazy"><span class="play">体験版を開く</span></a></figure>
           <div>
-            <p class="lead">外に渡す前の図面から、工事名・所在地・担当者名・電話番号・印を消す作業です。1物件で100ページ超、消す箇所は数千。市販の墨消しソフトでは探すのに1時間、印を塗るのに30分かかっていました。開くと消す候補が一覧に並び、チェックすると全ページから消えるファイルを作りました。</p>
+            <p class="lead">外に渡す前の図面から、工事名・所在地・担当者名・電話番号・印を消す作業です。1物件で100ページ超、消す箇所は数千。市販の墨消しソフトでは探すのに1時間、印を塗るのに30分かかっていました。図面を読み込むと消す候補が一覧に並び、チェックすると全ページから消えたファイルが出てきます。</p>
             <ul class="pts">
               <li>1件2時間が、数分に</li>
               <li>図面はパソコンの外に出ない。通信なし、ネット不要</li>
@@ -592,7 +594,7 @@
             <ul class="pts">
               <li>一人ずつの計算と、交代のたびの手直しが無くなった</li>
               <li>未払いにチェックを入れると支払済になり、明細のPDFがメールで届く</li>
-              <li>前の日の顔ぶれを写せる。携帯からも使える</li>
+              <li>前の日と同じ顔ぶれを、そのまま次の日に入れられる。携帯からも使える</li>
             </ul>
                         <div class="try">
               <a class="btn" href="https://negilab.github.io/tools/demo/baito/" target="_blank" rel="noopener" data-cta="try_baito">体験版を開く<small>携帯でも・架空データ</small></a>
@@ -608,7 +610,7 @@
         <div class="grid">
           <figure class="shot"><a class="frame phone" href="https://negilab.github.io/tools/demo/nazotoki/" target="_blank" rel="noopener" data-cta="try_nazotoki"><span class="play">体験版を開く</span><span class="ph-note">参加者はQRを読むだけ。携帯で遊べます</span></a></figure>
           <div>
-            <p class="lead">前回はLINEで一本道の謎解きを作りましたが、答えによる分岐ができませんでした。参加者はQRを読むだけで、登録なしで遊べる画面。運営は、問題と分岐を線でつないで作る画面。次回からも、運営だけで作れます。</p>
+            <p class="lead">前回はLINEで一本道の謎解きを作りましたが、答えによる分岐ができませんでした。参加者はQRを読むだけで、登録なしで遊べる画面。運営は、問題と「答えごとの次の問題」を画面の上でつないで組み立てます。次回からも、運営だけで作れます。</p>
             <ul class="pts">
               <li>答えで分かれる結末が3つ</li>
               <li>数百人が同時に始めても詰まらない</li>
@@ -634,16 +636,16 @@
         <ul>
           <li>初期費用なし。最低契約期間なし。</li>
           <li>作るアプリの数に上限はありません。1つ目の業務を直したあと、2つ目、3つ目と作っても、月5万円のままです。</li>
-          <li>作るのは1つずつ、順番に。大きいものは、作る前に「2つ分の時間がかかります」とお伝えします。</li>
-          <li>修正と追加は、回数の制限なし。保守込み。</li>
-          <li>エクセルやGoogle、そのパソコンの中で動くものは、サーバ代がかかりません。</li>
+          <li>作るのは1つずつ、順番に。大きいものは、作る前にかかる日数をお伝えします。</li>
+          <li>直しや追加は何度でも。動かなくなったときの対応も、この中です。</li>
+          <li>エクセルやGoogle、そのパソコンの中で動くものは、外のコンピューターを借りる料金（サーバ代）がかかりません。</li>
         </ul>
       </div>
       <h3 class="sub3">別にかかるもの（要るときは、作る前に言います）</h3>
       <ul class="plain">
-        <li>社外の大勢が使う仕組みのサーバ代：月5万円</li>
+        <li>お客さんや一般の人など、社外の大勢が使うもの：動かし続けるために外のコンピューターを借りる料金（サーバ代）として月5万円</li>
         <li>独自ドメインなどの実費</li>
-        <li>アプリの中でAIを使う場合：月5万円の追加</li>
+        <li>アプリの一部にAIを組み込む場合：月5万円の追加。要るかどうかは、業務を見て作る前にお伝えします。</li>
       </ul>
       <p class="note">適格請求書発行事業者（インボイス）には未登録です。</p>
     </div>
@@ -657,7 +659,7 @@
         <div class="ph"><img src="me.jpg" alt="neggy" width="600" height="600" loading="lazy"></div>
         <div>
           <div class="nm">neggy<small>ねぎラボ　東京都杉並区</small></div>
-          <p class="bio">コールセンターと医療の現場で12年、業務を減らす側の責任者をしてきました。勤務先は、NTTドコモグループ、ベルシステム24、Ubie。13,000の医療機関を支える運用を10人分から1人分にしたのも、通話の採点を年3,600時間から600時間にしたのも、業務の流れを見直し、道具を自分で作って実現したものです。</p>
+          <p class="bio">コールセンターと医療の現場で12年、業務を減らす側の責任者をしてきました。勤務先は、NTTドコモグループ、ベルシステム24、Ubie。13,000の医療機関を支える裏方の仕事を10人分から1人分にしたのも、コールセンターの通話を採点する仕事を年3,600時間から600時間にしたのも、業務の流れを見直し、道具を自分で作って実現したものです。</p>
         </div>
       </div>
     </div>
@@ -669,11 +671,12 @@
       <h2 class="sec">よくある質問</h2>
       <div class="faq">
         <details><summary>業種は決まっていますか。</summary><div class="a">決めていません。ただ、社内の決まりでGoogleやAIなどの外の道具が一切使えない会社は、作れるものが限られます。</div></details>
+        <details><summary>Googleは使っていません。エクセルだけです。</summary><div class="a">そのパソコンの中だけで動くものも作れます。図面の道具がそうです。</div></details>
         <details><summary>何を用意すればいいですか。</summary><div class="a">いま使っているエクセルやフォーム、出している書類を、そのまま。上の事例は、既存のエクセル1枚、既存のフォームと書類2枚から作っています。</div></details>
         <details><summary>やめたら、アプリは使えなくなりますか。</summary><div class="a">使えます。アプリもデータも、あなたの手元に残ります。やめるときは前の月のうちに伝えてください。翌月末で終わりです。</div></details>
         <details><summary>打ち合わせはどうやりますか。</summary><div class="a">初回はビデオ通話です。関東なら訪問もできます。返信は翌営業日までにします。</div></details>
         <details><summary>営業の電話はきますか。</summary><div class="a">きません。電話番号を持っていません。連絡はメールとこのフォームだけです。</div></details>
-        <details><summary>アプリはAIを使いますか。</summary><div class="a">できたアプリの中でAIを使うかどうかは、業務を見てから決めます。上の事例のうち、出店受付・アルバイト管理・図面の道具は、アプリの中でAIを使っていません。</div></details>
+        <details><summary>アプリはAIを使いますか。</summary><div class="a">アプリの一部にAIを組み込むかどうかは、業務を見て、作る前にお伝えします。上の事例のうち、出店受付・アルバイト管理・図面の道具は、AIを使っていません。</div></details>
         <details><summary>法人ですか、個人ですか。</summary><div class="a">個人事業です。請求書は出せます。インボイスは未登録です。</div></details>
         <details><summary>イベント用の1回きりのものも頼めますか。</summary><div class="a">頼めます。謎解きの事例も、運営が自分で次の問題を作れる画面にしていて、すでに使い始めています。料金は同じで、1社につき月5万円です。</div></details>
       </div>
@@ -684,7 +687,7 @@
   <section class="band" id="contact">
     <div class="wrap narrow">
       <h2 class="sec">作業の相談</h2>
-      <p class="lede">いま困っている作業を、一言で構いません。翌営業日までに info@negilab.tokyo から返信します。営業の電話はしません。</p>
+      <p class="lede">相談も試作も無料です。いま困っている作業を、一言で構いません。翌営業日までに info@negilab.tokyo から返信します。営業の電話はしません。</p>
 
       <form class="main" id="f" novalidate>
         <div class="two">
@@ -705,7 +708,8 @@
         </div>
         <div class="field">
           <label for="f-detail">困っている作業<span class="req">必須</span></label>
-          <textarea id="f-detail" name="detail" placeholder="例：出店の申し込みを、フォームとメールの両方で受けている"></textarea>
+          <textarea id="f-detail" name="detail"></textarea>
+          <p class="hint">例：申し込みがフォームとメールの両方で届く／毎月、同じ表を手で作り直している／同じ内容を2つの場所に入力している</p>
           <p class="err" id="e-detail">困っている作業を、一言で書いてください。</p>
         </div>
         <div class="field">
@@ -725,7 +729,7 @@
         <p class="before-send" id="before-send"></p>
         <div class="send">
           <button class="btn" type="submit" id="f-send" data-cta="form_send">送信する</button>
-          <div class="alt" id="alt">フォームが開かないときは、<a href="mailto:info@negilab.tokyo?subject=%E4%BD%9C%E6%A5%AD%E3%81%AE%E7%9B%B8%E8%AB%87" data-cta="contact_mail">info@negilab.tokyo</a> に直接どうぞ。 <a href="#" id="f-gmail" target="_blank" rel="noopener" data-cta="form_gmail">Gmailで送る</a> ／ <button class="copy" type="button" id="f-copy" data-cta="form_copy">内容をコピーする</button></div>
+          <div class="alt" id="alt">送れないときは、<a href="mailto:info@negilab.tokyo?subject=%E4%BD%9C%E6%A5%AD%E3%81%AE%E7%9B%B8%E8%AB%87" data-cta="contact_mail">info@negilab.tokyo</a> に直接どうぞ。 <a href="#" id="f-gmail" target="_blank" rel="noopener" data-cta="form_gmail">Gmailで送る</a> ／ <button class="copy" type="button" id="f-copy" data-cta="form_copy">内容をコピーする</button></div>
         </div>
         <div class="sent" id="f-sent" role="status"></div>
       </form>
@@ -748,7 +752,7 @@
           <li><a href="https://negilab.github.io/tools/demo/shutten/" target="_blank" rel="noopener">出店の受付（パソコン向け）</a></li>
           <li><a href="https://negilab.github.io/tools/demo/baito/" target="_blank" rel="noopener">アルバイトの出勤と支払い（携帯でも）</a></li>
           <li><a href="https://negilab.github.io/tools/demo/nazotoki/" target="_blank" rel="noopener">謎解き（携帯向け）</a></li>
-          <li><a href="https://negilab.github.io/tools/douga/" target="_blank" rel="noopener">打ち合わせ録画の道具（自分用）</a></li>
+          <li><a href="https://negilab.github.io/tools/douga/" target="_blank" rel="noopener">簡単な動画編集の道具（音声・文字起こし・画面録画をひとつに。ねぎラボが自分で使っているもの）</a></li>
         </ul>
       </div>
       <div>

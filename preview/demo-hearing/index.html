@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>体験版一覧ページのための質問（6問）</title>
+<style>
+  :root { --bg:#FBF8F1; --card:#fff; --rule:#EAE3D6; --ink:#2A2620; --ink2:#5C554B; --green:#3F6E3A; --gs:#EAF1E4; --orange:#D9622B; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font-family:"Hiragino Sans","Noto Sans JP","Yu Gothic",sans-serif; font-size:16px; line-height:1.7; padding:16px 14px 130px; }
+  h1 { font-size:20px; margin:0 0 6px; }
+  .lead { font-size:14px; color:var(--ink2); margin-bottom:16px; }
+  .q { background:var(--card); border:1px solid var(--rule); border-radius:14px; padding:14px 14px 12px; margin-bottom:12px; }
+  .q .no { font-weight:700; color:var(--orange); font-size:13px; }
+  .q .t { font-weight:700; margin:2px 0 4px; }
+  .q .why { font-size:13px; color:var(--ink2); margin-bottom:10px; }
+  .opts { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px; }
+  .opts label { border:1.5px solid var(--rule); border-radius:999px; padding:8px 14px; font-weight:700; cursor:pointer; user-select:none; font-size:14px; }
+  .opts input { display:none; }
+  .opts label:has(input:checked) { background:var(--green); color:#fff; border-color:var(--green); }
+  textarea { width:100%; border:1.5px solid var(--rule); border-radius:10px; padding:8px 10px; font:inherit; font-size:15px; min-height:48px; resize:vertical; background:var(--bg); }
+  textarea:focus { outline:none; border-color:var(--green); background:#fff; }
+  #out { display:none; margin-top:18px; }
+  #out textarea { min-height:220px; font-size:13px; background:#fff; }
+  .note { font-size:13px; color:var(--ink2); margin-top:8px; }
+  .bar { position:fixed; left:0; right:0; bottom:0; background:rgba(251,248,241,.95); border-top:1px solid var(--rule); padding:10px 14px calc(10px + env(safe-area-inset-bottom)); display:flex; gap:8px; }
+  .btn { flex:1; border:0; border-radius:999px; padding:14px 6px; font:inherit; font-weight:700; font-size:15px; color:#fff; background:var(--orange); text-decoration:none; display:flex; align-items:center; justify-content:center; }
+  .btn.g { background:var(--green); }
+</style>
+</head>
+<body>
+<h1>体験版一覧ページのための質問（6問）</h1>
+<p class="lead">コンサルからの質問です。一言か、選ぶだけで構いません。最後に「まとめる」→「メールで送る」か「コピー」。</p>
+<div id="qs"></div>
+<div id="out"><div class="q"><div class="t">まとまった回答</div><textarea id="outtext" readonly></textarea><p class="note" id="copied"></p></div></div>
+<div class="bar">
+  <button class="btn g" type="button" id="make">まとめる</button>
+  <button class="btn" type="button" id="copy">コピー</button>
+  <a class="btn" id="mail" href="#">メールで送る</a>
+</div>
+<script>
+const Q=[
+ [1,"スマホで開いた人に、最初に触ってほしい体験版はどれですか。","スマホの人は図面と出店受付を触れないので、一覧の先頭を決めるため。",["アルバイト","謎解き","どちらでも"]],
+ [2,"4本それぞれ、「これだけは触ってほしい操作」を一言ずつ。（図面：／出店受付：／アルバイト：／謎解き：）","紹介文を「何ができるか」ではなく「まずここを押してください」で書くため。",[]],
+ [3,"図面の体験版に、自分の図面PDFを入れて試してよいですか。","通信なしなら「自分の図面で試せます」と書けるが、勝手には書けないので。",["Yes","No"]],
+ [4,"出店受付・アルバイト・謎解きの体験版で入力した内容は、ほかの人にも見えますか。また、時間がたつと消えますか。","注意書きの中身が決まる。「本物の名前を入れないでください」と書くかどうか。",["見えない・消える","見えない・残る","見える・消える","見える・残る"]],
+ [5,"体験版は本番と同じ機能ですか。それとも一部を削っていますか。（削っているなら何を）","「本番と同じ」と書けるかどうかで、信用のさせ方が変わる。",["同じ","削っている"]],
+ [6,"動画編集の道具を、この一覧に載せますか。","4本は「客の業務」、これは「自分用」。混ぜると読み手が迷うので、載せるなら分けて置く。",["Yes","No"]],
+];
+const KEY='negilab-demo-hearing-v1'; let state={}; try{ state=JSON.parse(localStorage.getItem(KEY)||'{}'); }catch(e){}
+const box=document.getElementById('qs');
+Q.forEach(([n,t,why,opts])=>{ const d=document.createElement('div'); d.className='q';
+  const o=opts.length?'<div class="opts">'+opts.map(v=>`<label><input type="radio" name="a${n}" value="${v}">${v}</label>`).join('')+'</div>':'';
+  d.innerHTML=`<div class="no">${n}</div><div class="t">${t}</div><div class="why">なぜ：${why}</div>${o}<textarea name="c${n}" placeholder="${opts.length?'補足があれば':'一言で'}"></textarea>`; box.appendChild(d); });
+function save(){ const f={}; document.querySelectorAll('input[type=radio]:checked').forEach(r=>f[r.name]=r.value); document.querySelectorAll('textarea[name]').forEach(t=>{ if(t.value) f[t.name]=t.value; }); localStorage.setItem(KEY, JSON.stringify(f)); }
+function restore(){ for(const k in state){ if(k[0]==='a'){ const r=document.querySelector(`input[name=${k}][value="${state[k]}"]`); if(r) r.checked=true; } else { const t=document.querySelector(`textarea[name=${k}]`); if(t) t.value=state[k]; } } }
+restore(); document.addEventListener('input',save); document.addEventListener('change',save);
+function make(){ const lines=['【体験版一覧の質問への回答】']; Q.forEach(([n])=>{ const r=document.querySelector(`input[name=a${n}]:checked`); const c=(document.querySelector(`textarea[name=c${n}]`).value||'').trim(); lines.push(`${n}. ${r?r.value:''}${(r&&c)?'　':''}${c||(r?'':'（未回答）')}`); }); const txt=lines.join('\n'); document.getElementById('outtext').value=txt; document.getElementById('out').style.display='block'; document.getElementById('out').scrollIntoView({behavior:'smooth'}); return txt; }
+document.getElementById('make').onclick=make;
+document.getElementById('mail').onclick=(e)=>{ e.preventDefault(); const txt=make(); location.href='mailto:info@negilab.tokyo?subject='+encodeURIComponent('体験版一覧の質問への回答')+'&body='+encodeURIComponent(txt); };
+document.getElementById('copy').onclick=async()=>{ const txt=make(); try{ await navigator.clipboard.writeText(txt); document.getElementById('copied').textContent='コピーしました。チャットに貼ってください。'; }catch(e){ const ta=document.getElementById('outtext'); ta.focus(); ta.select(); document.getElementById('copied').textContent='上の文章を長押しして全選択→コピーしてください。'; } };
+</script>
+</body>
+</html>
