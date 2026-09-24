@@ -803,7 +803,7 @@
   var SUBJECT = '作業の相談';
   var KEY = 'negilab-soudan-v5';
   /* ▼ Apps Script の相談フォームのURL。空なら mailto 方式で動く。必ず script.google.com/macros/s/… の形にする */
-  var ENDPOINT = '';
+  var ENDPOINT = 'https://script.google.com/macros/s/AKfycbzQvoV0zRJuPlMm4JdjmDa-mqW8tPtMyddyLng9vRDXjQ1W9K5_xKuvyFnIn5ZYGm27/exec';
 
   function track(name, extra) { if (typeof window.gtag !== 'function') return; var p = { cta: name }; if (extra) for (var k in extra) p[k] = extra[k]; window.gtag('event', 'cta_click', p); }
   document.addEventListener('click', function (ev) { var el = ev.target && ev.target.closest ? ev.target.closest('[data-cta]') : null; if (el) track(el.getAttribute('data-cta')); }, { passive: true });
