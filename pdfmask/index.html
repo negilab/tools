@@ -2394,7 +2394,7 @@ function renderStep4() {
       el("tr", {}, el("td", {}, "\u56F2\u3063\u305F\u7BC4\u56F2"), el("td", { class: "v" }, `${m.areas}\u4EF6`))
     ),
     el("p", { class: "muted" }, "\u66F8\u304D\u51FA\u3057\u305F\u5F8C\u3001\u51FA\u6765\u4E0A\u304C\u308A\u3092\u8AAD\u307F\u76F4\u3057\u3066\u3001\u30DE\u30B9\u30AF\u3057\u305F\u3082\u306E\u304C\u6B8B\u3063\u3066\u3044\u306A\u3044\u304B\u3092\u78BA\u304B\u3081\u307E\u3059\u3002"),
-    el("p", {}, el("button", { class: "primary export", disabled: S.busy ? "1" : null, onclick: doExport }, "\u66F8\u304D\u51FA\u3059"), " ", S.busy ? el("span", { class: "muted" }, S.busy) : null),
+    el("p", {}, el("button", { class: "primary export", disabled: S.busy ? "1" : null, onclick: doExport }, "マスクして確かめる（保存はしません）"), " ", S.busy ? el("span", { class: "muted" }, S.busy) : null),
     S.busy ? el("div", { class: "progress" }, el("i", { id: "prog" })) : null
   ));
   if (S.exportResult) center.append(renderResult(S.exportResult));
@@ -2458,10 +2458,7 @@ async function doExport() {
     S.log.push({ kind: "export", at: (/* @__PURE__ */ new Date()).toISOString(), wordsLeft: rep.wordsLeft, textInRects: rep.textInRects, imagesLeft: rep.imagesLeft, pages: rep.pages, seconds: { mask: Math.round(T.mask / 1e3), save: Math.round(T.save / 1e3), verify: Math.round(T.verify / 1e3) } });
     S.busy = "";
     render();
-    const a = el("a", { href: url, download: name });
-    document.body.append(a);
-    a.click();
-    a.remove();
+    /* 体験版: ファイルは保存しない（結果の表示だけ） */
   } catch (e) {
     S.busy = "";
     render();
@@ -2474,8 +2471,7 @@ function renderResult(r) {
   return el(
     "div",
     { class: "result", id: "result" },
-    el("h2", {}, `${r.name} \u3092\u66F8\u304D\u51FA\u3057\u307E\u3057\u305F(${(r.size / 1e6).toFixed(1)} MB)`),
-    el("p", {}, el("a", { href: r.url, download: r.name }, "\u4FDD\u5B58\u306E\u7A93\u304C\u51FA\u306A\u304B\u3063\u305F\u3068\u304D\u306F\u3053\u3053\u3092\u62BC\u3057\u3066\u304F\u3060\u3055\u3044")),
+    el("h2", {}, "体験版なので、ファイルは保存しません。処理の結果だけ表示します。"),
     el(
       "table",
       {},
