@@ -1,0 +1,86 @@
+<!doctype html><html lang="ja"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>note 1本目 推敲の提案（返答用）</title>
+<style>
+body{margin:0;background:#f7f6f2;color:#222;font-family:"Hiragino Sans","BIZ UDPGothic","Yu Gothic",sans-serif;font-size:17px;line-height:1.8;-webkit-text-size-adjust:100%}
+main{max-width:680px;margin:0 auto;padding:20px 18px 120px;padding-top:max(20px,env(safe-area-inset-top))}
+h1{font-size:21px;line-height:1.5}
+.lead{font-size:15px;color:#555}
+section{background:#fff;border-radius:12px;padding:14px 16px;margin:18px 0;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+h2{font-size:18px;margin:0 0 8px;line-height:1.5}
+p{margin:8px 0}
+.q{font-size:15px;color:#444}
+.q ul{padding-left:1.2em;margin:6px 0}
+.opt{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 6px}
+.opt label{display:flex;align-items:center;gap:6px;padding:8px 14px;border:1.5px solid #bbb;border-radius:999px;font-size:16px;background:#fafafa}
+.opt input{width:20px;height:20px;margin:0}
+.opt label:has(input:checked){border-color:#1f3a5f;background:#e6ecf5;font-weight:600}
+.sub{font-size:14px;color:#555;margin-top:8px}
+textarea{width:100%;box-sizing:border-box;font:inherit;font-size:16px;padding:10px;border:1px solid #bbb;border-radius:8px;min-height:64px;background:#fffdf5}
+.bar{position:fixed;left:0;right:0;bottom:0;background:#1f3a5f;padding:12px 18px;padding-bottom:max(12px,env(safe-area-inset-bottom));display:flex;gap:10px;align-items:center}
+.bar button{flex:1;font:inherit;font-size:17px;font-weight:600;padding:12px;border:0;border-radius:10px;background:#fff;color:#1f3a5f}
+.bar .msg{color:#fff;font-size:14px;white-space:nowrap}
+#out{margin-top:20px;display:none}
+#out textarea{min-height:200px;font-size:14px}
+</style></head><body><main>
+<h1>note 1本目 推敲の提案（返答用）</h1>
+<p class="lead">2026-09-28。各項目で「やる／やらない」を押して、コメントは自由に。入力は端末に残ります。最後に下の「まとめてコピー」を押して、チャットに貼ってください。原稿は、貼ってもらうまで触りません。</p>
+<div id="items"></div>
+<section><h2>そのほか自由コメント</h2><textarea name="cX" placeholder="全体への感想、迷っていること、など"></textarea></section>
+<div id="out"><p class="sub">コピーできなかったときは、この中を長押しして全選択→コピーしてください。</p><textarea id="outtxt" readonly></textarea></div>
+</main>
+<div class="bar"><button id="copy">まとめてコピー</button><span class="msg" id="msg"></span></div>
+<script>
+const ITEMS=[
+{n:1,t:"モデルの一文を足す",q:"サブエージェントの節に Fable・Opus・Sonnet・Maxプラン が説明なしに出ます。「メインはFableで」の前に、事実だけの一文を置きます。<br>案：「Claudeには、賢さと消費量の違うモデルが何種類かあります。上からFable、Opus、Sonnetです」（私が足す文。座談会の言葉ではありません）"},
+{n:2,t:"「ターミナルと呼びます」の宣言を消す",q:"宣言のあとも本文はほぼ「Claude Code」で通っているので、宣言だけが古い残りです。<br>案：「僕はターミナルで使っていて、この記事でも『ターミナル』と呼びます（理由は次で書きます）」→「僕はターミナルで使っています（理由は次で書きます）」"},
+{n:3,t:"2つのリモートの違いを1行で言う",q:"「/remote-control」（今のセッションに携帯をつなぐ）と「claude remote-control」（受付として待つサーバーモード）は名前がほぼ同じで、初めての人は混同します。コードブロックの前に「名前が似ていてややこしいんですが、こっちは受付です」のような一言を足します。あわせて、文の途中で切れているコードブロックを、文を閉じてから置く形にします。"},
+{n:4,t:"「会話そのもの」を一句足す",q:"「読んだファイルが多いほど消費が増える」だけだと、会話が長いこと自体の影響が抜けて見えます。「会話そのものと、読んだファイルを全部抱えたまま考えます」に一句足します。詳しい話は2本目に残します。"},
+{n:5,t:"「使用率が1%ずつ減る」を揃える",q:"使用率＝使った割合なのに「減っていく」と書いてあります。当時見ていた画面に合わせたいです。",extra:{label:"どちらに",opts:["A 残りが1%ずつ減っていく","B 使用率が1%ずつ上がっていく"]}},
+{n:6,t:"Chrome の例を実話にする",q:"「最近やった例だと…できるイメージです」で、実話か例え話か分かりません。もし note のアカウント登録（9/23）のことなら「最近だと、noteのアカウントを作るときに」と書いて「イメージです」を落とせます。<br>確認：この例は何の申し込みでしたか？（コメントに）",ph:"何の申し込みだったか"},
+{n:7,t:"「.mdを毎回読み直していた」の主語",q:"引き継ぎに「誰にでも起きると書かない」とあります。今の文は Claude が勝手に読んだように読めるので、「最初の指示で読んでもらう形にしていたので」を添える案です。当時の実態は私には分からないので、違えば教えてください。"},
+{n:8,t:"「必ず」「完全に」の2語",q:"指示書に「絶対・完全に・必ずを使わないで」と書いた、という直後に、本文で「必ず『案は3つです』」「完全に無理ではない」が出ます。座談会の言葉なら残す。そうでなければ「毎回」「本当に無理なことはめったにない」に寄せる。"},
+{n:9,t:"小さな削り（まとめて）",q:"<ul><li>「セッション（1本の会話）」「トークン」「リモート」の注釈を初出に寄せる</li><li>「もうひとつ、tips的に挙げると、よく出る悩みとして」の三段重ねを一つに</li><li>まとめの「週制限を効率よく消費できる」→「Fableの分を長持ちさせられる」</li><li>はじめにの「要するに、既存のアプリケーションにはない…」を削るか軽くする</li><li>「業務改善の相談を受けていると、アプリは目的ではなく手段です」の主述を直す</li></ul>やらないものがあればコメントに番号を。",ph:"例：4つ目はやらない"},
+{n:10,t:"タイトル",q:"今：「業務改善のためにClaudeでアプリを作る仕事の、道具の話」",extra:{label:"選ぶ",opts:["今のまま","A Claudeでアプリを作る仕事の、道具の話","B Claudeでアプリを作っている僕が、毎日使っている道具の話","C Claudeは、どこから動かして、何を抱えていて、何を任せるのか","別案（コメントに）"]},noyn:true},
+{n:11,t:"2本目との重なり（今すぐ直す話ではない）",q:"1本目の「Claudeが自分で書くメモ」の節が、2本目の「メモリが勝手に育つ」とほぼ同じ話です。",extra:{label:"方針",opts:["1本目はこのまま、2本目で別の角度","1本目を短くする","あとで決める"]},noyn:true},
+];
+const KEY="note01-proposals-v1";
+let state={};try{state=JSON.parse(localStorage.getItem(KEY)||"{}")}catch(e){}
+function save(){localStorage.setItem(KEY,JSON.stringify(state))}
+const root=document.getElementById("items");
+ITEMS.forEach(it=>{
+  const s=document.createElement("section");
+  let h=`<h2>${it.n}. ${it.t}</h2><div class="q">${it.q}</div>`;
+  if(!it.noyn){h+=`<div class="opt">${["やる","やらない","保留"].map(v=>`<label><input type="radio" name="yn${it.n}" value="${v}">${v}</label>`).join("")}</div>`}
+  if(it.extra){h+=`<div class="sub">${it.extra.label}</div><div class="opt">${it.extra.opts.map(v=>`<label><input type="radio" name="ex${it.n}" value="${v}">${v}</label>`).join("")}</div>`}
+  h+=`<div class="sub">コメント</div><textarea name="c${it.n}" placeholder="${it.ph||""}"></textarea>`;
+  s.innerHTML=h;root.appendChild(s);
+});
+document.querySelectorAll("input[type=radio]").forEach(r=>{
+  if(state[r.name]===r.value)r.checked=true;
+  r.addEventListener("change",()=>{state[r.name]=r.value;save()});
+});
+document.querySelectorAll("textarea[name]").forEach(t=>{
+  if(state[t.name])t.value=state[t.name];
+  t.addEventListener("input",()=>{state[t.name]=t.value;save()});
+});
+const sec=document.getElementById("out"); 
+document.getElementById("copy").addEventListener("click",async()=>{
+  const lines=["【note 1本目 推敲の提案への返答】"];
+  ITEMS.forEach(it=>{
+    const parts=[];
+    if(!it.noyn)parts.push(state["yn"+it.n]||"未回答");
+    if(it.extra)parts.push(it.extra.label+"："+(state["ex"+it.n]||"未選択"));
+    const c=(state["c"+it.n]||"").trim();
+    lines.push(`${it.n}. ${it.t}：${parts.join("／")}`+(c?`\n   コメント：${c}`:""));
+  });
+  const ex=(state["cX"]||"").trim();if(ex)lines.push("そのほか："+ex);
+  const text=lines.join("\n");
+  const ta=document.getElementById("outtxt");ta.value=text;sec.style.display="block";
+  const msg=document.getElementById("msg");
+  try{await navigator.clipboard.writeText(text);msg.textContent="コピーしました"}
+  catch(e){ta.focus();ta.select();try{document.execCommand("copy");msg.textContent="コピーしました"}catch(e2){msg.textContent="下の欄からコピー"}}
+  setTimeout(()=>msg.textContent="",3000);
+});
+</script></body></html>
