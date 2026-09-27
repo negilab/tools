@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>note 1本目 改善案の整理</title>
+<style>
+  :root{--bg:#f7f6f2;--card:#fff;--ink:#222;--sub:#666;--line:#ddd;--accent:#1f3a5f;--quote:#f1efe8}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"BIZ UDPGothic","Hiragino Sans","Yu Gothic",sans-serif;line-height:1.7}
+  main{max-width:760px;margin:0 auto;padding:24px 16px 120px}
+  h1{font-size:1.4rem;margin:0 0 8px}
+  .lead{color:var(--sub);margin:0 0 24px}
+  h2{font-size:1.1rem;margin:32px 0 12px}
+  .good{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 16px}
+  .good ul{margin:0;padding-left:1.2em}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin:0 0 16px}
+  .card h3{font-size:1rem;margin:0 0 8px}
+  .card h3 .no{display:inline-block;min-width:1.8em;color:var(--accent)}
+  .where{font-size:.85rem;color:var(--sub);margin:0 0 4px}
+  blockquote{margin:0 0 10px;padding:8px 12px;background:var(--quote);border-left:3px solid var(--accent);font-size:.92rem}
+  .body{margin:0 0 12px}
+  fieldset{border:0;padding:0;margin:0 0 8px;display:flex;gap:16px;flex-wrap:wrap}
+  legend{font-size:.85rem;color:var(--sub);margin-bottom:4px;padding:0}
+  label.opt{display:flex;align-items:center;gap:4px;cursor:pointer}
+  label.cm{display:block;font-size:.85rem;color:var(--sub);margin-bottom:4px}
+  textarea{width:100%;min-height:72px;padding:8px;border:1px solid var(--line);border-radius:6px;font:inherit;resize:vertical}
+  .bar{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);padding:12px 16px;display:flex;justify-content:center;align-items:center;gap:12px}
+  .bar button{background:var(--accent);color:#fff;border:0;border-radius:8px;padding:10px 20px;font:inherit;font-weight:700;cursor:pointer}
+  .bar .msg{font-size:.9rem;color:var(--sub);min-width:8em}
+</style>
+</head>
+<body>
+<main>
+  <h1>note 1本目 改善案の整理</h1>
+  <p class="lead">改善案ごとに対応を選び、コメントを書いてください。改善案は、原稿「業務改善のためにClaudeでアプリを作る仕事の、道具の話」を読んだ感想から7つ並べました。選んだ対応と書いたコメントは、このブラウザに残ります。</p>
+
+  <h2>よかったところ</h2>
+  <div class="good">
+    <ul>
+      <li>自分で体験したことが具体的に書かれていて、仕組みの説明が他人事になっていない（「案は3つです」、謝りすぎる話、1回ごとに1%減る話、週の使用量の変化）</li>
+      <li>最初に「アプリは手段」と書いてあるので、自慢ではなく地図を渡す原稿として読める</li>
+      <li>「『できません』は『今の設定では』」と「素の状態の別人に見せる」は、すぐ役に立つ</li>
+      <li>最後のまとめが本文とちょうど対応している</li>
+    </ul>
+  </div>
+
+  <h2>改善案</h2>
+  <div id="list"></div>
+</main>
+
+<div class="bar">
+  <button type="button" id="copy">コメントをまとめてコピー</button>
+  <span class="msg" id="msg" aria-live="polite"></span>
+</div>
+<textarea id="fallback" aria-label="コメントのまとめ" readonly hidden style="position:fixed;left:16px;right:16px;bottom:70px;width:auto;height:40vh;background:#fff"></textarea>
+
+<script>
+const ITEMS = [
+  {t:"トークンの説明がないまま", w:"「携帯から動かす」の節", q:"セッションが長くなるとトークン（後で説明します）を食うので",
+   b:"「後で説明します」とあるのに、そのあと「トークン」という言葉が出てきません。「読んだものを全部抱えたまま考える」のところで「これがトークンの消費です」と一言つなぐと回収できます。"},
+  {t:"「使用率」が説明より先に出てくる", w:"「Claudeは何を覚えているのか」の節", q:"1回話しかけるごとに使用率が1%ずつ減っていく",
+   b:"週の上限の説明は「使える量には上限がある」の節にあり、「使用率」だけが先に出ます。初めて読む人は少し引っかかるかもしれません。"},
+  {t:"申し込みの例の語尾が弱い", w:"「入口は3つある」の節", q:"みたいな使い方もできるイメージです。",
+   b:"「最近やった例だと」と体験として書き始めているのに、終わりが想像の話のようになっています。「〜してくれました」と言い切ると、体験談として強くなります。"},
+  {t:"ブラウザが「入口」なのかあいまい", w:"「入口は3つある」の節", q:"3. ブラウザ（Chrome拡張）。Claudeがブラウザを操作します。",
+   b:"チャットとClaude Codeは話しかける場所ですが、ブラウザは主にClaude Codeから操作する相手として書かれています。3つ並べると「ブラウザからも話しかけるの？」と迷う人がいるかもしれません。"},
+  {t:"「次回書きます」が3回ある", w:"「Claudeは何を覚えているのか」「使える量には上限がある」「道具の話はここまで」の節", q:"差は、さっきのマークダウンの話と、コードをどう読んでもらうかの工夫です。これも次回に書きます。",
+   b:"連載の予告としてはよいのですが、使用量の節は「これも次回に」で終わるので少し物足りません。ヒントを1つだけ先に出すと、読み終わったときの満足感が上がります。"},
+  {t:"埋もれている一文", w:"「はじめに」の節", q:"コードの中身を追うより、Claudeに動きを言語化してもらったものを読んで判断する方に時間を使っています。",
+   b:"この原稿ならではの視点ですが、今は自己紹介の中に埋もれていてもったいないです。"},
+  {t:"段落がつながって見えるかもしれない", w:"「はじめに」の節", q:"自分用には、動画編集やゴルフのスイング切り出しなども作りました。",
+   b:"この行の前に空行がありません。表示する環境によっては、前の段落とつながって1つの段落になります。"}
+];
+const KEY = "note01-review";
+const saved = JSON.parse(localStorage.getItem(KEY) || "{}");
+const CHOICES = ["直す","直さない","あとで決める"];
+const list = document.getElementById("list");
+ITEMS.forEach((it,i)=>{
+  const s = saved[i] || {};
+  const card = document.createElement("section");
+  card.className = "card";
+  card.innerHTML =
+    `<h3><span class="no">${i+1}.</span>${it.t}</h3>`+
+    `<p class="where">${it.w}</p>`+
+    `<blockquote>${it.q}</blockquote>`+
+    `<p class="body">${it.b}</p>`+
+    `<fieldset><legend>対応</legend>`+
+    CHOICES.map(c=>`<label class="opt"><input type="radio" name="c${i}" value="${c}" ${s.c===c?"checked":""}>${c}</label>`).join("")+
+    `</fieldset>`+
+    `<label class="cm" for="t${i}">コメント</label>`+
+    `<textarea id="t${i}"></textarea>`;
+  list.appendChild(card);
+  const ta = card.querySelector("textarea");
+  ta.value = s.m || "";
+  const save = ()=>{
+    const cur = JSON.parse(localStorage.getItem(KEY) || "{}");
+    const r = card.querySelector(`input[name=c${i}]:checked`);
+    cur[i] = {c: r ? r.value : "", m: ta.value};
+    localStorage.setItem(KEY, JSON.stringify(cur));
+  };
+  ta.addEventListener("input", save);
+  card.querySelectorAll("input[type=radio]").forEach(r=>r.addEventListener("change", save));
+});
+document.getElementById("copy").addEventListener("click", async ()=>{
+  const cur = JSON.parse(localStorage.getItem(KEY) || "{}");
+  const text = ITEMS.map((it,i)=>{
+    const s = cur[i] || {};
+    return `${i+1}. ${it.t}\n対応：${s.c || "選んでいない"}\nコメント：${(s.m || "").trim() || "なし"}`;
+  }).join("\n\n");
+  const msg = document.getElementById("msg");
+  const fb = document.getElementById("fallback");
+  try { await navigator.clipboard.writeText(text); fb.hidden = true; msg.textContent = "コピーしました"; }
+  catch(e){
+    fb.value = text; fb.hidden = false; fb.focus(); fb.select();
+    msg.textContent = "ブラウザがコピーを許可しませんでした。上に出した文をコピーしてください。コメントはまだコピーされていません。";
+  }
+});
+</script>
+</body>
+</html>
