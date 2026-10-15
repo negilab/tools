@@ -269,6 +269,9 @@ h1 .t1{color:var(--muted);font-weight:600;font-size:12px;letter-spacing:.12em;ma
 .tools{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
 .hint{margin:0;text-align:center;font-size:12px;color:var(--muted);text-wrap:balance;line-height:1.7}
 .hint b{color:var(--fg);font-weight:700}
+.more{margin:0;text-align:center;font-size:13px}
+.more a{color:var(--fg);font-weight:700;text-decoration:none;border-bottom:1px solid var(--line-strong);padding-bottom:1px}
+.more a:hover{border-color:var(--fg)}
 
 /* ---------- done overlay ---------- */
 .overlay{

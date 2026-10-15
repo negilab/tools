@@ -389,15 +389,31 @@ window.addEventListener('pointerup', (e) => {
 });
 window.addEventListener('pointercancel', () => { cancelHold(); press = null; });
 
+const DOUBLE_TAP_MS = 320;
+let lastTap = { i: -1, t: 0, memoToggled: false };
+
 function tap(i) {
   if (S.done) return;
   if (eraser) { eraseCell(i); return; }
   if (S.val[i]) {                      // 数字が入っているマス → その数字に切り替え
     num = S.val[i]; sel = -1;
     update(); save();
+    lastTap = { i: -1, t: 0, memoToggled: false };
     return;
   }
-  if (num > 0) toggleMemo(i, num);
+  const now = Date.now();
+  const isDouble = lastTap.i === i && now - lastTap.t < DOUBLE_TAP_MS;
+  if (isDouble) {                      // ダブルタップ → 確定（1回目のタップで付けたメモは戻す）
+    if (lastTap.memoToggled) undo();
+    lastTap = { i: -1, t: 0, memoToggled: false };
+    const sure = sureDigit(i);
+    if (sure) commit(i, sure);
+    else if (num > 0) commit(i, num);
+    return;
+  }
+  const toggled = num > 0 && !S.puz[i];
+  if (toggled) toggleMemo(i, num);
+  lastTap = { i, t: now, memoToggled: toggled };
 }
 
 // ---------- パレット・ツール ----------

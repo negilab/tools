@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>数字を確定させられるパターン集</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2317171a'/%3E%3Ctext x='16' y='22' font-size='16' font-family='sans-serif' font-weight='800' fill='%23ffffff' text-anchor='middle'%3E9%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap">
+<style>
+/* Layout: a reading page. Each pattern is one section: name, one-line rule, a mini board drawn in the app's own
+   style, then the steps. Same monochrome tokens as the game. */
+:root{
+  --bg:#f4f4f6; --surface:#ffffff; --fg:#17171a; --muted:#8a8a93; --memo:#9b9ba3;
+  --line:#e3e3e8; --line-strong:#2b2b31; --faint:#f1f1f4; --peer:#e9e9ee; --same:#cdcdd6; --sel:#dadae1;
+  --shadow:0 12px 32px -18px rgba(20,20,30,.35);
+  --font-ui:"Manrope","Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic",Meiryo,sans-serif;
+  --font-num:"Manrope",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#111113; --surface:#1a1a1e; --fg:#f3f3f5; --muted:#8c8c96; --memo:#7d7d87;
+    --line:#2a2a30; --line-strong:#a9a9b4; --faint:#1f1f24; --peer:#26262c; --same:#45454f; --sel:#35353d;
+    --shadow:0 12px 32px -18px rgba(0,0,0,.7); color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#111113; --surface:#1a1a1e; --fg:#f3f3f5; --muted:#8c8c96; --memo:#7d7d87;
+  --line:#2a2a30; --line-strong:#a9a9b4; --faint:#1f1f24; --peer:#26262c; --same:#45454f; --sel:#35353d;
+  --shadow:0 12px 32px -18px rgba(0,0,0,.7); color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+body{margin:0;background:var(--bg);color:var(--fg);font:500 15px/1.8 var(--font-ui);-webkit-text-size-adjust:100%;-webkit-font-smoothing:antialiased}
+.page{
+  max-width:640px;margin:0 auto;
+  padding-block:18px 56px;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));
+  padding-right:max(16px, env(safe-area-inset-right, 0px));
+}
+.back{display:inline-flex;align-items:center;gap:6px;color:var(--muted);text-decoration:none;font-size:13px;font-weight:700}
+.back:hover{color:var(--fg)}
+.back svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+h1{font-size:24px;font-weight:800;letter-spacing:-.01em;line-height:1.3;margin:14px 0 6px;text-wrap:balance}
+.lead{margin:0 0 8px;color:var(--muted);font-size:14px}
+.toc{margin:18px 0 0;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:6px}
+.toc a{display:inline-block;font-size:12.5px;font-weight:700;color:var(--fg);text-decoration:none;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:4px 12px}
+.toc a:hover{border-color:var(--line-strong)}
+.legend{display:flex;flex-wrap:wrap;gap:14px;margin:18px 0 0;font-size:12.5px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:14px;height:14px;border-radius:3px;border:1px solid var(--line)}
+.sw.peer{background:var(--peer)} .sw.same{background:var(--same)} .sw.ans{background:var(--fg)}
+.sw.memo{background:var(--surface);position:relative}
+.sw.memo::after{content:"3";position:absolute;inset:0;font:700 8px/14px var(--font-num);text-align:center;color:var(--memo)}
+
+section{margin-top:40px;padding-top:28px;border-top:1px solid var(--line)}
+.eyebrow{font:700 11px var(--font-ui);letter-spacing:.14em;color:var(--muted);margin:0 0 4px}
+h2{font-size:19px;font-weight:800;margin:0 0 4px;letter-spacing:-.01em}
+.rule{margin:0 0 16px;font-size:14px;color:var(--muted)}
+figure{margin:0 0 16px}
+.demo{
+  width:min(100%,360px);margin:0 auto;display:block;
+  background:var(--surface);border:2px solid var(--line-strong);border-radius:10px;
+  box-shadow:var(--shadow);
+}
+figcaption{text-align:center;font-size:12.5px;color:var(--muted);margin-top:8px}
+ol{margin:0;padding-left:1.3em}
+ol li{margin:4px 0}
+ol li b{font-weight:800}
+.app{
+  margin:14px 0 0;padding:10px 14px;background:var(--surface);border:1px solid var(--line);border-radius:10px;
+  font-size:13.5px;
+}
+.app b{font-weight:800}
+footer{margin-top:48px;text-align:center}
+.btn{
+  display:inline-flex;align-items:center;gap:8px;text-decoration:none;
+  font:700 14px var(--font-ui);color:var(--bg);background:var(--fg);border-radius:10px;padding:10px 20px;
+}
+</style>
+</head>
+<body>
+<main class="page">
+  <a class="back" href="./"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>数独にもどる</a>
+  <h1>数字を確定させられるパターン集</h1>
+  <p class="lead">メモで候補を絞って、数字を置く。そのときに使う考え方を、基本から順に6つ。どれも「見えている数字」だけから言い切れるものです。</p>
+  <ul class="toc">
+    <li><a href="#p1">残り1マス</a></li>
+    <li><a href="#p2">行と列で挟む</a></li>
+    <li><a href="#p3">周りに8つそろう</a></li>
+    <li><a href="#p4">行の中でそこだけ</a></li>
+    <li><a href="#p5">2マスで2つの数字</a></li>
+    <li><a href="#p6">ブロックの中で1列に並ぶ</a></li>
+  </ul>
+  <div class="legend">
+    <span><i class="sw same"></i>注目している数字</span>
+    <span><i class="sw peer"></i>その数字が入れない場所</span>
+    <span><i class="sw memo"></i>メモ（候補）</span>
+    <span><i class="sw ans"></i>確定する数字</span>
+  </div>
+
+  <section id="p1">
+    <p class="eyebrow">01</p>
+    <h2>残り1マス</h2>
+    <p class="rule">行・列・ブロックのどれかで、空きが1つだけなら、残った数字がそこに入る。</p>
+    <figure><div class="demo" data-board="p1"></div><figcaption>5行目は 6 以外がそろっている</figcaption></figure>
+    <ol>
+      <li>空きが1つだけの行（または列・ブロック）を探す。</li>
+      <li>1〜9のうち、その行にまだない数字を数える。<b>1つだけ残る。</b></li>
+      <li>それを空きマスに置く。</li>
+    </ol>
+    <p class="app">このアプリでは、数字が9個そろうと少し派手に光ります。終盤はこのパターンの連続です。</p>
+  </section>
+
+  <section id="p2">
+    <p class="eyebrow">02</p>
+    <h2>行と列で挟む</h2>
+    <p class="rule">ある数字に注目して、その数字がある行と列を消していく。ブロックの中で消し残ったマスが1つなら、そこに入る。</p>
+    <figure><div class="demo" data-board="p2"></div><figcaption>まん中のブロックで、5 が入れるのは 1 マスだけ</figcaption></figure>
+    <ol>
+      <li>数字を1つ決める（ここでは 5）。</li>
+      <li>盤面にある 5 の、行と列をぜんぶ塗りつぶす。</li>
+      <li>調べたいブロックの中で、<b>塗られていない空きマスが1つ</b>なら、そこが 5。</li>
+    </ol>
+    <p class="app">このアプリで下のパネルの数字を選ぶと、この「塗りつぶし」が薄い灰色で出ます。<b>白く残ったマス</b>がその数字を置ける場所です。ブロックの中に白が1つだけなら、そこで確定です。</p>
+  </section>
+
+  <section id="p3">
+    <p class="eyebrow">03</p>
+    <h2>周りに8つそろう</h2>
+    <p class="rule">あるマスの行・列・ブロックを合わせて、1〜9のうち8つが見えていれば、残りの1つがそのマスに入る。</p>
+    <figure><div class="demo" data-board="p3"></div><figcaption>まん中のマスの周りには 1〜8 がすべてある</figcaption></figure>
+    <ol>
+      <li>空きマスを1つ決める。</li>
+      <li>そのマスと同じ行、同じ列、同じブロックにある数字を集める。</li>
+      <li>集めた数字が8種類なら、<b>足りない1つ</b>がそのマスの答え。</li>
+    </ol>
+    <p class="app">02 が「数字から場所を探す」のに対して、こちらは「場所から数字を探す」考え方です。メモを使うなら、そのマスに入れる数字を全部書いて、1つしか残らなければ確定です。</p>
+  </section>
+
+  <section id="p4">
+    <p class="eyebrow">04</p>
+    <h2>行の中でそこだけ</h2>
+    <p class="rule">行（または列・ブロック）に空きが複数あっても、ある数字が入れるマスが1つしかなければ、そこに入る。</p>
+    <figure><div class="demo" data-board="p4"></div><figcaption>3行目に 4 を置けるのは、まん中のマスだけ</figcaption></figure>
+    <ol>
+      <li>空きが複数ある行を選び、まだない数字を1つ決める（ここでは 4）。</li>
+      <li>空きマスごとに、その列やブロックにすでに 4 があるか見る。</li>
+      <li>4 が置ける空きマスが<b>1つしか残らなければ</b>、そこが 4。</li>
+    </ol>
+    <p class="app">02 と同じ「塗りつぶし」の見方で、ブロックではなく行や列を見るパターンです。パネルで数字を選んで、1行の中に白が1つだけ残っていないか探してみてください。</p>
+  </section>
+
+  <section id="p5">
+    <p class="eyebrow">05</p>
+    <h2>2マスで2つの数字</h2>
+    <p class="rule">同じ行の2マスが、どちらも同じ2つの候補だけなら、その2つの数字はこの2マスで使い切る。ほかのマスの候補から消せる。</p>
+    <figure><div class="demo" data-board="p5"></div><figcaption>左の2マスは「2 か 7」。右のマスの候補から 2 と 7 が消えて、9 が残る</figcaption></figure>
+    <ol>
+      <li>行の中で、メモが「同じ2つ」だけのマスを2つ見つける（ここでは 2 と 7）。</li>
+      <li>その2マスで 2 と 7 を使うので、<b>同じ行のほかのマスには 2 も 7 も入らない。</b></li>
+      <li>ほかのマスのメモから 2 と 7 を消す。候補が1つになったマスは確定。</li>
+    </ol>
+    <p class="app">このパターンは、メモを正直に書いていると自然に見えてきます。列やブロックでも同じことが言えます。</p>
+  </section>
+
+  <section id="p6">
+    <p class="eyebrow">06</p>
+    <h2>ブロックの中で1列に並ぶ</h2>
+    <p class="rule">ブロックの中で、ある数字の候補がひとつの行（または列）に集まっているなら、その行のブロック外のマスにはその数字は入らない。</p>
+    <figure><div class="demo" data-board="p6"></div><figcaption>左上のブロックで 3 が入れるのは1行目の2マスだけ。だから1行目の右側に 3 は入らず、「3 か 8」のマスは 8 になる</figcaption></figure>
+    <ol>
+      <li>ブロックを1つ選び、ある数字（ここでは 3）が入れるマスを探す。</li>
+      <li>入れるマスが<b>すべて同じ行に並んでいる</b>なら、3 はその行のその並びのどこかに入る。</li>
+      <li>同じ行の、ブロックの外のマスから 3 を消す。候補が1つになったマスは確定。</li>
+    </ol>
+    <p class="app">ここまでの5つで止まったときに試す、ひとつ上の手です。「むずかしい」の問題では、このパターンが必要になる場面があります。</p>
+  </section>
+
+  <footer><a class="btn" href="./">数独にもどる</a></footer>
+</main>
+
+<script>
+(() => {
+  // ミニ盤面を SVG で描く。spec: given / memos / peer（塗り）/ same（注目の数字）/ ans（確定するマスと数字）
+  const S = 40, LINE = 'var(--line)', STRONG = 'var(--line-strong)';
+  const key = (r, c) => `${r},${c}`;
+  function draw(spec) {
+    const peer = new Set(spec.peer || []), same = new Set(spec.same || []);
+    let out = '';
+    for (let r = 0; r < 9; r++) for (let c = 0; c < 9; c++) {
+      const k = key(r, c);
+      const fill = same.has(k) ? 'var(--same)' : peer.has(k) ? 'var(--peer)' : 'var(--surface)';
+      out += `<rect x="${c * S}" y="${r * S}" width="${S}" height="${S}" fill="${fill}"/>`;
+    }
+    for (let i = 1; i < 9; i++) {
+      const w = i % 3 === 0 ? 2 : 1, col = i % 3 === 0 ? STRONG : LINE;
+      out += `<line x1="${i * S}" y1="0" x2="${i * S}" y2="${9 * S}" stroke="${col}" stroke-width="${w}"/>`;
+      out += `<line x1="0" y1="${i * S}" x2="${9 * S}" y2="${i * S}" stroke="${col}" stroke-width="${w}"/>`;
+    }
+    for (const [k, n] of Object.entries(spec.given || {})) {
+      const [r, c] = k.split(',').map(Number);
+      out += `<text x="${c * S + S / 2}" y="${r * S + S / 2}" dy=".36em" text-anchor="middle" font-family="var(--font-num)" font-weight="800" font-size="21" fill="var(--fg)">${n}</text>`;
+    }
+    for (const [k, list] of Object.entries(spec.memos || {})) {
+      const [r, c] = k.split(',').map(Number);
+      for (const n of list) {
+        const mx = (n - 1) % 3, my = ((n - 1) / 3) | 0;
+        out += `<text x="${c * S + S / 6 + mx * S / 3}" y="${r * S + S / 6 + my * S / 3}" dy=".36em" text-anchor="middle" font-family="var(--font-num)" font-weight="700" font-size="11" fill="var(--memo)">${n}</text>`;
+      }
+    }
+    if (spec.ans) {
+      const [k, n] = spec.ans; const [r, c] = k.split(',').map(Number);
+      const cx = c * S + S / 2, cy = r * S + S / 2;
+      out += `<rect x="${c * S + 1.5}" y="${r * S + 1.5}" width="${S - 3}" height="${S - 3}" fill="none" stroke="var(--fg)" stroke-width="2.5"/>`;
+      out += `<circle cx="${cx}" cy="${cy}" r="13" fill="var(--fg)"/>`;
+      out += `<text x="${cx}" y="${cy}" dy=".36em" text-anchor="middle" font-family="var(--font-num)" font-weight="800" font-size="17" fill="var(--surface)">${n}</text>`;
+    }
+    return `<svg viewBox="0 0 ${9 * S} ${9 * S}" width="100%" role="img" aria-label="${spec.alt || ''}" style="display:block;border-radius:8px">${out}</svg>`;
+  }
+  const rowKeys = (r) => [...Array(9).keys()].map((c) => key(r, c));
+  const colKeys = (c) => [...Array(9).keys()].map((r) => key(r, c));
+  const boxKeys = (br, bc) => { const a = []; for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++) a.push(key(br * 3 + r, bc * 3 + c)); return a; };
+
+  const boards = {
+    // 01 残り1マス: 5行目（r=4）に 6 以外がそろっている
+    p1: {
+      alt: '5行目に8つの数字があり、残る1マスに6が入る',
+      given: { '4,0': 2, '4,1': 7, '4,2': 4, '4,3': 1, '4,4': 9, '4,6': 5, '4,7': 3, '4,8': 8,
+               '0,2': 6, '2,7': 1, '6,1': 9, '7,5': 3, '8,8': 4 },
+      peer: rowKeys(4),
+      ans: ['4,5', 6],
+    },
+    // 02 行と列で挟む: 盤面の 5 の行・列を塗ると、まん中のブロックには (4,5) だけ残る
+    p2: {
+      alt: '5のある行と列を塗りつぶすと、中央ブロックで残る空きマスは1つ',
+      given: { '3,0': 5, '5,8': 5, '0,4': 5, '8,3': 5, '1,1': 8, '2,6': 1, '6,2': 7, '7,7': 3, '3,4': 2, '4,3': 9 },
+      same: ['3,0', '5,8', '0,4', '8,3'],
+      peer: [...rowKeys(3), ...rowKeys(5), ...colKeys(4), ...colKeys(3)],
+      ans: ['4,5', 5],
+    },
+    // 03 周りに8つそろう: (4,4) の行・列・ブロックに 1〜8
+    p3: {
+      alt: '中央のマスの行・列・ブロックに1から8がそろい、残る9が入る',
+      given: { '4,0': 1, '4,2': 2, '4,7': 3, '0,4': 4, '2,4': 5, '7,4': 6, '3,3': 7, '5,5': 8, '1,7': 9, '6,1': 4, '8,6': 2 },
+      same: ['4,0', '4,2', '4,7', '0,4', '2,4', '7,4', '3,3', '5,5'],
+      peer: [...rowKeys(4), ...colKeys(4), ...boxKeys(1, 1)],
+      ans: ['4,4', 9],
+    },
+    // 04 行の中でそこだけ: 3行目（r=2）の空き3つのうち、4 を置けるのは (2,4) だけ
+    p4: {
+      alt: '3行目の3つの空きのうち、列に4がないのは中央の1マスだけ',
+      given: { '2,0': 3, '2,2': 8, '2,3': 1, '2,5': 6, '2,6': 2, '2,8': 9, '6,1': 4, '0,7': 4, '5,4': 7, '8,2': 5 },
+      same: ['6,1', '0,7'],
+      peer: [...colKeys(1), ...colKeys(7)],
+      memos: { '2,1': [5, 7], '2,7': [5, 7] },
+      ans: ['2,4', 4],
+    },
+    // 05 2マスで2つの数字: 7行目（r=6）の左2マスが「2,7」。(6,5) の候補「2,7,9」から 2,7 が消えて 9
+    p5: {
+      alt: '左の2マスが2か7なので、右のマスの候補は9だけになる',
+      given: { '6,2': 1, '6,3': 3, '6,4': 4, '6,6': 5, '6,7': 6, '6,8': 8, '1,0': 9, '8,1': 9, '3,5': 1 },
+      peer: rowKeys(6),
+      same: ['6,0', '6,1'],
+      memos: { '6,0': [2, 7], '6,1': [2, 7], '6,5': [2, 7, 9] },
+      ans: ['6,5', 9],
+    },
+    // 06 ブロックの中で1列に並ぶ: 左上ブロックで 3 が入れるのは (0,1),(0,2) だけ → 1行目の外のマスから 3 が消える
+    p6: {
+      alt: '左上ブロックで3の候補が1行目に並ぶので、1行目のほかのマスに3は入らない',
+      given: { '0,0': 5, '1,1': 6, '1,2': 9, '2,0': 1, '2,1': 2, '2,2': 7, '5,0': 3, '0,3': 4, '0,4': 1, '0,8': 2, '4,6': 3 },
+      same: ['5,0', '4,6'],
+      peer: [...colKeys(0), ...rowKeys(0).filter((k) => !['0,1', '0,2'].includes(k))],
+      memos: { '0,1': [3, 8], '0,2': [3, 8], '0,5': [6, 7], '0,6': [3, 8], '0,7': [6, 7, 8] },
+      ans: ['0,6', 8],
+    },
+  };
+  for (const el of document.querySelectorAll('[data-board]')) el.innerHTML = draw(boards[el.dataset.board]);
+})();
+</script>
+</body>
+</html>
