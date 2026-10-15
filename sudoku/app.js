@@ -59,15 +59,15 @@ function fillGrid(g) {
 
 function popcount(x) { let c = 0; while (x) { x &= x - 1; c++; } return c; }
 
-// 黒丸にする数字を返す（長押しでそのまま確定できる）
-// 条件: そのマスのメモが1つだけ、かつ 同じ行・列・ブロックのほかのマスに「同じ数字だけ」のメモがない
-// （見るのはプレイヤーのメモだけ。盤面の数字も答えも読まない。「2はこのどれか」と
-//   複数のマスに同じ数字だけを書いた位置メモは、お互いに打ち消し合って黒丸にならない）
+// 黒丸にする数字を返す（長押し／ダブルタップでそのまま確定できる）
+// 条件: そのマスのメモが1つだけ、かつ 同じ行・列・ブロックのほかのマスに その数字のメモがない
+// （見るのはプレイヤーのメモだけ。盤面の数字も答えも読まない。「2はこのどれか」と複数のマスに
+//   2を書いている間は黒丸にならない。ほかの数字のメモを足しても黒丸は変わらない）
 function sureDigit(i) {
   if (!S || S.val[i] || S.puz[i]) return 0;
   const m = S.memos[i];
   if (!m || (m & (m - 1))) return 0;          // ビットが1つだけか
-  for (const p of PEERS[i]) if (!S.val[p] && S.memos[p] === m) return 0;
+  for (const p of PEERS[i]) if (!S.val[p] && (S.memos[p] & m)) return 0;
   return 31 - Math.clz32(m);
 }
 
@@ -424,15 +424,16 @@ paletteEl.addEventListener('click', (e) => {
   num = num === n ? 0 : n;
   eraser = false;
   sel = -1;                       // マスの選択はいったん解除
+  lastTap = { i: -1, t: 0, memoToggled: false };   // 数字を変えたら、直前のタップとは続けない
   update(); save();
 });
-eraserBtn.addEventListener('click', () => { eraser = !eraser; if (eraser) num = 0; update(); save(); });
-undoBtn.addEventListener('click', undo);
+eraserBtn.addEventListener('click', () => { eraser = !eraser; if (eraser) num = 0; lastTap = { i: -1, t: 0, memoToggled: false }; update(); save(); });
+undoBtn.addEventListener('click', () => { lastTap = { i: -1, t: 0, memoToggled: false }; undo(); });
 
 window.addEventListener('keydown', (e) => {
   if (!S || e.metaKey || e.ctrlKey || e.altKey) return;
   if (e.target.tagName === 'SELECT' || e.target.tagName === 'BUTTON') return;
-  if (/^[1-9]$/.test(e.key)) { num = num === +e.key ? 0 : +e.key; eraser = false; sel = -1; update(); save(); return; }
+  if (/^[1-9]$/.test(e.key)) { num = num === +e.key ? 0 : +e.key; eraser = false; sel = -1; lastTap = { i: -1, t: 0, memoToggled: false }; update(); save(); return; }
   if (e.key === 'Escape') { num = 0; eraser = false; update(); save(); return; }
   if (sel < 0) { if (e.key.startsWith('Arrow')) selectCell(40); return; }
   const r = row(sel), c = col(sel);
