@@ -16,12 +16,10 @@ const paletteEl = $('#palette');
 const timeEl = $('#time');
 const mistakesEl = $('#mistakes');
 const statusEl = $('#status');
-const eraserBtn = $('#eraser');
-const undoBtn = $('#undo');
 const diffSel = $('#difficulty');
 const confirmEl = $('#confirm');
 const optEls = { assist: $('#opt-assist'), tapSwitch: $('#opt-tapswitch'), holdCommit: $('#opt-hold'), dblCommit: $('#opt-dbl') };
-const hintCommitEl = $('#hint-commit');
+
 const doneEl = $('#done');
 
 // ---------- 盤面の基礎 ----------
@@ -151,8 +149,6 @@ function renderSettings() {
   // 確定方法はどちらか一方は残す
   optEls.holdCommit.disabled = settings.holdCommit && !settings.dblCommit;
   optEls.dblCommit.disabled = settings.dblCommit && !settings.holdCommit;
-  hintCommitEl.textContent = settings.holdCommit && settings.dblCommit ? '長押し か ダブルタップで確定'
-    : settings.holdCommit ? '長押しで確定' : 'ダブルタップで確定';
 }
 
 function save() {
@@ -233,8 +229,6 @@ function update() {
     b.classList.toggle('on', num === n);
     b.classList.toggle('done', counts[n] >= 9);
   }
-  eraserBtn.setAttribute('aria-pressed', String(eraser));
-  undoBtn.disabled = history.length === 0 || S.done;
   mistakesEl.textContent = S.mistakes;
   timeEl.textContent = fmtTime(S.elapsed);
   diffSel.value = S.diff;
@@ -464,8 +458,6 @@ paletteEl.addEventListener('click', (e) => {
   lastTap = { i: -1, t: 0, memoToggled: false };   // 数字を変えたら、直前のタップとは続けない
   update(); save();
 });
-eraserBtn.addEventListener('click', () => { eraser = !eraser; if (eraser) num = 0; lastTap = { i: -1, t: 0, memoToggled: false }; update(); save(); });
-undoBtn.addEventListener('click', () => { lastTap = { i: -1, t: 0, memoToggled: false }; undo(); });
 for (const k of Object.keys(optEls)) {
   optEls[k].addEventListener('change', () => {
     settings[k] = optEls[k].checked;
