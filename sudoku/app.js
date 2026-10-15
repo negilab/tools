@@ -20,6 +20,7 @@ const eraserBtn = $('#eraser');
 const undoBtn = $('#undo');
 const diffSel = $('#difficulty');
 const confirmEl = $('#confirm');
+const assistEl = $('#assist');
 const doneEl = $('#done');
 
 // ---------- 盤面の基礎 ----------
@@ -70,7 +71,7 @@ function canTake(k, n) {
   return !S.val[k] && !PEERS[k].some((p) => S.val[p] === n);
 }
 function sureDigit(i) {
-  if (!S || S.val[i] || !S.memos[i]) return 0;
+  if (!assist || !S || S.val[i] || !S.memos[i]) return 0;
   for (let n = 1; n <= 9; n++) {
     if (!(S.memos[i] & (1 << n)) || !canTake(i, n)) continue;
     for (const unit of [ROWS[row(i)], COLS[col(i)], BOXES[box(i)]]) {
@@ -125,15 +126,16 @@ let history = [];      // [{ val, memos }]
 let sel = -1;          // 選択中のマス
 let num = 0;           // パレットで選択中の数字（0 = なし）
 let eraser = false;
+let assist = false;    // アシスト（黒丸メモ）のオンオフ
 
 function save() {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ S, history: history.slice(-50), sel, num })); } catch (_) {}
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ S, history: history.slice(-50), sel, num, assist })); } catch (_) {}
 }
 function load() {
   try {
     const d = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
     if (!d || !d.S || !Array.isArray(d.S.puz) || d.S.puz.length !== 81) return false;
-    S = d.S; history = d.history || []; sel = d.sel ?? -1; num = d.num || 0;
+    S = d.S; history = d.history || []; sel = d.sel ?? -1; num = d.num || 0; assist = !!d.assist;
     return true;
   } catch (_) { return false; }
 }
@@ -205,6 +207,7 @@ function update() {
     b.classList.toggle('done', counts[n] >= 9);
   }
   eraserBtn.setAttribute('aria-pressed', String(eraser));
+  assistEl.checked = assist;
   undoBtn.disabled = history.length === 0 || S.done;
   mistakesEl.textContent = S.mistakes;
   timeEl.textContent = fmtTime(S.elapsed);
@@ -438,6 +441,7 @@ paletteEl.addEventListener('click', (e) => {
 });
 eraserBtn.addEventListener('click', () => { eraser = !eraser; if (eraser) num = 0; lastTap = { i: -1, t: 0, memoToggled: false }; update(); save(); });
 undoBtn.addEventListener('click', () => { lastTap = { i: -1, t: 0, memoToggled: false }; undo(); });
+assistEl.addEventListener('change', () => { assist = assistEl.checked; update(); save(); });
 
 window.addEventListener('keydown', (e) => {
   if (!S || e.metaKey || e.ctrlKey || e.altKey) return;
