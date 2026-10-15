@@ -326,7 +326,7 @@ boardEl.addEventListener('pointerdown', (e) => {
   e.preventDefault();
   const i = +cell.dataset.i;
   press = { i, x: e.clientX, y: e.clientY, done: false, timer: 0 };
-  selectCell(i);
+  if (!num && !eraser) selectCell(i);   // 数字を選んでいる間（メモ／確定）はマスを選択状態にしない
   const willCommit = !S.done && !S.puz[i] && (eraser || num > 0 || S.val[i] > 0 || S.memos[i] > 0);
   if (willCommit) {
     restartAnim(cell, 'holding');
