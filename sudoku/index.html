@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>やわらか数独</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23e0dcff'/%3E%3Ctext x='16' y='22' font-size='16' font-family='sans-serif' font-weight='800' fill='%236f5cd2' text-anchor='middle'%3E9%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800&family=Nunito:wght@700;800;900&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="app">
+  <header class="top">
+    <h1><span class="t1">やわらか</span><span class="t2">数独</span></h1>
+    <div class="stats">
+      <span class="stat" title="経過時間"><span class="ico">⏱</span><span id="time">0:00</span></span>
+      <span class="stat" title="まちがえた回数"><span class="ico">✕</span><span id="mistakes">0</span></span>
+    </div>
+  </header>
+
+  <section class="bar">
+    <label class="diff">
+      <span>むずかしさ</span>
+      <select id="difficulty">
+        <option value="easy">やさしい</option>
+        <option value="normal" selected>ふつう</option>
+        <option value="hard">むずかしい</option>
+      </select>
+    </label>
+    <button id="new" class="btn primary" type="button">新しい問題</button>
+  </section>
+
+  <section id="confirm" class="sheet" hidden>
+    <p>いまの問題をやめて、新しい問題を始めますか？</p>
+    <div class="sheet-btns">
+      <button id="confirm-no" class="btn" type="button">つづける</button>
+      <button id="confirm-yes" class="btn primary" type="button">新しく始める</button>
+    </div>
+  </section>
+
+  <section class="board-wrap">
+    <div id="board" class="board" aria-label="数独の盤面"></div>
+    <p id="status" class="status" hidden>問題を作っています…</p>
+  </section>
+
+  <section class="controls">
+    <div id="palette" class="palette" aria-label="数字"></div>
+    <div class="tools">
+      <button id="eraser" class="btn tool" type="button" aria-pressed="false"><span class="ico">⌫</span>けす</button>
+      <button id="undo" class="btn tool" type="button"><span class="ico">↶</span>もどす</button>
+    </div>
+    <p class="hint">数字を選んで <b>タップ → メモ</b> ／ <b>長押し → 確定</b>。確定すると、同じ行・列・ブロックのメモから その数字が消えます。</p>
+  </section>
+</main>
+
+<div id="done" class="overlay" hidden>
+  <div class="card">
+    <div id="confetti" class="confetti" aria-hidden="true"></div>
+    <p class="card-eyebrow">できました！</p>
+    <p class="card-time" id="done-time">0:00</p>
+    <p class="card-sub" id="done-sub"></p>
+    <button id="again" class="btn primary" type="button">もう一回</button>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
