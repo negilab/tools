@@ -83,10 +83,6 @@ h1 .t1{color:var(--muted);font-weight:600;font-size:12px;letter-spacing:.12em;ma
 .btn:active{transform:scale(.97)}
 .btn:focus-visible,.num:focus-visible,select:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
 .btn.primary{background:var(--fg);border-color:var(--fg);color:var(--bg)}
-.bar-right{display:flex;gap:8px;align-items:center}
-.btn.icon{padding:8px;width:38px;height:38px;justify-content:center}
-.btn.icon svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.btn.icon[aria-expanded="true"]{background:var(--fg);border-color:var(--fg);color:var(--bg)}
 .btn.tool{min-width:104px;justify-content:center}
 .btn.tool svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .btn.tool[aria-pressed="true"]{background:var(--fg);border-color:var(--fg);color:var(--bg)}
@@ -270,8 +266,13 @@ h1 .t1{color:var(--muted);font-weight:600;font-size:12px;letter-spacing:.12em;ma
 .num.done{opacity:.28}
 .num.done.on{opacity:1}
 .num.shake{animation:shake .4s}
-/* settings */
-.settings h2{margin:0 0 2px;font-size:13px;font-weight:700;letter-spacing:.1em;color:var(--muted)}
+/* settings: always visible, under the controls */
+.settings{
+  width:min(100%,520px);margin:12px auto 0;
+  border-top:1px solid var(--line);padding-top:16px;
+  display:flex;flex-direction:column;gap:2px;
+}
+.settings h2{margin:0 0 4px;font-size:12px;font-weight:700;letter-spacing:.12em;color:var(--muted)}
 .opt{
   display:flex;align-items:center;gap:12px;cursor:pointer;user-select:none;-webkit-user-select:none;
   padding:6px 0;

@@ -20,8 +20,6 @@ const eraserBtn = $('#eraser');
 const undoBtn = $('#undo');
 const diffSel = $('#difficulty');
 const confirmEl = $('#confirm');
-const settingsEl = $('#settings');
-const settingsBtn = $('#settings-btn');
 const optEls = { assist: $('#opt-assist'), tapSwitch: $('#opt-tapswitch'), holdCommit: $('#opt-hold'), dblCommit: $('#opt-dbl') };
 const hintCommitEl = $('#hint-commit');
 const doneEl = $('#done');
@@ -475,13 +473,7 @@ for (const k of Object.keys(optEls)) {
     renderSettings(); saveSettings(); update();
   });
 }
-function toggleSettings(open) {
-  settingsEl.hidden = !open;
-  settingsBtn.setAttribute('aria-expanded', String(open));
-  if (open) confirmEl.hidden = true;
-}
-settingsBtn.addEventListener('click', () => toggleSettings(settingsEl.hidden));
-$('#settings-close').addEventListener('click', () => toggleSettings(false));
+
 
 window.addEventListener('keydown', (e) => {
   if (!S || e.metaKey || e.ctrlKey || e.altKey) return;
@@ -518,7 +510,7 @@ function hasProgress() {
   return S && !S.done && S.val.some((v, i) => v && !S.puz[i] || S.memos[i]);
 }
 $('#new').addEventListener('click', () => {
-  if (hasProgress()) { toggleSettings(false); confirmEl.hidden = false; }
+  if (hasProgress()) confirmEl.hidden = false;
   else startNew(diffSel.value);
 });
 $('#confirm-no').addEventListener('click', () => { confirmEl.hidden = true; });
