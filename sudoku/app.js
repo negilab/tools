@@ -60,17 +60,15 @@ function fillGrid(g) {
 function popcount(x) { let c = 0; while (x) { x &= x - 1; c++; } return c; }
 
 // 黒丸にする数字を返す（長押しでそのまま確定できる）
-// 条件: メモが1つだけ、かつ そのマスの行・列・ブロックにほかの8つの数字がすべて見えている
-// （「このマスにはこれしか入らない」という周りを数えれば分かる事実だけ。行や列を読んで
-//   「ここにしか入れない」と導くような判定はしない。答えも見ない）
+// 条件: そのマスのメモが1つだけ、かつ 同じ行・列・ブロックのほかのマスに「同じ数字だけ」のメモがない
+// （見るのはプレイヤーのメモだけ。盤面の数字も答えも読まない。「2はこのどれか」と
+//   複数のマスに同じ数字だけを書いた位置メモは、お互いに打ち消し合って黒丸にならない）
 function sureDigit(i) {
   if (!S || S.val[i] || S.puz[i]) return 0;
   const m = S.memos[i];
   if (!m || (m & (m - 1))) return 0;          // ビットが1つだけか
-  const n = 31 - Math.clz32(m);
-  let used = 0;
-  for (const p of PEERS[i]) if (S.val[p]) used |= 1 << S.val[p];
-  return (used | (1 << n)) === 0x3fe && !(used & (1 << n)) ? n : 0;
+  for (const p of PEERS[i]) if (!S.val[p] && S.memos[p] === m) return 0;
+  return 31 - Math.clz32(m);
 }
 
 // 解の個数を limit まで数える（候補が最も少ないマスから埋める）
