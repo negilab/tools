@@ -27,6 +27,8 @@ const row = (i) => (i / 9) | 0;
 const col = (i) => i % 9;
 const box = (i) => ((row(i) / 3) | 0) * 3 + ((col(i) / 3) | 0);
 const PEERS = [];
+const ROWS = [...Array(9)].map(() => []), COLS = [...Array(9)].map(() => []), BOXES = [...Array(9)].map(() => []);
+for (let i = 0; i < 81; i++) { ROWS[row(i)].push(i); COLS[col(i)].push(i); BOXES[box(i)].push(i); }
 for (let i = 0; i < 81; i++) {
   const list = [];
   for (let j = 0; j < 81; j++) {
@@ -60,15 +62,22 @@ function fillGrid(g) {
 function popcount(x) { let c = 0; while (x) { x &= x - 1; c++; } return c; }
 
 // 黒丸にする数字を返す（長押し／ダブルタップでそのまま確定できる）
-// 条件: そのマスのメモが1つだけ、かつ 同じ行・列・ブロックのほかのマスに その数字のメモがない
-// （見るのはプレイヤーのメモだけ。盤面の数字も答えも読まない。「2はこのどれか」と複数のマスに
-//   2を書いている間は黒丸にならない。ほかの数字のメモを足しても黒丸は変わらない）
+// 決まりはひとつだけ:
+//   そのマスの行・列・ブロックのどれかで、その数字を置ける空きマスがそこしかない。
+//   かつ、そのマスのメモにその数字がある。
+// 「置ける」は盤面に確定している数字だけで判断する。答えは見ない。
+function canTake(k, n) {
+  return !S.val[k] && !PEERS[k].some((p) => S.val[p] === n);
+}
 function sureDigit(i) {
-  if (!S || S.val[i] || S.puz[i]) return 0;
-  const m = S.memos[i];
-  if (!m || (m & (m - 1))) return 0;          // ビットが1つだけか
-  for (const p of PEERS[i]) if (!S.val[p] && (S.memos[p] & m)) return 0;
-  return 31 - Math.clz32(m);
+  if (!S || S.val[i] || !S.memos[i]) return 0;
+  for (let n = 1; n <= 9; n++) {
+    if (!(S.memos[i] & (1 << n)) || !canTake(i, n)) continue;
+    for (const unit of [ROWS[row(i)], COLS[col(i)], BOXES[box(i)]]) {
+      if (unit.every((k) => k === i || !canTake(k, n))) return n;
+    }
+  }
+  return 0;
 }
 
 // 解の個数を limit まで数える（候補が最も少ないマスから埋める）
