@@ -141,8 +141,7 @@ for (let n = 1; n <= 9; n++) {
   b.type = 'button';
   b.className = 'num';
   b.dataset.n = n;
-  b.style.setProperty('--nc', `var(--i${n})`);
-  b.innerHTML = `${n}<small></small>`;
+  b.textContent = n;
   b.setAttribute('aria-label', `${n}を選ぶ`);
   paletteEl.appendChild(b);
   numBtns.push(b);
@@ -155,6 +154,9 @@ function update() {
   if (!S) return;
   const hi = num || (sel >= 0 ? S.val[sel] : 0);   // 強調する数字
   const sr = sel >= 0 ? row(sel) : -1, sc = sel >= 0 ? col(sel) : -1, sb = sel >= 0 ? box(sel) : -1;
+  // 強調する数字が置かれている行・列（その数字が入れない場所を薄く示す）
+  const lineRows = new Set(), lineCols = new Set();
+  if (hi) for (let i = 0; i < 81; i++) if (S.val[i] === hi) { lineRows.add(row(i)); lineCols.add(col(i)); }
   for (let i = 0; i < 81; i++) {
     const c = cells[i], v = S.val[i], given = !!S.puz[i];
     c.classList.toggle('given', given);
@@ -162,7 +164,7 @@ function update() {
     c.classList.toggle('sel', i === sel);
     c.classList.toggle('peer', sel >= 0 && i !== sel && (row(i) === sr || col(i) === sc || box(i) === sb));
     c.classList.toggle('same', hi > 0 && v === hi);
-    c.style.setProperty('--hc', v ? `var(--i${v})` : 'var(--accent)');
+    c.classList.toggle('line', lineRows.has(row(i)) || lineCols.has(col(i)));
     valEls[i].textContent = v || '';
     const m = S.memos[i], spans = memoEls[i];
     for (let n = 1; n <= 9; n++) {
@@ -175,11 +177,9 @@ function update() {
   const counts = new Array(10).fill(0);
   for (const v of S.val) counts[v]++;
   for (let n = 1; n <= 9; n++) {
-    const left = 9 - counts[n];
     const b = numBtns[n - 1];
     b.classList.toggle('on', num === n);
-    b.classList.toggle('done', left === 0);
-    b.querySelector('small').textContent = left === 0 ? '✓' : `あと${left}`;
+    b.classList.toggle('done', counts[n] >= 9);
   }
   eraserBtn.setAttribute('aria-pressed', String(eraser));
   undoBtn.disabled = history.length === 0 || S.done;
@@ -211,7 +211,6 @@ function animateCommit(i, n, cleared) {
   ring.addEventListener('animationend', () => ring.remove());
   for (const p of PEERS[i]) {
     const pc = cells[p];
-    pc.style.setProperty('--wc', `var(--i${n})`);
     pc.style.setProperty('--delay', `${dist(i, p) * 45}ms`);
     once(pc, 'wave', 1200);
   }
@@ -220,7 +219,6 @@ function animateCommit(i, n, cleared) {
     const out = document.createElement('span');
     out.className = 'memo-out';
     out.textContent = n;
-    out.style.setProperty('--mc', `var(--i${n})`);
     out.style.setProperty('--delay', `${dist(i, p) * 45 + 60}ms`);
     out.style.left = `${((n - 1) % 3) * 33.33}%`;
     out.style.top = `${(((n - 1) / 3) | 0) * 33.33}%`;
@@ -247,7 +245,7 @@ function confetti() {
   box.innerHTML = '';
   for (let k = 0; k < 28; k++) {
     const i = document.createElement('i');
-    i.style.setProperty('--cc', `var(--i${(k % 9) + 1})`);
+    i.style.setProperty('--o', String(0.25 + ((k * 7) % 10) / 12));
     i.style.setProperty('--x', `${Math.random() * 100}%`);
     i.style.setProperty('--dur', `${1.8 + Math.random() * 1.6}s`);
     i.style.setProperty('--delay', `${Math.random() * 2}s`);
@@ -331,7 +329,6 @@ boardEl.addEventListener('pointerdown', (e) => {
   selectCell(i);
   const willCommit = !S.done && !S.puz[i] && (eraser || num > 0 || S.val[i] > 0 || S.memos[i] > 0);
   if (willCommit) {
-    cell.style.setProperty('--hold-c', eraser || !num ? 'var(--sel)' : `color-mix(in oklab, var(--i${num}) 45%, var(--surface))`);
     restartAnim(cell, 'holding');
     press.timer = setTimeout(() => {
       press.done = true;
@@ -374,6 +371,7 @@ paletteEl.addEventListener('click', (e) => {
   const n = +b.dataset.n;
   num = num === n ? 0 : n;
   eraser = false;
+  sel = -1;                       // マスの選択はいったん解除
   update(); save();
 });
 eraserBtn.addEventListener('click', () => { eraser = !eraser; if (eraser) num = 0; update(); save(); });
@@ -382,7 +380,7 @@ undoBtn.addEventListener('click', undo);
 window.addEventListener('keydown', (e) => {
   if (!S || e.metaKey || e.ctrlKey || e.altKey) return;
   if (e.target.tagName === 'SELECT' || e.target.tagName === 'BUTTON') return;
-  if (/^[1-9]$/.test(e.key)) { num = num === +e.key ? 0 : +e.key; eraser = false; update(); save(); return; }
+  if (/^[1-9]$/.test(e.key)) { num = num === +e.key ? 0 : +e.key; eraser = false; sel = -1; update(); save(); return; }
   if (e.key === 'Escape') { num = 0; eraser = false; update(); save(); return; }
   if (sel < 0) { if (e.key.startsWith('Arrow')) selectCell(40); return; }
   const r = row(sel), c = col(sel);
