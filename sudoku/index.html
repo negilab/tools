@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>やわらか数独</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2317171a'/%3E%3Ctext x='16' y='22' font-size='16' font-family='sans-serif' font-weight='800' fill='%23ffffff' text-anchor='middle'%3E9%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="app">
+  <header class="top">
+    <h1><span class="t1">やわらか</span><span class="t2">数独</span></h1>
+    <div class="stats">
+      <span class="stat"><span class="lbl">時間</span><span id="time">0:00</span></span>
+      <span class="stat"><span class="lbl">ミス</span><span id="mistakes">0</span></span>
+    </div>
+  </header>
+
+  <section class="bar">
+    <label class="diff">
+      <span>むずかしさ</span>
+      <select id="difficulty">
+        <option value="1">入門</option>
+        <option value="2">やさしい</option>
+        <option value="3" selected>ふつう</option>
+        <option value="4">むずかしい</option>
+        <option value="5">激ムズ</option>
+      </select>
+    </label>
+    <button id="new" class="btn primary" type="button">新しい問題</button>
+  </section>
+
+  <section id="confirm" class="sheet" hidden>
+    <p>いまの問題をやめて、新しい問題を始めますか？</p>
+    <div class="sheet-btns">
+      <button id="confirm-no" class="btn" type="button">つづける</button>
+      <button id="confirm-yes" class="btn primary" type="button">新しく始める</button>
+    </div>
+  </section>
+
+  <section class="board-wrap">
+    <div id="board" class="board" aria-label="数独の盤面"></div>
+    <p id="status" class="status" hidden>問題を作っています…</p>
+  </section>
+
+  <section class="controls">
+    <div id="palette" class="palette" aria-label="数字"></div>
+
+    <section id="settings" class="settings" aria-label="設定">
+      <label class="opt">
+        <input type="checkbox" id="opt-assist">
+        <span class="switch" aria-hidden="true"></span>
+        <span class="opt-text">メモを黒丸にする<small>メモが強調される</small></span>
+      </label>
+      <label class="opt">
+        <input type="checkbox" id="opt-tapswitch">
+        <span class="switch" aria-hidden="true"></span>
+        <span class="opt-text">マスの数字をタップで切り替え<small>数字が入っているマスを押すと、その数字が選ばれる</small></span>
+      </label>
+      <div class="opt-row">
+        <span class="opt-text">数字の確定方法</span>
+        <label class="chk"><input type="checkbox" id="opt-hold">長押し</label>
+        <label class="chk"><input type="checkbox" id="opt-dbl">ダブルタップ</label>
+      </div>
+    </section>
+
+    <p class="more"><a href="patterns.html">数字を確定させられるパターン集 →</a></p>
+  </section>
+</main>
+
+<div id="done" class="overlay" hidden>
+  <div class="card">
+    <div id="confetti" class="confetti" aria-hidden="true"></div>
+    <p class="card-eyebrow">できました！</p>
+    <p class="card-time" id="done-time">0:00</p>
+    <p class="card-sub" id="done-sub"></p>
+    <button id="again" class="btn primary" type="button">もう一回</button>
+  </div>
+</div>
+
+<script src="grader.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
