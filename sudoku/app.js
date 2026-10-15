@@ -59,6 +59,15 @@ function fillGrid(g) {
 
 function popcount(x) { let c = 0; while (x) { x &= x - 1; c++; } return c; }
 
+// メモが1つだけで、それが正解なら、その数字を返す（長押しでそのまま確定できる）
+function sureDigit(i) {
+  if (!S || S.val[i] || S.puz[i]) return 0;
+  const m = S.memos[i];
+  if (!m || (m & (m - 1))) return 0;          // ビットが1つだけか
+  const n = 31 - Math.clz32(m);
+  return S.sol[i] === n ? n : 0;
+}
+
 // 解の個数を limit まで数える（候補が最も少ないマスから埋める）
 function countSolutions(g, limit) {
   let best = -1, bestMask = 0, bestCount = 10;
@@ -166,12 +175,13 @@ function update() {
     c.classList.toggle('same', hi > 0 && v === hi);
     c.classList.toggle('line', lineRows.has(row(i)) || lineCols.has(col(i)) || lineBoxes.has(box(i)));
     valEls[i].textContent = v || '';
-    const m = S.memos[i], spans = memoEls[i];
+    const m = S.memos[i], spans = memoEls[i], sure = sureDigit(i);
     for (let n = 1; n <= 9; n++) {
       const on = !v && !!(m & (1 << n));
       spans[n - 1].textContent = on ? n : '';
       spans[n - 1].classList.toggle('on', on);
       spans[n - 1].classList.toggle('hit', on && n === hi);
+      spans[n - 1].classList.toggle('sure', on && n === sure);
     }
   }
   const counts = new Array(10).fill(0);
@@ -226,6 +236,17 @@ function animateCommit(i, n, cleared) {
     out.addEventListener('animationend', () => out.remove());
   }
   vibrate(12);
+}
+function animateNine(i, n) {
+  const same = [];
+  for (let k = 0; k < 81; k++) if (S.val[k] === n) same.push(k);
+  same.sort((a, b) => dist(i, a) - dist(i, b));
+  same.forEach((k, idx) => {
+    cells[k].style.setProperty('--delay', `${250 + idx * 70}ms`);
+    once(cells[k], 'nine', 2000);
+  });
+  setTimeout(() => once(numBtns[n - 1], 'complete', 1000), 300);
+  setTimeout(() => { once(boardEl, 'flash', 800); vibrate([15, 30, 15, 30, 50]); }, 250 + same.length * 70);
 }
 function animateReject(i, n) {
   const c = cells[i];
@@ -292,7 +313,9 @@ function commit(i, n) {
   }
   update();
   animateCommit(i, n, cleared);
-  if (S.val.every((v, k) => v === S.sol[k])) finish();
+  const complete = S.val.every((v, k) => v === S.sol[k]);
+  if (!complete && S.val.filter((v) => v === n).length === 9) animateNine(i, n);
+  if (complete) finish();
   save();
 }
 
@@ -328,14 +351,17 @@ boardEl.addEventListener('pointerdown', (e) => {
   press = { i, x: e.clientX, y: e.clientY, done: false, timer: 0 };
   // 数字を選んでいる間（メモ／確定）と、数字が入っているマス（タップでその数字に切り替え）は選択状態にしない
   if (!num && !eraser && !S.val[i]) selectCell(i);
-  const willCommit = !S.done && !S.puz[i] && (eraser || num > 0 || S.val[i] > 0 || S.memos[i] > 0);
+  const sure = eraser ? 0 : sureDigit(i);
+  const willCommit = !S.done && !S.puz[i] && (eraser || num > 0 || sure > 0 || S.val[i] > 0 || S.memos[i] > 0);
   if (willCommit) {
     restartAnim(cell, 'holding');
     press.timer = setTimeout(() => {
       press.done = true;
       cell.classList.remove('holding');
-      if (eraser || !num) eraseCell(i);
-      else commit(i, num);
+      if (eraser) eraseCell(i);
+      else if (sure) commit(i, sure);          // 候補が1つに絞れたメモはそのまま確定
+      else if (num) commit(i, num);
+      else eraseCell(i);
     }, HOLD_MS);
   }
 });
@@ -394,7 +420,7 @@ window.addEventListener('keydown', (e) => {
   if (e.key === 'ArrowDown')  { selectCell(((r + 1) % 9) * 9 + c); e.preventDefault(); }
   if (e.key === 'ArrowLeft')  { selectCell(r * 9 + (c + 8) % 9); e.preventDefault(); }
   if (e.key === 'ArrowRight') { selectCell(r * 9 + (c + 1) % 9); e.preventDefault(); }
-  if (e.key === 'Enter' && num) commit(sel, num);
+  if (e.key === 'Enter') { const sure = sureDigit(sel); if (sure) commit(sel, sure); else if (num) commit(sel, num); }
   if (e.key === ' ' && num) { toggleMemo(sel, num); e.preventDefault(); }
   if (e.key === 'Backspace' || e.key === 'Delete') eraseCell(sel);
   if (e.key === 'z' || e.key === 'u') undo();
