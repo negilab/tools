@@ -154,9 +154,9 @@ function update() {
   if (!S) return;
   const hi = num || (sel >= 0 ? S.val[sel] : 0);   // 強調する数字
   const sr = sel >= 0 ? row(sel) : -1, sc = sel >= 0 ? col(sel) : -1, sb = sel >= 0 ? box(sel) : -1;
-  // 強調する数字が置かれている行・列（その数字が入れない場所を薄く示す）
-  const lineRows = new Set(), lineCols = new Set();
-  if (hi) for (let i = 0; i < 81; i++) if (S.val[i] === hi) { lineRows.add(row(i)); lineCols.add(col(i)); }
+  // 強調する数字が置かれている行・列・ブロック（その数字が入れない場所を薄く示す）
+  const lineRows = new Set(), lineCols = new Set(), lineBoxes = new Set();
+  if (hi) for (let i = 0; i < 81; i++) if (S.val[i] === hi) { lineRows.add(row(i)); lineCols.add(col(i)); lineBoxes.add(box(i)); }
   for (let i = 0; i < 81; i++) {
     const c = cells[i], v = S.val[i], given = !!S.puz[i];
     c.classList.toggle('given', given);
@@ -164,7 +164,7 @@ function update() {
     c.classList.toggle('sel', i === sel);
     c.classList.toggle('peer', sel >= 0 && i !== sel && (row(i) === sr || col(i) === sc || box(i) === sb));
     c.classList.toggle('same', hi > 0 && v === hi);
-    c.classList.toggle('line', lineRows.has(row(i)) || lineCols.has(col(i)));
+    c.classList.toggle('line', lineRows.has(row(i)) || lineCols.has(col(i)) || lineBoxes.has(box(i)));
     valEls[i].textContent = v || '';
     const m = S.memos[i], spans = memoEls[i];
     for (let n = 1; n <= 9; n++) {
@@ -326,7 +326,8 @@ boardEl.addEventListener('pointerdown', (e) => {
   e.preventDefault();
   const i = +cell.dataset.i;
   press = { i, x: e.clientX, y: e.clientY, done: false, timer: 0 };
-  if (!num && !eraser) selectCell(i);   // 数字を選んでいる間（メモ／確定）はマスを選択状態にしない
+  // 数字を選んでいる間（メモ／確定）と、数字が入っているマス（タップでその数字に切り替え）は選択状態にしない
+  if (!num && !eraser && !S.val[i]) selectCell(i);
   const willCommit = !S.done && !S.puz[i] && (eraser || num > 0 || S.val[i] > 0 || S.memos[i] > 0);
   if (willCommit) {
     restartAnim(cell, 'holding');
@@ -361,6 +362,11 @@ window.addEventListener('pointercancel', () => { cancelHold(); press = null; });
 function tap(i) {
   if (S.done) return;
   if (eraser) { eraseCell(i); return; }
+  if (S.val[i]) {                      // 数字が入っているマス → その数字に切り替え
+    num = S.val[i]; sel = -1;
+    update(); save();
+    return;
+  }
   if (num > 0) toggleMemo(i, num);
 }
 
