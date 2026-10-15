@@ -4,11 +4,20 @@
 const HOLD_MS = 420;          // 長押し判定（CSSの --hold と合わせる）
 const MOVE_CANCEL_PX = 12;    // 指がこれ以上動いたら長押しキャンセル
 const STORAGE_KEY = 'yawaraka-sudoku-v1';
+// 難しさは「解くのに必要な手筋」で決める（grader.js）。パターン集の順番と対応
+//   1 入門:       シングルだけで解ける。ヒント多め（40個）
+//   2 やさしい:   シングルだけで解ける。ヒント少なめ（30個）
+//   3 ふつう:     2マスで2つの数字 / ブロックの中で1列に並ぶ / 行からブロックへ が必要
+//   4 むずかしい: 隠れた2つ / 3マスで3つの数字 / X-ウイング / スカイスクレイパー が必要
+//   5 激ムズ:     Y-ウイング / ソードフィッシュ / ユニーク・レクタングル が必要
 const DIFF = {
-  easy:   { label: 'やさしい',   clues: 42 },
-  normal: { label: 'ふつう',     clues: 34 },
-  hard:   { label: 'むずかしい', clues: 27 },
+  1: { label: '入門',       clues: 40 },
+  2: { label: 'やさしい',   clues: 30 },
+  3: { label: 'ふつう',     clues: 17 },
+  4: { label: 'むずかしい', clues: 17 },
+  5: { label: '激ムズ',     clues: 17 },
 };
+const GEN_BUDGET_MS = 3000;   // 狙いの段階が出るまで作り直す時間の上限
 
 const $ = (s) => document.querySelector(s);
 const boardEl = $('#board');
@@ -104,7 +113,8 @@ function countSolutions(g, limit) {
   return total;
 }
 
-function makePuzzle(clues) {
+// 答えが1通りのまま、ヒントが clues 個になるまで数字を抜く（17 なら抜けるだけ抜く）
+function digPuzzle(clues) {
   const sol = new Array(81).fill(0);
   fillGrid(sol);
   const puz = sol.slice();
@@ -117,6 +127,21 @@ function makePuzzle(clues) {
     else puz[i] = keep;
   }
   return { puz, sol };
+}
+
+// 狙いの段階になるまで作り直す。時間内に出なければ、いちばん近い段階のものを使う
+function makePuzzle(level) {
+  const deadline = Date.now() + GEN_BUDGET_MS;
+  let best = null;
+  for (let attempt = 0; attempt < 400; attempt++) {
+    const cand = digPuzzle(DIFF[level].clues);
+    const g = SudokuGrader.grade(cand.puz);
+    cand.grade = { level: g.level, used: g.used };
+    if (g.level === level) return cand;
+    if (g.solved && (!best || Math.abs(g.level - level) < Math.abs(best.grade.level - level))) best = cand;
+    if (Date.now() > deadline) break;
+  }
+  return best || makePuzzle(1);
 }
 
 // ---------- 状態 ----------
@@ -159,6 +184,7 @@ function load() {
     const d = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
     if (!d || !d.S || !Array.isArray(d.S.puz) || d.S.puz.length !== 81) return false;
     S = d.S; history = d.history || []; sel = d.sel ?? -1; num = d.num || 0;
+    if (!DIFF[S.diff]) S.diff = { easy: 2, normal: 3, hard: 4 }[S.diff] || 3;   // 以前の保存形式
     return true;
   } catch (_) { return false; }
 }
@@ -491,8 +517,8 @@ function startNew(diff) {
   statusEl.hidden = false;
   boardEl.classList.remove('done');
   setTimeout(() => {
-    const { puz, sol } = makePuzzle(DIFF[diff].clues);
-    S = { diff, puz, sol, val: puz.slice(), memos: new Array(81).fill(0), elapsed: 0, mistakes: 0, done: false };
+    const { puz, sol, grade } = makePuzzle(+diff);
+    S = { diff: +diff, puz, sol, val: puz.slice(), memos: new Array(81).fill(0), elapsed: 0, mistakes: 0, done: false, grade };
     history = []; sel = -1; num = 0; eraser = false;
     statusEl.hidden = true;
     update(); save();
@@ -524,6 +550,6 @@ if (load()) {
   update();
   if (S.done) { doneEl.hidden = false; $('#done-time').textContent = fmtTime(S.elapsed); $('#done-sub').textContent = `${DIFF[S.diff].label} ／ まちがい ${S.mistakes} 回`; confetti(); }
 } else {
-  startNew('normal');
+  startNew(3);
 }
 })();

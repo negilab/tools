@@ -53,6 +53,9 @@ h1{font-size:24px;font-weight:800;letter-spacing:-.01em;line-height:1.3;margin:1
 .sw.peer{background:var(--peer)} .sw.same{background:var(--same)} .sw.ans{background:var(--fg)}
 .sw.memo{background:var(--surface);position:relative}
 .sw.memo::after{content:"3";position:absolute;inset:0;font:700 8px/14px var(--font-num);text-align:center;color:var(--memo)}
+.sw.cut{background:var(--surface);position:relative}
+.sw.cut::after{content:"3";position:absolute;inset:0;font:700 8px/14px var(--font-num);text-align:center;color:var(--memo);text-decoration:line-through}
+.lv{display:inline-block;margin-left:8px;font:700 10px var(--font-ui);letter-spacing:.1em;color:var(--muted);vertical-align:middle;border:1px solid var(--line);border-radius:999px;padding:2px 8px}
 
 section{margin-top:40px;padding-top:28px;border-top:1px solid var(--line)}
 .eyebrow{font:700 11px var(--font-ui);letter-spacing:.14em;color:var(--muted);margin:0 0 4px}
@@ -84,7 +87,7 @@ footer{margin-top:48px;text-align:center}
 <main class="page">
   <a class="back" href="./"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>数独にもどる</a>
   <h1>数字を確定させられるパターン集</h1>
-  <p class="lead">メモで候補を絞って、数字を置く。そのときに使う考え方を、基本から順に6つ。どれも「見えている数字」だけから言い切れるものです。</p>
+  <p class="lead">メモで候補を絞って、数字を置く。そのときに使う考え方を、基本から順に14。どれも「見えている数字」だけから言い切れるものです。むずかしさは、この手筋のどこまでが必要かで決まります。</p>
   <ul class="toc">
     <li><a href="#p1">残り1マス</a></li>
     <li><a href="#p2">行と列で挟む</a></li>
@@ -92,16 +95,25 @@ footer{margin-top:48px;text-align:center}
     <li><a href="#p4">行の中でそこだけ</a></li>
     <li><a href="#p5">2マスで2つの数字</a></li>
     <li><a href="#p6">ブロックの中で1列に並ぶ</a></li>
+    <li><a href="#p7">行からブロックへ</a></li>
+    <li><a href="#p8">隠れた2つ</a></li>
+    <li><a href="#p9">3マスで3つの数字</a></li>
+    <li><a href="#p10">X-ウイング</a></li>
+    <li><a href="#p11">スカイスクレイパー</a></li>
+    <li><a href="#p12">Y-ウイング</a></li>
+    <li><a href="#p13">ソードフィッシュ</a></li>
+    <li><a href="#p14">ユニーク・レクタングル</a></li>
   </ul>
   <div class="legend">
-    <span><i class="sw same"></i>注目している数字</span>
+    <span><i class="sw same"></i>注目している数字・マス</span>
     <span><i class="sw peer"></i>その数字が入れない場所</span>
     <span><i class="sw memo"></i>メモ（候補）</span>
+    <span><i class="sw cut"></i>消える候補</span>
     <span><i class="sw ans"></i>確定する数字</span>
   </div>
 
   <section id="p1">
-    <p class="eyebrow">01</p>
+    <p class="eyebrow">01<span class="lv">入門〜やさしい</span></p>
     <h2>残り1マス</h2>
     <p class="rule">行・列・ブロックのどれかで、空きが1つだけなら、残った数字がそこに入る。</p>
     <figure><div class="demo" data-board="p1"></div><figcaption>5行目は 6 以外がそろっている</figcaption></figure>
@@ -114,7 +126,7 @@ footer{margin-top:48px;text-align:center}
   </section>
 
   <section id="p2">
-    <p class="eyebrow">02</p>
+    <p class="eyebrow">02<span class="lv">入門〜やさしい</span></p>
     <h2>行と列で挟む</h2>
     <p class="rule">ある数字に注目して、その数字がある行と列を消していく。ブロックの中で消し残ったマスが1つなら、そこに入る。</p>
     <figure><div class="demo" data-board="p2"></div><figcaption>まん中のブロックで、5 が入れるのは 1 マスだけ</figcaption></figure>
@@ -127,7 +139,7 @@ footer{margin-top:48px;text-align:center}
   </section>
 
   <section id="p3">
-    <p class="eyebrow">03</p>
+    <p class="eyebrow">03<span class="lv">入門〜やさしい</span></p>
     <h2>周りに8つそろう</h2>
     <p class="rule">あるマスの行・列・ブロックを合わせて、1〜9のうち8つが見えていれば、残りの1つがそのマスに入る。</p>
     <figure><div class="demo" data-board="p3"></div><figcaption>まん中のマスの周りには 1〜8 がすべてある</figcaption></figure>
@@ -140,7 +152,7 @@ footer{margin-top:48px;text-align:center}
   </section>
 
   <section id="p4">
-    <p class="eyebrow">04</p>
+    <p class="eyebrow">04<span class="lv">入門〜やさしい</span></p>
     <h2>行の中でそこだけ</h2>
     <p class="rule">行（または列・ブロック）に空きが複数あっても、ある数字が入れるマスが1つしかなければ、そこに入る。</p>
     <figure><div class="demo" data-board="p4"></div><figcaption>3行目に 4 を置けるのは、まん中のマスだけ</figcaption></figure>
@@ -153,7 +165,7 @@ footer{margin-top:48px;text-align:center}
   </section>
 
   <section id="p5">
-    <p class="eyebrow">05</p>
+    <p class="eyebrow">05<span class="lv">ふつう</span></p>
     <h2>2マスで2つの数字</h2>
     <p class="rule">同じ行の2マスが、どちらも同じ2つの候補だけなら、その2つの数字はこの2マスで使い切る。ほかのマスの候補から消せる。</p>
     <figure><div class="demo" data-board="p5"></div><figcaption>左の2マスは「2 か 7」。右のマスの候補から 2 と 7 が消えて、9 が残る</figcaption></figure>
@@ -166,7 +178,7 @@ footer{margin-top:48px;text-align:center}
   </section>
 
   <section id="p6">
-    <p class="eyebrow">06</p>
+    <p class="eyebrow">06<span class="lv">ふつう</span></p>
     <h2>ブロックの中で1列に並ぶ</h2>
     <p class="rule">ブロックの中で、ある数字の候補がひとつの行（または列）に集まっているなら、その行のブロック外のマスにはその数字は入らない。</p>
     <figure><div class="demo" data-board="p6"></div><figcaption>左上のブロックで 3 が入れるのは1行目の2マスだけ。だから1行目の右側に 3 は入らず、「3 か 8」のマスは 8 になる</figcaption></figure>
@@ -175,7 +187,111 @@ footer{margin-top:48px;text-align:center}
       <li>入れるマスが<b>すべて同じ行に並んでいる</b>なら、3 はその行のその並びのどこかに入る。</li>
       <li>同じ行の、ブロックの外のマスから 3 を消す。候補が1つになったマスは確定。</li>
     </ol>
-    <p class="app">ここまでの5つで止まったときに試す、ひとつ上の手です。「むずかしい」の問題では、このパターンが必要になる場面があります。</p>
+    <p class="app">ここまでの5つで止まったときに試す、ひとつ上の手です。「ふつう」の問題では、ここまでの手筋で必ず解けます。</p>
+  </section>
+
+  <section id="p7">
+    <p class="eyebrow">07<span class="lv">ふつう</span></p>
+    <h2>行からブロックへ</h2>
+    <p class="rule">06 の逆向き。行（または列）の中で、ある数字の候補がひとつのブロックに集まっているなら、そのブロックの行の外のマスにはその数字は入らない。</p>
+    <figure><div class="demo" data-board="p7"></div><figcaption>3行目で 4 が入れるのはまん中のブロックの3マスだけ。だからそのブロックのほかの行に 4 は入らず、「4 か 5」のマスは 5 になる</figcaption></figure>
+    <ol>
+      <li>行を1つ選び、ある数字（ここでは 4）が入れるマスを探す。</li>
+      <li>入れるマスが<b>すべて同じブロックの中</b>なら、4 はそのブロックのその行のどこかに入る。</li>
+      <li>同じブロックの、ほかの行のマスから 4 を消す。候補が1つになったマスは確定。</li>
+    </ol>
+    <p class="app">06 と 07 はセットで「ブロックと行・列のやりとり」と覚えると探しやすいです。パネルで数字を選んで、白いマスがブロックの中で1列に並んでいないか見てください。</p>
+  </section>
+
+  <section id="p8">
+    <p class="eyebrow">08<span class="lv">むずかしい</span></p>
+    <h2>隠れた2つ</h2>
+    <p class="rule">ブロック（または行・列）の中で、2つの数字が同じ2マスにしか入れないなら、その2マスにはその2つの数字しか入らない。ほかの候補は消える。</p>
+    <figure><div class="demo" data-board="p8"></div><figcaption>まん中のブロックで、3 と 7 が入れるのは左上と右下の2マスだけ。その2マスの候補は「3 か 7」に絞れる</figcaption></figure>
+    <ol>
+      <li>ブロックの中で、まだ入っていない数字ごとに「入れるマス」を数える。</li>
+      <li><b>2つの数字が、同じ2マスにしか入れない</b>組を見つける（ここでは 3 と 7）。</li>
+      <li>その2マスのメモから、3 と 7 以外を消す。</li>
+    </ol>
+    <p class="app">05 の「2マスで2つの数字」がメモの数で見つかるのに対して、こちらは数字ごとに場所を数えないと見えません。3つの数字が3マスにしか入れないときも同じです（隠れた3つ）。</p>
+  </section>
+
+  <section id="p9">
+    <p class="eyebrow">09<span class="lv">むずかしい</span></p>
+    <h2>3マスで3つの数字</h2>
+    <p class="rule">05 の3マス版。同じ行の3マスの候補が、合わせて3つの数字におさまるなら、その3つはこの3マスで使い切る。ほかのマスの候補から消せる。</p>
+    <figure><div class="demo" data-board="p9"></div><figcaption>「1 4」「4 6」「1 6」の3マスで 1・4・6 を使い切るので、「1 4 8」のマスは 8 になる</figcaption></figure>
+    <ol>
+      <li>行の中で、メモが2つか3つのマスを3つ選ぶ。</li>
+      <li>3マスのメモを合わせて<b>数字が3種類</b>におさまるか確かめる（ここでは 1・4・6）。それぞれのマスに3つ全部がなくてもよい。</li>
+      <li>同じ行のほかのマスから 1・4・6 を消す。候補が1つになったマスは確定。</li>
+    </ol>
+    <p class="app">「2マスで2つ」が見つからないとき、3マスまで広げて探すのがこの手筋です。列やブロックでも同じです。</p>
+  </section>
+
+  <section id="p10">
+    <p class="eyebrow">10<span class="lv">むずかしい</span></p>
+    <h2>X-ウイング</h2>
+    <p class="rule">ある数字について、2つの行でそれぞれ候補が同じ2列にしかないなら、その数字はその2列ではその4マスのどれかに入る。2列のほかのマスから消せる。</p>
+    <figure><div class="demo" data-board="p10"></div><figcaption>2行目と8行目で 5 が入れるのは、どちらも3列目と7列目だけ。4マスが長方形を作り、3列目・7列目のほかのマスから 5 が消える</figcaption></figure>
+    <ol>
+      <li>数字を1つ決める（ここでは 5）。候補がちょうど2マスしかない行を探す。</li>
+      <li>そういう行が2つあって、<b>候補の列が同じ2列</b>なら、4マスが長方形になる。</li>
+      <li>5 は長方形の対角のどちらかに入るので、その2列のほかのマスから 5 を消す。</li>
+    </ol>
+    <p class="app">行と列を入れ替えても同じです。パネルで数字を選んで、白いマスが「2行に2つずつ、同じ列に」並んでいたら X-ウイングです。</p>
+  </section>
+
+  <section id="p11">
+    <p class="eyebrow">11<span class="lv">むずかしい</span></p>
+    <h2>スカイスクレイパー</h2>
+    <p class="rule">X-ウイングの崩れた形。2つの行でそれぞれ候補が2マスずつで、片方の端が同じ列にそろっているなら、もう片方の端のどちらかにその数字が入る。両方の端から見えるマスから消せる。</p>
+    <figure><div class="demo" data-board="p11"></div><figcaption>2行目と7行目で 7 が入れるのは2マスずつ。左端は同じ1列目なので、右端（6列目か5列目）のどちらかが 7。両方から見える2マスから 7 が消える</figcaption></figure>
+    <ol>
+      <li>数字を1つ決め（ここでは 7）、候補がちょうど2マスの行を2つ探す。</li>
+      <li>片方の端どうしが<b>同じ列</b>にあることを確かめる。そこには同時に 7 は入れないので、もう片方の端のどちらかが 7。</li>
+      <li>その2つの端の<b>両方から見える</b>マス（同じ行・列・ブロック）から 7 を消す。</li>
+    </ol>
+    <p class="app">X-ウイングを探していて「あと1マスずれている」ときに、この形になっていることがあります。</p>
+  </section>
+
+  <section id="p12">
+    <p class="eyebrow">12<span class="lv">激ムズ</span></p>
+    <h2>Y-ウイング</h2>
+    <p class="rule">候補が2つのマスを3つ使う。軸のマスが「A か B」、それが見える2マスが「A か C」「B か C」なら、軸がどちらでも羽のどちらかが C になる。両方の羽から見えるマスから C を消せる。</p>
+    <figure><div class="demo" data-board="p12"></div><figcaption>軸「2 か 7」、羽「2 か 5」と「7 か 5」。軸が 2 なら左の羽が 5、軸が 7 なら上の羽が 5。どちらでも 5 なので、両方から見える左上のマスから 5 が消えて 8 になる</figcaption></figure>
+    <ol>
+      <li>候補が2つだけのマスを軸に選ぶ（ここでは「2 か 7」）。</li>
+      <li>軸から見えるマスで、軸の片方の数字と<b>共通の第3の数字 C</b>を持つマスを2つ探す（「2 か 5」「7 か 5」）。</li>
+      <li>2つの羽の両方から見えるマスから C（5）を消す。</li>
+    </ol>
+    <p class="app">軸の候補が3つ「A か B か C」で、羽が「A か C」「B か C」のときも同じように C を消せます（XYZ-ウイング）。その場合は、軸からも見えるマスに限ります。</p>
+  </section>
+
+  <section id="p13">
+    <p class="eyebrow">13<span class="lv">激ムズ</span></p>
+    <h2>ソードフィッシュ</h2>
+    <p class="rule">X-ウイングの3行版。3つの行でそれぞれ候補が、合わせて3つの列におさまるなら、その3列のほかのマスから消せる。</p>
+    <figure><div class="demo" data-board="p13"></div><figcaption>1行目・5行目・9行目で 3 が入れる列は、合わせて 2列目・5列目・8列目の3つだけ。その3列のほかのマスから 3 が消える</figcaption></figure>
+    <ol>
+      <li>数字を1つ決め（ここでは 3）、候補が2〜3マスの行を3つ探す。</li>
+      <li>3行の候補の列を合わせて<b>3列におさまる</b>か確かめる。各行に3列全部がなくてもよい。</li>
+      <li>その3列の、3行以外のマスから 3 を消す。</li>
+    </ol>
+    <p class="app">見つけるのに時間がかかる手筋です。「激ムズ」でここまでの手筋を全部使っても進まないときに探してみてください。</p>
+  </section>
+
+  <section id="p14">
+    <p class="eyebrow">14<span class="lv">激ムズ</span></p>
+    <h2>ユニーク・レクタングル</h2>
+    <p class="rule">答えが1通りであることを使う。長方形の4マス（2つのブロックにまたがる）のうち3マスが同じ「A か B」なら、4つめのマスは A でも B でもない。</p>
+    <figure><div class="demo" data-board="p14"></div><figcaption>3マスが「4 か 9」。もし右下も 4 か 9 なら、4つのマスの 4 と 9 を入れ替えても成り立ってしまい答えが2通りになる。だから右下は 6</figcaption></figure>
+    <ol>
+      <li>「A か B」だけのマスが長方形の3つの角に並んでいるところを探す（ここでは「4 か 9」）。</li>
+      <li>4マスが<b>ちょうど2つのブロック</b>にまたがっていることを確かめる。</li>
+      <li>残りの角のマスから A と B を消す。候補が1つになったら確定。</li>
+    </ol>
+    <p class="app">このアプリの問題は答えが必ず1通りなので、安心して使えます。ほかの数独でも、ふつうは1通りに作られています。</p>
   </section>
 
   <footer><a class="btn" href="./">数独にもどる</a></footer>
@@ -203,11 +319,15 @@ footer{margin-top:48px;text-align:center}
       const [r, c] = k.split(',').map(Number);
       out += `<text x="${c * S + S / 2}" y="${r * S + S / 2}" dy=".36em" text-anchor="middle" font-family="var(--font-num)" font-weight="800" font-size="21" fill="var(--fg)">${n}</text>`;
     }
+    const cut = new Set((spec.cut || []).map(([k, n]) => `${k}:${n}`));
     for (const [k, list] of Object.entries(spec.memos || {})) {
       const [r, c] = k.split(',').map(Number);
       for (const n of list) {
         const mx = (n - 1) % 3, my = ((n - 1) / 3) | 0;
-        out += `<text x="${c * S + S / 6 + mx * S / 3}" y="${r * S + S / 6 + my * S / 3}" dy=".36em" text-anchor="middle" font-family="var(--font-num)" font-weight="700" font-size="11" fill="var(--memo)">${n}</text>`;
+        const x = c * S + S / 6 + mx * S / 3, y = r * S + S / 6 + my * S / 3;
+        const isCut = cut.has(`${k}:${n}`);
+        out += `<text x="${x}" y="${y}" dy=".36em" text-anchor="middle" font-family="var(--font-num)" font-weight="700" font-size="11" fill="${isCut ? 'var(--line-strong)' : 'var(--memo)'}" opacity="${isCut ? .55 : 1}">${n}</text>`;
+        if (isCut) out += `<line x1="${x - 5}" y1="${y + 4}" x2="${x + 5}" y2="${y - 4}" stroke="var(--fg)" stroke-width="1.6" stroke-linecap="round"/>`;
       }
     }
     if (spec.ans) {
@@ -269,13 +389,99 @@ footer{margin-top:48px;text-align:center}
     // 06 ブロックの中で1列に並ぶ: 左上ブロックで 3 が入れるのは (0,1),(0,2) だけ → 1行目の外のマスから 3 が消える
     p6: {
       alt: '左上ブロックで3の候補が1行目に並ぶので、1行目のほかのマスに3は入らない',
-      given: { '0,0': 5, '1,1': 6, '1,2': 9, '2,0': 1, '2,1': 2, '2,2': 7, '5,0': 3, '0,3': 4, '0,4': 1, '0,8': 2, '4,6': 3 },
-      same: ['5,0', '4,6'],
+      given: { '0,0': 5, '1,1': 6, '1,2': 9, '2,0': 1, '2,1': 2, '2,2': 7, '5,0': 3, '0,3': 4, '0,4': 1, '0,8': 2 },
+      same: ['5,0'],
       peer: [...colKeys(0), ...rowKeys(0).filter((k) => !['0,1', '0,2'].includes(k))],
       memos: { '0,1': [3, 8], '0,2': [3, 8], '0,5': [6, 7], '0,6': [3, 8], '0,7': [6, 7, 8] },
       ans: ['0,6', 8],
     },
   };
+  Object.assign(boards, {
+    // 07 行からブロックへ: 3行目（r=2）で 4 が入れるのは box1 の3マスだけ → box1 のほかの行から 4 が消える
+    p7: {
+      alt: '3行目の4の候補が中央上のブロックに集まるので、そのブロックのほかの行から4が消える',
+      given: { '2,0': 1, '2,1': 8, '2,2': 6, '2,6': 9, '2,7': 2, '2,8': 7, '0,5': 1, '1,4': 2, '5,3': 7, '7,7': 4 },
+      same: ['2,3', '2,4', '2,5'],
+      peer: boxKeys(0, 1).filter((k) => !k.startsWith('2,')),
+      memos: { '2,3': [3, 4, 5], '2,4': [3, 4, 5], '2,5': [3, 4, 5], '0,3': [4, 5], '1,5': [3, 4] },
+      cut: [['0,3', 4], ['1,5', 4]],
+      ans: ['0,3', 5],
+    },
+    // 08 隠れた2つ: box4 で 3 と 7 が入れるのは (3,3),(5,5) だけ
+    p8: {
+      alt: '中央ブロックで3と7が入れる2マスの候補が3と7に絞られる',
+      given: { '3,4': 2, '4,3': 4, '4,5': 6, '5,4': 8, '0,0': 7, '1,8': 3, '7,1': 3, '8,7': 7 },
+      same: ['3,3', '5,5'],
+      peer: boxKeys(1, 1).filter((k) => !['3,3', '5,5'].includes(k)),
+      memos: { '3,3': [1, 3, 7, 9], '5,5': [3, 5, 7], '3,5': [1, 9], '4,4': [1, 5, 9], '5,3': [5, 9] },
+      cut: [['3,3', 1], ['3,3', 9], ['5,5', 5]],
+    },
+    // 09 3マスで3つの数字: 5行目（r=4）の「1 4」「4 6」「1 6」→ (4,5) の 1,4 が消えて 8
+    p9: {
+      alt: '3マスで1・4・6を使い切るので、残るマスの候補は8だけになる',
+      given: { '4,1': 2, '4,2': 9, '4,4': 3, '4,6': 5, '4,8': 7, '0,3': 5, '2,7': 4, '7,0': 6, '8,5': 2 },
+      same: ['4,0', '4,3', '4,7'],
+      peer: rowKeys(4),
+      memos: { '4,0': [1, 4], '4,3': [4, 6], '4,7': [1, 6], '4,5': [1, 4, 8] },
+      cut: [['4,5', 1], ['4,5', 4]],
+      ans: ['4,5', 8],
+    },
+    // 10 X-ウイング: 2行目(r=1)・8行目(r=7) で 5 が入れるのは 3列目(c=2)・7列目(c=6) だけ
+    p10: {
+      alt: '2行で5の候補が同じ2列に並ぶので、その2列のほかのマスから5が消える',
+      given: { '1,0': 3, '1,1': 8, '1,3': 1, '1,4': 9, '1,5': 7, '1,7': 2, '1,8': 4,
+               '7,0': 9, '7,1': 1, '7,3': 4, '7,4': 2, '7,5': 8, '7,7': 7, '7,8': 3 },
+      same: ['1,2', '1,6', '7,2', '7,6'],
+      peer: [...colKeys(2), ...colKeys(6)].filter((k) => !['1,2', '1,6', '7,2', '7,6'].includes(k)),
+      memos: { '1,2': [5, 6], '1,6': [5, 6], '7,2': [5, 6], '7,6': [5, 6], '4,2': [5, 9], '3,6': [2, 5] },
+      cut: [['4,2', 5], ['3,6', 5]],
+      ans: ['4,2', 9],
+    },
+    // 11 スカイスクレイパー: 2行目(r=1) (1,0)-(1,5)、7行目(r=6) (6,0)-(6,4)。左端が同じ1列目
+    p11: {
+      alt: '2行の7の候補の片端が同じ列にそろうので、もう片端の両方から見えるマスから7が消える',
+      given: { '1,1': 5, '1,2': 8, '1,3': 2, '1,4': 9, '1,6': 4, '1,7': 6, '1,8': 1,
+               '6,1': 1, '6,2': 2, '6,3': 8, '6,5': 5, '6,6': 9, '6,7': 3, '6,8': 6, '3,8': 7 },
+      same: ['1,0', '1,5', '6,0', '6,4'],
+      peer: colKeys(0).filter((k) => !['1,0', '6,0'].includes(k)),
+      memos: { '1,0': [3, 7], '1,5': [3, 7], '6,0': [4, 7], '6,4': [4, 7], '7,5': [3, 7], '2,4': [1, 7] },
+      cut: [['7,5', 7], ['2,4', 7]],
+      ans: ['7,5', 3],
+    },
+    // 12 Y-ウイング: 軸 (4,4)[2,7]、羽 (4,0)[2,5]・(0,4)[5,7] → (0,0) から 5 が消える
+    p12: {
+      alt: '軸と2つの羽の形から、両方の羽から見えるマスの5が消える',
+      given: { '4,1': 3, '4,2': 1, '4,6': 8, '2,4': 6, '7,4': 1, '2,0': 9, '7,0': 4, '0,2': 3, '0,6': 1, '6,6': 5 },
+      same: ['4,4', '4,0', '0,4'],
+      peer: ['0,0'],
+      memos: { '4,4': [2, 7], '4,0': [2, 5], '0,4': [5, 7], '0,0': [5, 8] },
+      cut: [['0,0', 5]],
+      ans: ['0,0', 8],
+    },
+    // 13 ソードフィッシュ: 1・5・9行目で 3 の候補が 2・5・8列目におさまる
+    p13: {
+      alt: '3行の3の候補が3列におさまるので、その3列のほかのマスから3が消える',
+      given: { '0,0': 6, '0,2': 2, '0,3': 8, '0,5': 5, '0,6': 9, '0,8': 1,
+               '4,0': 8, '4,1': 2, '4,2': 5, '4,3': 1, '4,5': 9, '4,6': 6, '4,8': 7,
+               '8,0': 2, '8,2': 7, '8,3': 6, '8,4': 9, '8,5': 1, '8,6': 8, '8,8': 5 },
+      same: ['0,1', '0,4', '4,4', '4,7', '8,1', '8,7'],
+      peer: [...colKeys(1), ...colKeys(4), ...colKeys(7)].filter((k) => !['0,1', '0,4', '0,7', '4,4', '4,7', '8,1', '8,7'].includes(k)),
+      memos: { '0,1': [3, 4], '0,4': [3, 7], '0,7': [4, 7], '4,4': [3, 4], '4,7': [3, 4], '8,1': [3, 4], '8,7': [3, 4], '6,1': [3, 9], '2,7': [3, 8] },
+      cut: [['6,1', 3], ['2,7', 3]],
+      ans: ['6,1', 9],
+    },
+    // 14 ユニーク・レクタングル: (1,1)(1,7)(2,1) が「4 9」→ (2,7) は 4 でも 9 でもない
+    p14: {
+      alt: '長方形の3つの角が4か9なので、4つめの角は4でも9でもない',
+      given: { '1,0': 6, '1,2': 8, '1,3': 5, '1,4': 7, '1,5': 1, '1,6': 3, '1,8': 2,
+               '2,0': 1, '2,2': 5, '2,3': 8, '2,4': 3, '2,5': 2, '2,6': 7, '5,1': 6, '6,8': 4 },
+      same: ['1,1', '1,7', '2,1'],
+      peer: ['2,7'],
+      memos: { '1,1': [4, 9], '1,7': [4, 9], '2,1': [4, 9], '2,7': [4, 6, 9], '2,8': [6, 9] },
+      cut: [['2,7', 4], ['2,7', 9]],
+      ans: ['2,7', 6],
+    },
+  });
   for (const el of document.querySelectorAll('[data-board]')) el.innerHTML = draw(boards[el.dataset.board]);
 })();
 </script>

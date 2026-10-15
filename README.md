@@ -32,7 +32,7 @@ tools/
 |---|---|---|
 | 動画編集 | [/douga/](https://negilab.github.io/tools/douga/) | 音声を取り出す・切る・重ねる・文字起こし |
 | PDFマスクツール 体験版 | [/pdfmask/](https://negilab.github.io/tools/pdfmask/) | 図面PDFの個人情報を伏せる。詳しくは [pdfmask.md](pdfmask.md) |
-| やわらか数独 | [/sudoku/](https://negilab.github.io/tools/sudoku/) | メモ機能つき数独。外部と通信しない。進み具合はブラウザに保存 |
+| やわらか数独 | [/sudoku/](https://negilab.github.io/tools/sudoku/) | メモ機能つき数独。難しさ5段階は必要な手筋で判定。外部と通信しない。進み具合はブラウザに保存 |
 
 外部と通信するかどうかは道具ごとに違うので、**そのツール自身の説明に書いてください。**
 リポジトリ全体で一律にこうだ、とは書かないようにします。

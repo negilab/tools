@@ -25,9 +25,11 @@
     <label class="diff">
       <span>むずかしさ</span>
       <select id="difficulty">
-        <option value="easy">やさしい</option>
-        <option value="normal" selected>ふつう</option>
-        <option value="hard">むずかしい</option>
+        <option value="1">入門</option>
+        <option value="2">やさしい</option>
+        <option value="3" selected>ふつう</option>
+        <option value="4">むずかしい</option>
+        <option value="5">激ムズ</option>
       </select>
     </label>
     <button id="new" class="btn primary" type="button">新しい問題</button>
@@ -81,6 +83,7 @@
   </div>
 </div>
 
+<script src="grader.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
