@@ -27,8 +27,6 @@ const row = (i) => (i / 9) | 0;
 const col = (i) => i % 9;
 const box = (i) => ((row(i) / 3) | 0) * 3 + ((col(i) / 3) | 0);
 const PEERS = [];
-const ROWS = [...Array(9)].map(() => []), COLS = [...Array(9)].map(() => []), BOXES = [...Array(9)].map(() => []);
-for (let i = 0; i < 81; i++) { ROWS[row(i)].push(i); COLS[col(i)].push(i); BOXES[box(i)].push(i); }
 for (let i = 0; i < 81; i++) {
   const list = [];
   for (let j = 0; j < 81; j++) {
@@ -61,23 +59,13 @@ function fillGrid(g) {
 
 function popcount(x) { let c = 0; while (x) { x &= x - 1; c++; } return c; }
 
-// メモが1つだけで、盤面に見えている数字だけからその数字しか入らないと言い切れるなら、その数字を返す
-// （答えは見ない。見えている数字で決まるものだけなので、メモを1つ書いて答え合わせする使い方はできない）
+// メモが1つだけのマスなら、その数字を返す（黒丸で示し、長押しでそのまま確定できる）
+// 答えも盤面も見ない。正しいかどうかは確定するときに判定され、間違っていれば弾かれる
 function sureDigit(i) {
   if (!S || S.val[i] || S.puz[i]) return 0;
   const m = S.memos[i];
   if (!m || (m & (m - 1))) return 0;          // ビットが1つだけか
-  const n = 31 - Math.clz32(m);
-  let used = 0;
-  for (const p of PEERS[i]) if (S.val[p]) used |= 1 << S.val[p];
-  if (used & (1 << n)) return 0;              // 行・列・ブロックにその数字がすでにある
-  if ((used | (1 << n)) === 0x3fe) return n;  // ほかの8つの数字がすべて周りにある（このマスにはこれしか入らない）
-  // 行・列・ブロックのどれかで、この数字が入れる空きマスがここしかない
-  const canTake = (k) => !S.val[k] && !PEERS[k].some((p) => S.val[p] === n);
-  for (const unit of [ROWS[row(i)], COLS[col(i)], BOXES[box(i)]]) {
-    if (unit.every((k) => k === i || !canTake(k))) return n;
-  }
-  return 0;
+  return 31 - Math.clz32(m);
 }
 
 // 解の個数を limit まで数える（候補が最も少ないマスから埋める）
