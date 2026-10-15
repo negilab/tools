@@ -20,7 +20,10 @@ const eraserBtn = $('#eraser');
 const undoBtn = $('#undo');
 const diffSel = $('#difficulty');
 const confirmEl = $('#confirm');
-const assistEl = $('#assist');
+const settingsEl = $('#settings');
+const settingsBtn = $('#settings-btn');
+const optEls = { assist: $('#opt-assist'), tapSwitch: $('#opt-tapswitch'), holdCommit: $('#opt-hold'), dblCommit: $('#opt-dbl') };
+const hintCommitEl = $('#hint-commit');
 const doneEl = $('#done');
 
 // ---------- 盤面の基礎 ----------
@@ -71,7 +74,7 @@ function canTake(k, n) {
   return !S.val[k] && !PEERS[k].some((p) => S.val[p] === n);
 }
 function sureDigit(i) {
-  if (!assist || !S || S.val[i] || !S.memos[i]) return 0;
+  if (!settings.assist || !S || S.val[i] || !S.memos[i]) return 0;
   for (let n = 1; n <= 9; n++) {
     if (!(S.memos[i] & (1 << n)) || !canTake(i, n)) continue;
     for (const unit of [ROWS[row(i)], COLS[col(i)], BOXES[box(i)]]) {
@@ -126,16 +129,42 @@ let history = [];      // [{ val, memos }]
 let sel = -1;          // 選択中のマス
 let num = 0;           // パレットで選択中の数字（0 = なし）
 let eraser = false;
-let assist = false;    // アシスト（黒丸メモ）のオンオフ
+
+// ---------- 設定 ----------
+const SETTINGS_KEY = 'yawaraka-sudoku-settings';
+const settings = {
+  assist: false,      // 黒丸メモ
+  tapSwitch: true,    // 数字の入ったマスをタップでその数字に切り替え
+  holdCommit: true,   // 長押しで確定
+  dblCommit: true,    // ダブルタップで確定
+};
+function loadSettings() {
+  try {
+    const d = JSON.parse(localStorage.getItem(SETTINGS_KEY) || 'null');
+    if (d) for (const k of Object.keys(settings)) if (typeof d[k] === 'boolean') settings[k] = d[k];
+  } catch (_) {}
+  if (!settings.holdCommit && !settings.dblCommit) settings.holdCommit = true;
+}
+function saveSettings() {
+  try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (_) {}
+}
+function renderSettings() {
+  for (const k of Object.keys(optEls)) optEls[k].checked = settings[k];
+  // 確定方法はどちらか一方は残す
+  optEls.holdCommit.disabled = settings.holdCommit && !settings.dblCommit;
+  optEls.dblCommit.disabled = settings.dblCommit && !settings.holdCommit;
+  hintCommitEl.textContent = settings.holdCommit && settings.dblCommit ? '長押し か ダブルタップで確定'
+    : settings.holdCommit ? '長押しで確定' : 'ダブルタップで確定';
+}
 
 function save() {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ S, history: history.slice(-50), sel, num, assist })); } catch (_) {}
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ S, history: history.slice(-50), sel, num })); } catch (_) {}
 }
 function load() {
   try {
     const d = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
     if (!d || !d.S || !Array.isArray(d.S.puz) || d.S.puz.length !== 81) return false;
-    S = d.S; history = d.history || []; sel = d.sel ?? -1; num = d.num || 0; assist = !!d.assist;
+    S = d.S; history = d.history || []; sel = d.sel ?? -1; num = d.num || 0;
     return true;
   } catch (_) { return false; }
 }
@@ -207,7 +236,6 @@ function update() {
     b.classList.toggle('done', counts[n] >= 9);
   }
   eraserBtn.setAttribute('aria-pressed', String(eraser));
-  assistEl.checked = assist;
   undoBtn.disabled = history.length === 0 || S.done;
   mistakesEl.textContent = S.mistakes;
   timeEl.textContent = fmtTime(S.elapsed);
@@ -365,10 +393,10 @@ boardEl.addEventListener('pointerdown', (e) => {
   e.preventDefault();
   const i = +cell.dataset.i;
   press = { i, x: e.clientX, y: e.clientY, done: false, timer: 0 };
-  // 数字を選んでいる間（メモ／確定）と、数字が入っているマス（タップでその数字に切り替え）は選択状態にしない
-  if (!num && !eraser && !S.val[i]) selectCell(i);
+  // 数字を選んでいる間（メモ／確定）と、タップでその数字に切り替えるマスは選択状態にしない
+  if (!num && !eraser && (!S.val[i] || !settings.tapSwitch)) selectCell(i);
   const sure = eraser ? 0 : sureDigit(i);
-  const willCommit = !S.done && !S.puz[i] && (eraser || num > 0 || sure > 0 || S.val[i] > 0 || S.memos[i] > 0);
+  const willCommit = settings.holdCommit && !S.done && !S.puz[i] && (eraser || num > 0 || sure > 0 || S.val[i] > 0 || S.memos[i] > 0);
   if (willCommit) {
     restartAnim(cell, 'holding');
     press.timer = setTimeout(() => {
@@ -407,14 +435,13 @@ let lastTap = { i: -1, t: 0, memoToggled: false };
 function tap(i) {
   if (S.done) return;
   if (eraser) { eraseCell(i); return; }
-  if (S.val[i]) {                      // 数字が入っているマス → その数字に切り替え
-    num = S.val[i]; sel = -1;
-    update(); save();
+  if (S.val[i]) {                      // 数字が入っているマス → （設定がオンなら）その数字に切り替え
+    if (settings.tapSwitch) { num = S.val[i]; sel = -1; update(); save(); }
     lastTap = { i: -1, t: 0, memoToggled: false };
     return;
   }
   const now = Date.now();
-  const isDouble = lastTap.i === i && now - lastTap.t < DOUBLE_TAP_MS;
+  const isDouble = settings.dblCommit && lastTap.i === i && now - lastTap.t < DOUBLE_TAP_MS;
   if (isDouble) {                      // ダブルタップ → 確定（1回目のタップで付けたメモは戻す）
     if (lastTap.memoToggled) undo();
     lastTap = { i: -1, t: 0, memoToggled: false };
@@ -441,7 +468,20 @@ paletteEl.addEventListener('click', (e) => {
 });
 eraserBtn.addEventListener('click', () => { eraser = !eraser; if (eraser) num = 0; lastTap = { i: -1, t: 0, memoToggled: false }; update(); save(); });
 undoBtn.addEventListener('click', () => { lastTap = { i: -1, t: 0, memoToggled: false }; undo(); });
-assistEl.addEventListener('change', () => { assist = assistEl.checked; update(); save(); });
+for (const k of Object.keys(optEls)) {
+  optEls[k].addEventListener('change', () => {
+    settings[k] = optEls[k].checked;
+    if (!settings.holdCommit && !settings.dblCommit) settings[k] = true;   // 確定方法は最低ひとつ残す
+    renderSettings(); saveSettings(); update();
+  });
+}
+function toggleSettings(open) {
+  settingsEl.hidden = !open;
+  settingsBtn.setAttribute('aria-expanded', String(open));
+  if (open) confirmEl.hidden = true;
+}
+settingsBtn.addEventListener('click', () => toggleSettings(settingsEl.hidden));
+$('#settings-close').addEventListener('click', () => toggleSettings(false));
 
 window.addEventListener('keydown', (e) => {
   if (!S || e.metaKey || e.ctrlKey || e.altKey) return;
@@ -478,7 +518,7 @@ function hasProgress() {
   return S && !S.done && S.val.some((v, i) => v && !S.puz[i] || S.memos[i]);
 }
 $('#new').addEventListener('click', () => {
-  if (hasProgress()) confirmEl.hidden = false;
+  if (hasProgress()) { toggleSettings(false); confirmEl.hidden = false; }
   else startNew(diffSel.value);
 });
 $('#confirm-no').addEventListener('click', () => { confirmEl.hidden = true; });
@@ -494,6 +534,8 @@ setInterval(() => {
 }, 1000);
 
 // ---------- 起動 ----------
+loadSettings();
+renderSettings();
 if (load()) {
   update();
   if (S.done) { doneEl.hidden = false; $('#done-time').textContent = fmtTime(S.elapsed); $('#done-sub').textContent = `${DIFF[S.diff].label} ／ まちがい ${S.mistakes} 回`; confetti(); }
